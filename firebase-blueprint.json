@@ -1,0 +1,740 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Private user profile isolated to the account owner and platform administrators. Never stores RBAC roles or raw passwords.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified account email address.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "organization": {
+          "type": "string",
+          "description": "Optional organization or team affiliation.",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "description": "UI language code.",
+          "enum": ["en", "bn"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last modification server timestamp."
+        }
+      },
+      "required": ["uid", "email", "displayName", "organization", "preferredLanguage", "createdAt", "updatedAt"]
+    },
+    "Role": {
+      "title": "Role",
+      "description": "Authoritative RBAC role record managed strictly by administrators. Never writable by regular users.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Target user UID matching document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "role": {
+          "type": "string",
+          "description": "Assigned security privilege level.",
+          "enum": ["user", "analyst", "moderator", "admin"]
+        },
+        "assignedBy": {
+          "type": "string",
+          "description": "Admin UID who granted or modified the role.",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "role", "assignedBy", "createdAt", "updatedAt"]
+    },
+    "CveRecord": {
+      "title": "CveRecord",
+      "description": "Public read-only Common Vulnerability and Exposure record.",
+      "type": "object",
+      "properties": {
+        "cveId": {
+          "type": "string",
+          "description": "Standard CVE identifier (e.g., CVE-2026-0001).",
+          "minLength": 9,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240
+        },
+        "description": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 4000
+        },
+        "vendor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+        },
+        "cvssScore": {
+          "type": "number",
+          "description": "CVSS base score between 0.0 and 10.0."
+        },
+        "cvssVector": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 128
+        },
+        "source": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "publishedAt": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["cveId", "title", "description", "vendor", "product", "severity", "cvssScore", "cvssVector", "source", "publishedAt", "createdAt", "updatedAt"]
+    },
+    "KevEntry": {
+      "title": "KevEntry",
+      "description": "Public read-only Known Exploited Vulnerability entry.",
+      "type": "object",
+      "properties": {
+        "kevId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "cveId": {
+          "type": "string",
+          "minLength": 9,
+          "maxLength": 32
+        },
+        "vendorProject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "vulnerabilityName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240
+        },
+        "shortDescription": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 2000
+        },
+        "requiredAction": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "knownRansomwareCampaignUse": {
+          "type": "string",
+          "enum": ["Known", "Unknown"]
+        },
+        "dateAdded": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 40
+        },
+        "dueDate": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["kevId", "cveId", "vendorProject", "product", "vulnerabilityName", "shortDescription", "requiredAction", "knownRansomwareCampaignUse", "dateAdded", "dueDate", "createdAt", "updatedAt"]
+    },
+    "ThreatIndicator": {
+      "title": "ThreatIndicator",
+      "description": "Public read-only defanged malware or network indicator.",
+      "type": "object",
+      "properties": {
+        "indicatorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "indicatorType": {
+          "type": "string",
+          "enum": ["url", "domain", "ip", "sha256", "md5"]
+        },
+        "defangedValue": {
+          "type": "string",
+          "description": "Defanged indicator text (e.g., hxxps://example[.]invalid).",
+          "minLength": 3,
+          "maxLength": 512
+        },
+        "malwareFamily": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["indicatorId", "indicatorType", "defangedValue", "malwareFamily", "severity", "source", "createdAt", "updatedAt"]
+    },
+    "SecurityAdvisory": {
+      "title": "SecurityAdvisory",
+      "description": "Public read-only vendor or open-source security bulletin.",
+      "type": "object",
+      "properties": {
+        "advisoryId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 3000
+        },
+        "ecosystem": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 512
+        },
+        "publishedAt": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["advisoryId", "title", "summary", "ecosystem", "severity", "sourceUrl", "publishedAt", "createdAt", "updatedAt"]
+    },
+    "ScamReport": {
+      "title": "ScamReport",
+      "description": "Submitted scam or phishing report enforced with pending moderation on creation.",
+      "type": "object",
+      "properties": {
+        "reportId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reporterUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "enum": ["phishing_url", "otp_scam", "brand_impersonation", "invoice_fraud", "fake_job", "other"]
+        },
+        "defangedIndicator": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 512
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 2500
+        },
+        "moderationStatus": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected", "needs_more_info"]
+        },
+        "moderatorNotes": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "reviewedBy": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["reportId", "reporterUid", "title", "category", "defangedIndicator", "description", "moderationStatus", "moderatorNotes", "reviewedBy", "createdAt", "updatedAt"]
+    },
+    "Watchlist": {
+      "title": "Watchlist",
+      "description": "User-owned watchlist entry isolated to its creator.",
+      "type": "object",
+      "properties": {
+        "watchlistId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "itemType": {
+          "type": "string",
+          "enum": ["vendor_keyword", "cve_id", "domain_pattern", "product_cpe"]
+        },
+        "targetValue": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 180
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 600
+        },
+        "severityFilter": {
+          "type": "string",
+          "enum": ["ALL", "MEDIUM_PLUS", "HIGH_PLUS", "CRITICAL_ONLY"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["watchlistId", "userId", "itemType", "targetValue", "notes", "severityFilter", "createdAt", "updatedAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User-specific alert notification.",
+      "type": "object",
+      "properties": {
+        "notificationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "message": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "category": {
+          "type": "string",
+          "enum": ["watchlist_match", "moderation_update", "security_notice", "system"]
+        },
+        "isRead": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["notificationId", "userId", "title", "message", "category", "isRead", "createdAt", "updatedAt"]
+    },
+    "DataSource": {
+      "title": "DataSource",
+      "description": "Admin-managed public threat intelligence data source definition.",
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140
+        },
+        "endpointUrl": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 512
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["nvd_cve", "cisa_kev", "urlhaus", "osv_advisory", "community_phish"]
+        },
+        "isEnabled": {
+          "type": "boolean"
+        },
+        "costTier": {
+          "type": "string",
+          "enum": ["FREE_PUBLIC_ZERO_COST"]
+        },
+        "lastSyncStatus": {
+          "type": "string",
+          "enum": ["NOT_CONNECTED", "READY", "SYNCED", "ERROR"]
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["sourceId", "name", "endpointUrl", "sourceType", "isEnabled", "costTier", "lastSyncStatus", "updatedBy", "createdAt", "updatedAt"]
+    },
+    "SyncLog": {
+      "title": "SyncLog",
+      "description": "Immutable admin log of manual public feed synchronization events.",
+      "type": "object",
+      "properties": {
+        "logId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "triggeredBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "status": {
+          "type": "string",
+          "enum": ["STARTED", "COMPLETED", "FAILED"]
+        },
+        "recordsProcessed": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["logId", "sourceId", "triggeredBy", "status", "recordsProcessed", "message", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable append-only security audit log record.",
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "actorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "action": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "targetCollection": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64
+        },
+        "targetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 600
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["auditId", "actorUid", "action", "targetCollection", "targetId", "summary", "createdAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User-submitted platform feedback or defensive tool report.",
+      "type": "object",
+      "properties": {
+        "feedbackId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "category": {
+          "type": "string",
+          "enum": ["bug_report", "feature_request", "false_positive", "documentation", "appeal_request"]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 2000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "reviewed", "closed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["feedbackId", "userId", "category", "message", "status", "createdAt", "updatedAt"]
+    },
+    "AppSetting": {
+      "title": "AppSetting",
+      "description": "Admin-managed application configuration setting with public read visibility.",
+      "type": "object",
+      "properties": {
+        "settingId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "description": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 500
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["settingId", "key", "value", "description", "updatedBy", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Private user profiles accessible only by the account owner or platform admin."
+    },
+    "/roles/{userId}": {
+      "schema": { "$ref": "#/entities/Role" },
+      "description": "Authoritative RBAC role assignments writable only by verified admins."
+    },
+    "/cves/{cveId}": {
+      "schema": { "$ref": "#/entities/CveRecord" },
+      "description": "Public read-only CVE vulnerability records writable only by admins."
+    },
+    "/kev_entries/{kevId}": {
+      "schema": { "$ref": "#/entities/KevEntry" },
+      "description": "Public read-only CISA KEV catalog records writable only by admins."
+    },
+    "/threat_indicators/{indicatorId}": {
+      "schema": { "$ref": "#/entities/ThreatIndicator" },
+      "description": "Public read-only defanged malware and threat indicators writable only by admins."
+    },
+    "/security_advisories/{advisoryId}": {
+      "schema": { "$ref": "#/entities/SecurityAdvisory" },
+      "description": "Public read-only security bulletins writable only by admins."
+    },
+    "/scam_reports/{reportId}": {
+      "schema": { "$ref": "#/entities/ScamReport" },
+      "description": "Community scam reports requiring pending moderation on creation; only approved reports are publicly readable."
+    },
+    "/watchlists/{watchlistId}": {
+      "schema": { "$ref": "#/entities/Watchlist" },
+      "description": "User-owned watchlist records isolated by userId == request.auth.uid."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User-owned alert notifications isolated by userId == request.auth.uid."
+    },
+    "/data_sources/{sourceId}": {
+      "schema": { "$ref": "#/entities/DataSource" },
+      "description": "Publicly readable threat feed registry managed exclusively by admins."
+    },
+    "/sync_logs/{logId}": {
+      "schema": { "$ref": "#/entities/SyncLog" },
+      "description": "Admin-only immutable synchronization logs."
+    },
+    "/audit_logs/{auditId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Append-only immutable security audit trail."
+    },
+    "/feedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/Feedback" },
+      "description": "User-submitted feedback isolated to the submitting user and admins."
+    },
+    "/app_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/AppSetting" },
+      "description": "Global application settings readable publicly and writable only by admins."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <AssemblyName>KironProhori.Agent.Desktop</AssemblyName>
+    <RootNamespace>KironProhori.Agent.Desktop</RootNamespace>
+    <Version>0.7.0-phase7a</Version>
+    <Description>KIRON PROHORI Phase 7A Windows 10/11 (64-bit) Endpoint Security Desktop Agent</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KironProhori.Agent.Core\KironProhori.Agent.Core.csproj" />
+  </ItemGroup>
+
+</Project>

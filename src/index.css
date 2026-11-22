@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-canvas: #080d1a;
+    --bg-surface: #0e1628;
+    --bg-elevated: #141f38;
+    --border-subtle: #1e2d4a;
+    --border-focus: #3b82f6;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-primary: #2563eb;
+    --accent-hover: #3b82f6;
+    --font-display: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
+    --font-sans: 'Public Sans', 'Hind Siliguri', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  code, pre, .font-mono, .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom subtle scrollbars for high-density data tables and sidebar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080d1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e2d4a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

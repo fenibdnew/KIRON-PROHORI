@@ -1,0 +1,573 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // 0. GLOBAL SAFETY NET (Default-Deny Catch-All)
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================================
+    // 1. HARDENED GLOBAL PRIMITIVES
+    // =========================================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Zero-DB-read check for bootstrapped admin (safe for allow list rules)
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'mdarifab50@gmail.com';
+    }
+
+    // Full RBAC admin check (bootstrapped owner OR authoritative /roles/{uid} document)
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/roles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // =========================================================================
+    // 2. VALIDATION BLUEPRINTS (Pillar 2 — Anti-Update-Gap)
+    // =========================================================================
+
+    function isValidUser(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'organization', 'preferredLanguage', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'organization', 'preferredLanguage', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid == userId && data.uid == request.auth.uid &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 && data.email == request.auth.token.email &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+        data.organization is string && data.organization.size() <= 120 &&
+        data.preferredLanguage is string && data.preferredLanguage.size() == 2 && (data.preferredLanguage == 'en' || data.preferredLanguage == 'bn') &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidRole(data, targetUserId) {
+      return data.keys().hasAll(['uid', 'role', 'assignedBy', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'role', 'assignedBy', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid == targetUserId &&
+        data.role is string && data.role.size() >= 4 && data.role.size() <= 16 &&
+        (data.role == 'user' || data.role == 'analyst' || data.role == 'moderator' || data.role == 'admin') &&
+        data.assignedBy is string && data.assignedBy.size() >= 1 && data.assignedBy.size() <= 128 && data.assignedBy == request.auth.uid &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCve(data, cveId) {
+      return data.keys().hasAll(['cveId', 'title', 'description', 'vendor', 'product', 'severity', 'cvssScore', 'cvssVector', 'source', 'publishedAt', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['cveId', 'title', 'description', 'vendor', 'product', 'severity', 'cvssScore', 'cvssVector', 'source', 'publishedAt', 'createdAt', 'updatedAt']) &&
+        data.cveId is string && data.cveId.size() >= 9 && data.cveId.size() <= 32 && data.cveId == cveId &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 240 &&
+        data.description is string && data.description.size() >= 5 && data.description.size() <= 4000 &&
+        data.vendor is string && data.vendor.size() >= 1 && data.vendor.size() <= 120 &&
+        data.product is string && data.product.size() >= 1 && data.product.size() <= 120 &&
+        data.severity is string && data.severity.size() >= 3 && data.severity.size() <= 16 &&
+        (data.severity == 'LOW' || data.severity == 'MEDIUM' || data.severity == 'HIGH' || data.severity == 'CRITICAL') &&
+        (data.cvssScore is int || data.cvssScore is float) && data.cvssScore >= 0 && data.cvssScore <= 10 &&
+        data.cvssVector is string && data.cvssVector.size() >= 5 && data.cvssVector.size() <= 128 &&
+        data.source is string && data.source.size() >= 2 && data.source.size() <= 100 &&
+        data.publishedAt is string && data.publishedAt.size() >= 4 && data.publishedAt.size() <= 64 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidKevEntry(data, kevId) {
+      return data.keys().hasAll(['kevId', 'cveId', 'vendorProject', 'product', 'vulnerabilityName', 'shortDescription', 'requiredAction', 'knownRansomwareCampaignUse', 'dateAdded', 'dueDate', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['kevId', 'cveId', 'vendorProject', 'product', 'vulnerabilityName', 'shortDescription', 'requiredAction', 'knownRansomwareCampaignUse', 'dateAdded', 'dueDate', 'createdAt', 'updatedAt']) &&
+        data.kevId is string && data.kevId.size() >= 4 && data.kevId.size() <= 64 && data.kevId == kevId &&
+        data.cveId is string && data.cveId.size() >= 9 && data.cveId.size() <= 32 &&
+        data.vendorProject is string && data.vendorProject.size() >= 1 && data.vendorProject.size() <= 140 &&
+        data.product is string && data.product.size() >= 1 && data.product.size() <= 140 &&
+        data.vulnerabilityName is string && data.vulnerabilityName.size() >= 3 && data.vulnerabilityName.size() <= 240 &&
+        data.shortDescription is string && data.shortDescription.size() >= 5 && data.shortDescription.size() <= 2000 &&
+        data.requiredAction is string && data.requiredAction.size() >= 3 && data.requiredAction.size() <= 1000 &&
+        data.knownRansomwareCampaignUse is string && data.knownRansomwareCampaignUse.size() >= 5 && data.knownRansomwareCampaignUse.size() <= 16 &&
+        (data.knownRansomwareCampaignUse == 'Known' || data.knownRansomwareCampaignUse == 'Unknown') &&
+        data.dateAdded is string && data.dateAdded.size() >= 4 && data.dateAdded.size() <= 40 &&
+        data.dueDate is string && data.dueDate.size() >= 4 && data.dueDate.size() <= 40 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidThreatIndicator(data, indicatorId) {
+      return data.keys().hasAll(['indicatorId', 'indicatorType', 'defangedValue', 'malwareFamily', 'severity', 'source', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['indicatorId', 'indicatorType', 'defangedValue', 'malwareFamily', 'severity', 'source', 'createdAt', 'updatedAt']) &&
+        data.indicatorId is string && data.indicatorId.size() >= 1 && data.indicatorId.size() <= 128 && data.indicatorId == indicatorId &&
+        data.indicatorType is string && data.indicatorType.size() >= 2 && data.indicatorType.size() <= 16 &&
+        (data.indicatorType == 'url' || data.indicatorType == 'domain' || data.indicatorType == 'ip' || data.indicatorType == 'sha256' || data.indicatorType == 'md5') &&
+        data.defangedValue is string && data.defangedValue.size() >= 3 && data.defangedValue.size() <= 512 &&
+        data.malwareFamily is string && data.malwareFamily.size() >= 1 && data.malwareFamily.size() <= 120 &&
+        data.severity is string && data.severity.size() >= 3 && data.severity.size() <= 16 &&
+        (data.severity == 'LOW' || data.severity == 'MEDIUM' || data.severity == 'HIGH' || data.severity == 'CRITICAL') &&
+        data.source is string && data.source.size() >= 2 && data.source.size() <= 100 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSecurityAdvisory(data, advisoryId) {
+      return data.keys().hasAll(['advisoryId', 'title', 'summary', 'ecosystem', 'severity', 'sourceUrl', 'publishedAt', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['advisoryId', 'title', 'summary', 'ecosystem', 'severity', 'sourceUrl', 'publishedAt', 'createdAt', 'updatedAt']) &&
+        data.advisoryId is string && data.advisoryId.size() >= 2 && data.advisoryId.size() <= 128 && data.advisoryId == advisoryId &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 240 &&
+        data.summary is string && data.summary.size() >= 5 && data.summary.size() <= 3000 &&
+        data.ecosystem is string && data.ecosystem.size() >= 1 && data.ecosystem.size() <= 100 &&
+        data.severity is string && data.severity.size() >= 3 && data.severity.size() <= 16 &&
+        (data.severity == 'LOW' || data.severity == 'MEDIUM' || data.severity == 'HIGH' || data.severity == 'CRITICAL') &&
+        data.sourceUrl is string && data.sourceUrl.size() >= 8 && data.sourceUrl.size() <= 512 &&
+        data.publishedAt is string && data.publishedAt.size() >= 4 && data.publishedAt.size() <= 64 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidScamReport(data, reportId) {
+      return data.keys().hasAll(['reportId', 'reporterUid', 'title', 'category', 'defangedIndicator', 'description', 'moderationStatus', 'moderatorNotes', 'reviewedBy', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['reportId', 'reporterUid', 'title', 'category', 'defangedIndicator', 'description', 'moderationStatus', 'moderatorNotes', 'reviewedBy', 'createdAt', 'updatedAt']) &&
+        data.reportId is string && data.reportId.size() >= 1 && data.reportId.size() <= 128 && data.reportId == reportId &&
+        data.reporterUid is string && data.reporterUid.size() >= 1 && data.reporterUid.size() <= 128 &&
+        data.title is string && data.title.size() >= 5 && data.title.size() <= 200 &&
+        data.category is string && data.category.size() >= 4 && data.category.size() <= 32 &&
+        (data.category == 'phishing_url' || data.category == 'otp_scam' || data.category == 'brand_impersonation' || data.category == 'invoice_fraud' || data.category == 'fake_job' || data.category == 'other') &&
+        data.defangedIndicator is string && data.defangedIndicator.size() >= 3 && data.defangedIndicator.size() <= 512 &&
+        data.description is string && data.description.size() >= 10 && data.description.size() <= 2500 &&
+        data.moderationStatus is string && data.moderationStatus.size() >= 7 && data.moderationStatus.size() <= 16 &&
+        (data.moderationStatus == 'pending' || data.moderationStatus == 'approved' || data.moderationStatus == 'rejected' || data.moderationStatus == 'needs_more_info') &&
+        data.moderatorNotes is string && data.moderatorNotes.size() <= 1000 &&
+        data.reviewedBy is string && data.reviewedBy.size() <= 128 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidWatchlist(data, watchlistId) {
+      return data.keys().hasAll(['watchlistId', 'userId', 'itemType', 'targetValue', 'notes', 'severityFilter', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['watchlistId', 'userId', 'itemType', 'targetValue', 'notes', 'severityFilter', 'createdAt', 'updatedAt']) &&
+        data.watchlistId is string && data.watchlistId.size() >= 1 && data.watchlistId.size() <= 128 && data.watchlistId == watchlistId &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+        data.itemType is string && data.itemType.size() >= 6 && data.itemType.size() <= 32 &&
+        (data.itemType == 'vendor_keyword' || data.itemType == 'cve_id' || data.itemType == 'domain_pattern' || data.itemType == 'product_cpe') &&
+        data.targetValue is string && data.targetValue.size() >= 2 && data.targetValue.size() <= 180 &&
+        data.notes is string && data.notes.size() <= 600 &&
+        data.severityFilter is string && data.severityFilter.size() >= 3 && data.severityFilter.size() <= 24 &&
+        (data.severityFilter == 'ALL' || data.severityFilter == 'MEDIUM_PLUS' || data.severityFilter == 'HIGH_PLUS' || data.severityFilter == 'CRITICAL_ONLY') &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidNotification(data, notificationId) {
+      return data.keys().hasAll(['notificationId', 'userId', 'title', 'message', 'category', 'isRead', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['notificationId', 'userId', 'title', 'message', 'category', 'isRead', 'createdAt', 'updatedAt']) &&
+        data.notificationId is string && data.notificationId.size() >= 1 && data.notificationId.size() <= 128 && data.notificationId == notificationId &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 200 &&
+        data.message is string && data.message.size() >= 3 && data.message.size() <= 1000 &&
+        data.category is string && data.category.size() >= 6 && data.category.size() <= 32 &&
+        (data.category == 'watchlist_match' || data.category == 'moderation_update' || data.category == 'security_notice' || data.category == 'system') &&
+        data.isRead is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidDataSource(data, sourceId) {
+      return data.keys().hasAll(['sourceId', 'name', 'endpointUrl', 'sourceType', 'isEnabled', 'costTier', 'lastSyncStatus', 'updatedBy', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['sourceId', 'name', 'endpointUrl', 'sourceType', 'isEnabled', 'costTier', 'lastSyncStatus', 'updatedBy', 'createdAt', 'updatedAt']) &&
+        data.sourceId is string && data.sourceId.size() >= 1 && data.sourceId.size() <= 128 && data.sourceId == sourceId &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 140 &&
+        data.endpointUrl is string && data.endpointUrl.size() >= 8 && data.endpointUrl.size() <= 512 &&
+        data.sourceType is string && data.sourceType.size() >= 7 && data.sourceType.size() <= 32 &&
+        (data.sourceType == 'nvd_cve' || data.sourceType == 'cisa_kev' || data.sourceType == 'urlhaus' || data.sourceType == 'osv_advisory' || data.sourceType == 'community_phish') &&
+        data.isEnabled is bool &&
+        data.costTier is string && data.costTier.size() == 21 && data.costTier == 'FREE_PUBLIC_ZERO_COST' &&
+        data.lastSyncStatus is string && data.lastSyncStatus.size() >= 5 && data.lastSyncStatus.size() <= 16 &&
+        (data.lastSyncStatus == 'NOT_CONNECTED' || data.lastSyncStatus == 'READY' || data.lastSyncStatus == 'SYNCED' || data.lastSyncStatus == 'ERROR') &&
+        data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy == request.auth.uid &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSyncLog(data, logId) {
+      return data.keys().hasAll(['logId', 'sourceId', 'triggeredBy', 'status', 'recordsProcessed', 'message', 'createdAt']) &&
+        data.keys().hasOnly(['logId', 'sourceId', 'triggeredBy', 'status', 'recordsProcessed', 'message', 'createdAt']) &&
+        data.logId is string && data.logId.size() >= 1 && data.logId.size() <= 128 && data.logId == logId &&
+        data.sourceId is string && data.sourceId.size() >= 1 && data.sourceId.size() <= 128 &&
+        data.triggeredBy is string && data.triggeredBy.size() >= 1 && data.triggeredBy.size() <= 128 && data.triggeredBy == request.auth.uid &&
+        data.status is string && data.status.size() >= 6 && data.status.size() <= 16 &&
+        (data.status == 'STARTED' || data.status == 'COMPLETED' || data.status == 'FAILED') &&
+        data.recordsProcessed is int && data.recordsProcessed >= 0 && data.recordsProcessed <= 1000000 &&
+        data.message is string && data.message.size() >= 1 && data.message.size() <= 1000 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAuditLog(data, auditId) {
+      return data.keys().hasAll(['auditId', 'actorUid', 'action', 'targetCollection', 'targetId', 'summary', 'createdAt']) &&
+        data.keys().hasOnly(['auditId', 'actorUid', 'action', 'targetCollection', 'targetId', 'summary', 'createdAt']) &&
+        data.auditId is string && data.auditId.size() >= 1 && data.auditId.size() <= 128 && data.auditId == auditId &&
+        data.actorUid is string && data.actorUid.size() >= 1 && data.actorUid.size() <= 128 && data.actorUid == request.auth.uid &&
+        data.action is string && data.action.size() >= 2 && data.action.size() <= 120 &&
+        data.targetCollection is string && data.targetCollection.size() >= 2 && data.targetCollection.size() <= 64 &&
+        data.targetId is string && data.targetId.size() >= 1 && data.targetId.size() <= 128 &&
+        data.summary is string && data.summary.size() >= 3 && data.summary.size() <= 600 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidFeedback(data, feedbackId) {
+      return data.keys().hasAll(['feedbackId', 'userId', 'category', 'message', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['feedbackId', 'userId', 'category', 'message', 'status', 'createdAt', 'updatedAt']) &&
+        data.feedbackId is string && data.feedbackId.size() >= 1 && data.feedbackId.size() <= 128 && data.feedbackId == feedbackId &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.category is string && data.category.size() >= 10 && data.category.size() <= 32 &&
+        (data.category == 'bug_report' || data.category == 'feature_request' || data.category == 'false_positive' || data.category == 'documentation' || data.category == 'appeal_request') &&
+        data.message is string && data.message.size() >= 5 && data.message.size() <= 2000 &&
+        data.status is string && data.status.size() >= 4 && data.status.size() <= 16 &&
+        (data.status == 'open' || data.status == 'reviewed' || data.status == 'closed') &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAppSetting(data, settingId) {
+      return data.keys().hasAll(['settingId', 'key', 'value', 'description', 'updatedBy', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['settingId', 'key', 'value', 'description', 'updatedBy', 'createdAt', 'updatedAt']) &&
+        data.settingId is string && data.settingId.size() >= 1 && data.settingId.size() <= 128 && data.settingId == settingId &&
+        data.key is string && data.key.size() >= 2 && data.key.size() <= 120 &&
+        data.value is string && data.value.size() >= 1 && data.value.size() <= 1000 &&
+        data.description is string && data.description.size() >= 3 && data.description.size() <= 500 &&
+        data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 && data.updatedBy == request.auth.uid &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // =========================================================================
+    // 3. COLLECTION MATCH BLOCKS (All 14 Collections)
+    // =========================================================================
+
+    // 1. users — Private PII-Isolated User Profiles (Never contains RBAC roles)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUser(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidUser(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().email == existing().email &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time && (
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'organization', 'preferredLanguage', 'updatedAt'])) ||
+          isAdmin()
+        );
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // 2. roles — Authoritative Server-Side RBAC Assignments (Admin-Only Writes)
+    match /roles/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidRole(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidRole(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['role', 'assignedBy', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // 3. cves — Public Read-Only Vulnerability Catalog
+    match /cves/{cveId} {
+      allow get: if isValidId(cveId);
+      allow list: if true;
+      allow create: if isVerifiedUser() &&
+        isValidId(cveId) &&
+        isValidCve(incoming(), cveId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(cveId) &&
+        isValidCve(incoming(), cveId) &&
+        incoming().cveId == existing().cveId &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'vendor', 'product', 'severity', 'cvssScore', 'cvssVector', 'source', 'publishedAt', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(cveId) && isAdmin();
+    }
+
+    // 4. kev_entries — Public Read-Only CISA KEV Catalog
+    match /kev_entries/{kevId} {
+      allow get: if isValidId(kevId);
+      allow list: if true;
+      allow create: if isVerifiedUser() &&
+        isValidId(kevId) &&
+        isValidKevEntry(incoming(), kevId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(kevId) &&
+        isValidKevEntry(incoming(), kevId) &&
+        incoming().kevId == existing().kevId &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['cveId', 'vendorProject', 'product', 'vulnerabilityName', 'shortDescription', 'requiredAction', 'knownRansomwareCampaignUse', 'dateAdded', 'dueDate', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(kevId) && isAdmin();
+    }
+
+    // 5. threat_indicators — Public Read-Only Defanged Malware Indicators
+    match /threat_indicators/{indicatorId} {
+      allow get: if isValidId(indicatorId);
+      allow list: if true;
+      allow create: if isVerifiedUser() &&
+        isValidId(indicatorId) &&
+        isValidThreatIndicator(incoming(), indicatorId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(indicatorId) &&
+        isValidThreatIndicator(incoming(), indicatorId) &&
+        incoming().indicatorId == existing().indicatorId &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['indicatorType', 'defangedValue', 'malwareFamily', 'severity', 'source', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(indicatorId) && isAdmin();
+    }
+
+    // 6. security_advisories — Public Read-Only Security Bulletins
+    match /security_advisories/{advisoryId} {
+      allow get: if isValidId(advisoryId);
+      allow list: if true;
+      allow create: if isVerifiedUser() &&
+        isValidId(advisoryId) &&
+        isValidSecurityAdvisory(incoming(), advisoryId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(advisoryId) &&
+        isValidSecurityAdvisory(incoming(), advisoryId) &&
+        incoming().advisoryId == existing().advisoryId &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'summary', 'ecosystem', 'severity', 'sourceUrl', 'publishedAt', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(advisoryId) && isAdmin();
+    }
+
+    // 7. scam_reports — Pending Moderation Queue on Submit; Approved Reports Public
+    match /scam_reports/{reportId} {
+      allow get: if isValidId(reportId) && (
+        existing().moderationStatus == 'approved' ||
+        (isSignedIn() && existing().reporterUid == request.auth.uid) ||
+        isAdmin()
+      );
+      allow list: if resource.data.moderationStatus == 'approved' ||
+        (isSignedIn() && resource.data.reporterUid == request.auth.uid) ||
+        isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(reportId) &&
+        isValidScamReport(incoming(), reportId) &&
+        incoming().reporterUid == request.auth.uid &&
+        incoming().moderationStatus == 'pending' &&
+        incoming().moderatorNotes == '' &&
+        incoming().reviewedBy == '' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isVerifiedUser() &&
+        isValidId(reportId) &&
+        isValidScamReport(incoming(), reportId) &&
+        incoming().reportId == existing().reportId &&
+        incoming().reporterUid == existing().reporterUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().reviewedBy == request.auth.uid &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['moderationStatus', 'moderatorNotes', 'reviewedBy', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(reportId) && isAdmin();
+    }
+
+    // 8. watchlists — Strictly User-Owned Watchlist Records
+    match /watchlists/{watchlistId} {
+      allow get: if isValidId(watchlistId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(watchlistId) &&
+        isValidWatchlist(incoming(), watchlistId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isVerifiedUser() &&
+        isValidId(watchlistId) &&
+        isValidWatchlist(incoming(), watchlistId) &&
+        existing().userId == request.auth.uid &&
+        incoming().watchlistId == existing().watchlistId &&
+        incoming().userId == existing().userId &&
+        incoming().itemType == existing().itemType &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['targetValue', 'notes', 'severityFilter', 'updatedAt']) ||
+          isAdmin()
+        );
+      allow delete: if isValidId(watchlistId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // 9. notifications — User-Specific In-App Notifications
+    match /notifications/{notificationId} {
+      allow get: if isValidId(notificationId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(notificationId) &&
+        isValidNotification(incoming(), notificationId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (incoming().userId == request.auth.uid || isAdmin()) &&
+        exists(/databases/$(database)/documents/users/$(incoming().userId));
+      allow update: if isVerifiedUser() &&
+        isValidId(notificationId) &&
+        isValidNotification(incoming(), notificationId) &&
+        incoming().notificationId == existing().notificationId &&
+        incoming().userId == existing().userId &&
+        incoming().title == existing().title &&
+        incoming().message == existing().message &&
+        incoming().category == existing().category &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['isRead', 'updatedAt'])) ||
+          isAdmin()
+        );
+      allow delete: if isValidId(notificationId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // 10. data_sources — Public Read Transparency; Admin-Only Management
+    match /data_sources/{sourceId} {
+      allow get: if isValidId(sourceId);
+      allow list: if true;
+      allow create: if isVerifiedUser() &&
+        isValidId(sourceId) &&
+        isValidDataSource(incoming(), sourceId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(sourceId) &&
+        isValidDataSource(incoming(), sourceId) &&
+        incoming().sourceId == existing().sourceId &&
+        incoming().costTier == existing().costTier &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'endpointUrl', 'isEnabled', 'lastSyncStatus', 'updatedBy', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(sourceId) && isAdmin();
+    }
+
+    // 11. sync_logs — Admin-Only Append-Only Synchronization Logs
+    match /sync_logs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isVerifiedUser() &&
+        isValidId(logId) &&
+        isValidSyncLog(incoming(), logId) &&
+        incoming().createdAt == request.time &&
+        isAdmin() &&
+        exists(/databases/$(database)/documents/data_sources/$(incoming().sourceId));
+      allow update, delete: if false;
+    }
+
+    // 12. audit_logs — Append-Only Immutable Security Audit Trail
+    match /audit_logs/{auditId} {
+      allow get: if isValidId(auditId) && isSignedIn() && (existing().actorUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.actorUid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(auditId) &&
+        isValidAuditLog(incoming(), auditId) &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update, delete: if false;
+    }
+
+    // 13. feedback — User Feedback & False-Positive Reports
+    match /feedback/{feedbackId} {
+      allow get: if isValidId(feedbackId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser() &&
+        isValidId(feedbackId) &&
+        isValidFeedback(incoming(), feedbackId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'open' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isVerifiedUser() &&
+        isValidId(feedbackId) &&
+        isValidFeedback(incoming(), feedbackId) &&
+        incoming().feedbackId == existing().feedbackId &&
+        incoming().userId == existing().userId &&
+        incoming().category == existing().category &&
+        incoming().message == existing().message &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(feedbackId) && isAdmin();
+    }
+
+    // 14. app_settings — Public Read Configuration; Admin-Only Mutations
+    match /app_settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create: if isVerifiedUser() &&
+        isValidId(settingId) &&
+        isValidAppSetting(incoming(), settingId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isVerifiedUser() &&
+        isValidId(settingId) &&
+        isValidAppSetting(incoming(), settingId) &&
+        incoming().settingId == existing().settingId &&
+        incoming().key == existing().key &&
+        (incoming().createdAt == existing().createdAt || incoming().createdAt == request.time) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['value', 'description', 'updatedBy', 'createdAt', 'updatedAt']) &&
+        isAdmin();
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+  }
+}

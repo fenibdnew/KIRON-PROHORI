@@ -1,0 +1,224 @@
+<Window x:Class="KironProhori.Agent.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KIRON PROHORI (কিরণ প্রহরী) — Windows Endpoint Security Agent (Phase 7A User-Mode MVP)"
+        Width="1360"
+        Height="860"
+        MinWidth="1024"
+        MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        FontFamily="Segoe UI">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="265" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Navigation Sidebar (13 Mandatory Antivirus Navigation Views) -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource SurfaceCardBrush}"
+                BorderBrush="{DynamicResource BorderHairlineBrush}"
+                BorderThickness="0,0,1,0"
+                Padding="16">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+                    <TextBlock x:Name="BrandTitleText"
+                               Text="KIRON PROHORI"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource PrimaryTextBrush}" />
+                    <TextBlock x:Name="PhaseSubtitleText"
+                               Text="Phase 7A Windows Agent · $0 Budget"
+                               FontSize="11"
+                               Margin="0,4,0,0"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="ToggleLanguageBtn"
+                                Grid.Column="0"
+                                Content="English / বাংলা"
+                                Padding="8,6"
+                                Click="OnToggleLanguageClick" />
+                        <Button x:Name="ToggleThemeBtn"
+                                Grid.Column="2"
+                                Content="Dark / Light"
+                                Padding="8,6"
+                                Click="OnToggleThemeClick" />
+                    </Grid>
+                    <TextBlock Text="Co-Existent User-Mode · Defender Active"
+                               FontSize="10"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="SidebarNavPanel">
+                        <Button Content="01. Security Overview" Tag="Overview" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="02. Quick Scan" Tag="QuickScan" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="03. Full Scan" Tag="FullScan" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="04. Custom Scan" Tag="CustomScan" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="05. USB Scan" Tag="UsbScan" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="06. Protection Status" Tag="ProtectionStatus" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="07. Threat History" Tag="ThreatHistory" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="08. Quarantine" Tag="Quarantine" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="09. Firewall Status" Tag="Firewall" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="10. Windows Security" Tag="WindowsSecurity" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="11. Updates" Tag="Updates" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="12. Reports" Tag="Reports" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                        <Button Content="13. Settings" Tag="Settings" Margin="0,2" Padding="10,7" HorizontalContentAlignment="Left" Click="OnNavButtonClick" />
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Workspace Content -->
+        <Grid Grid.Column="1" Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Top Header & Quick Action Bar -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SurfaceCardBrush}"
+                    BorderBrush="{DynamicResource BorderHairlineBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="18">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Left">
+                        <TextBlock x:Name="ActiveSectionTitle"
+                                   Text="01. Security Overview &amp; Windows Defender Co-Existence"
+                                   FontSize="20"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}" />
+                        <TextBlock x:Name="CoexistenceNoticeText"
+                                   Text="Read-Only Windows Security Integration: Never disables Microsoft Defender or Windows Firewall. Never installs unsigned kernel drivers."
+                                   FontSize="12"
+                                   Margin="0,4,0,0"
+                                   Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="RunQuickScanBtn"
+                                Content="Run Quick Scan"
+                                Padding="14,8"
+                                Margin="0,0,8,0"
+                                Click="OnRunQuickScanClick" />
+                        <Button x:Name="RunEicarSelfTestBtn"
+                                Content="Harmless EICAR Verification"
+                                Padding="14,8"
+                                Margin="0,0,8,0"
+                                Click="OnRunEicarTestClick" />
+                        <Button x:Name="CancelScanBtn"
+                                Content="Cancel Active Scan"
+                                Padding="14,8"
+                                IsEnabled="False"
+                                Click="OnCancelScanClick" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Telemetry & Progress Strip -->
+            <Border Grid.Row="1"
+                    Margin="0,14,0,14"
+                    Background="{DynamicResource SurfaceCardBrush}"
+                    BorderBrush="{DynamicResource BorderHairlineBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="16">
+                <StackPanel>
+                    <TextBlock x:Name="ScanStatusSummaryText"
+                               Text="READY · Phase 7A User-Mode Modular Scanner Idle"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}" />
+                    <ProgressBar x:Name="ScanProgressBar"
+                                 Height="8"
+                                 Margin="0,8,0,8"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="0" />
+                    <TextBlock x:Name="TelemetrySummaryText"
+                               Text="Defender Status: Reading WMI..."
+                               FontSize="12"
+                               FontFamily="Consolas"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Dynamic Detail & Quarantine / Findings Table -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.25*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Findings / Navigation View Output -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource SurfaceCardBrush}"
+                        BorderBrush="{DynamicResource BorderHairlineBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="16">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <TextBlock Text="Scan Findings &amp; Modular Engine Output"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}" />
+                            <Button DockPanel.Dock="Right"
+                                    Content="Quarantine Selected (Confirm Required)"
+                                    Padding="10,4"
+                                    HorizontalAlignment="Right"
+                                    Click="OnQuarantineSelectedClick" />
+                        </DockPanel>
+                        <ListBox x:Name="FindingsListBox"
+                                 FontFamily="Consolas"
+                                 FontSize="12" />
+                    </DockPanel>
+                </Border>
+
+                <!-- Quarantine Vault & Windows Security Telemetry Output -->
+                <Border Grid.Column="2"
+                        Background="{DynamicResource SurfaceCardBrush}"
+                        BorderBrush="{DynamicResource BorderHairlineBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="16">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <TextBlock Text="Isolated Quarantine Vault (.kpq) &amp; Engine Status"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="Restore Selected (Confirm)"
+                                        Padding="10,4"
+                                        Margin="0,0,8,0"
+                                        Click="OnRestoreQuarantineClick" />
+                                <Button Content="Delete Permanently (Confirm)"
+                                        Padding="10,4"
+                                        Click="OnDeleteQuarantineClick" />
+                            </StackPanel>
+                        </StackPanel>
+                        <ListBox x:Name="QuarantineAndStatusListBox"
+                                 FontFamily="Consolas"
+                                 FontSize="12" />
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

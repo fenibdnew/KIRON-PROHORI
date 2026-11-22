@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <RootNamespace>KironProhori.Agent.Core</RootNamespace>
+    <AssemblyName>KironProhori.Agent.Core</AssemblyName>
+    <Version>0.7.0-phase7a</Version>
+    <Authors>KIRON PROHORI Security Engineering</Authors>
+    <Description>KIRON PROHORI Phase 7A Windows Endpoint Security Agent Core Library ($0 Zero-Cost Architecture)</Description>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

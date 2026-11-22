@@ -1,0 +1,18 @@
+/**
+ * KIRON PROHORI — Defensive Cybersecurity Command-Center Theme Tokens (/client/styles/theme.css)
+ * Imported alongside src/index.css for high-contrast, low-glare security operations center (SOC) clarity.
+ */
+
+:root {
+  --kp-bg-primary: #020617;
+  --kp-bg-surface: #0f172a;
+  --kp-bg-elevated: #1e293b;
+  --kp-border-subtle: #1e293b;
+  --kp-text-primary: #f8fafc;
+  --kp-text-secondary: #94a3b8;
+  --kp-accent-emerald: #10b981;
+  --kp-severity-critical: #f43f5e;
+  --kp-severity-high: #f97316;
+  --kp-severity-medium: #f59e0b;
+  --kp-severity-low: #38bdf8;
+}

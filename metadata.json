@@ -1,0 +1,6 @@
+{
+  "name": "KIRON PROHORI — Cyber Threat Intelligence Platform",
+  "description": "Independent defensive cybersecurity intelligence platform helping IT technicians, security researchers, small businesses, and users understand publicly documented vulnerabilities, malware indicators, and online scams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
