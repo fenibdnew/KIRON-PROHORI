@@ -1,0 +1,62 @@
+=============================================================================
+KIRON PROHORI — Windows Security & Antivirus V1.0 (User & Installation Guide)
+=============================================================================
+Developer & Publisher : ARIFUZZAMAN KIRON
+Target OS             : Windows 10 x64 (Build 19041+) & Windows 11 x64
+Privacy Policy        : NO TELEMETRY BY DEFAULT · Zero Automatic File Uploads
+=============================================================================
+
+STEP 1 — VERIFY DOWNLOAD INTEGRITY (SHA-256)
+--------------------------------------------
+1. Download KIRON-PROHORI-Setup-x64.exe and SHA256SUMS.txt from the official
+   GitHub Releases page.
+2. Open Windows PowerShell in your Downloads folder and run:
+     Get-FileHash .\KIRON-PROHORI-Setup-x64.exe -Algorithm SHA256
+3. Verify that the output hash matches the hash in SHA256SUMS.txt.
+
+STEP 2 — INSTALL KIRON PROHORI ON WINDOWS 10 / 11 (x64)
+-------------------------------------------------------
+1. Double-click KIRON-PROHORI-Setup-x64.exe.
+2. Approve the Windows User Account Control (UAC) Administrator prompt.
+3. Choose your installation directory (Default: C:\Program Files\KIRON PROHORI).
+4. Select optional tasks:
+   - Create a Desktop shortcut
+   - Launch KIRON PROHORI Security Tray Companion at Windows sign-in
+   - Install and start KIRON PROHORI Windows Background Service (KironProhoriSecurityService)
+   - Stage Chrome & Microsoft Edge Browser Protection Extension files
+5. Click Install and launch KIRON PROHORI.
+
+STEP 3 — ENABLE CHROME & MICROSOFT EDGE BROWSER PROTECTION (USER-CONSENTED)
+---------------------------------------------------------------------------
+KIRON PROHORI never silently modifies your browser settings. To enable Web &
+Download Protection:
+1. Open Google Chrome (chrome://extensions) or Microsoft Edge (edge://extensions).
+2. Enable "Developer mode" (or install from the official store once published).
+3. Click "Load unpacked" and select:
+     C:\Program Files\KIRON PROHORI\browser-extension
+4. Copy the generated 32-character Extension ID and run in PowerShell:
+     powershell -ExecutionPolicy Bypass -File "C:\Program Files\KIRON PROHORI\browser-extension\native-host\register-native-host.ps1" -ExtensionId <YOUR_EXTENSION_ID>
+
+STEP 4 — RUNNING SCANS & MANAGING QUARANTINE
+--------------------------------------------
+- Quick Scan: Scans high-risk startup, downloads, and active user directories.
+- Full Scan: Scans all accessible local drives with low-resource CPU throttling.
+- Custom Scan / USB Scan: Scans specific folders, single files, or removable drives.
+- Quarantine First Policy: Detected threats are isolated in the local Quarantine
+  Vault (.kpq) only with your approval. Permanent deletion requires a separate
+  explicit confirmation.
+
+STEP 5 — REPAIR OR SAFE UNINSTALL
+---------------------------------
+- To uninstall, open Windows Settings -> Apps -> Installed Apps -> KIRON PROHORI -> Uninstall.
+- The uninstaller safely stops and removes KironProhoriSecurityService, removes
+  only application-owned binaries under C:\Program Files\KIRON PROHORI, and asks
+  your explicit permission before keeping or deleting your local Quarantine Vault
+  (%LOCALAPPDATA%\KironProhori). It never deletes unrelated user files.
+
+SECURITY CONTACT
+----------------
+Developer: ARIFUZZAMAN KIRON
+Security Reporting: Report vulnerabilities or false positives via the official
+GitHub Repository Security tab or security@kironprohori.security.
+=============================================================================

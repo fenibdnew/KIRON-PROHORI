@@ -5,18 +5,20 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using KironProhori.Agent.Core.Exclusions;
 using KironProhori.Agent.Core.Models;
 using KironProhori.Agent.Core.Scanning;
 
 namespace KironProhori.Agent.Core.Quarantine;
 
 /// <summary>
-/// Safe Quarantine Manager for KIRON PROHORI Phase 7A.
+/// Safe Quarantine &amp; Threat Remediation Manager for KIRON PROHORI Phase 7A.
 /// Safety Guarantees:
 /// 1. NEVER silently quarantines, restores, or deletes any file. Explicit userConfirmed == true is mandatory.
-/// 2. Protects critical Windows OS directories (%WINDIR%\System32, SysWOW64, WinSxS) from accidental quarantine.
-/// 3. Neutralizes quarantined files via reversible XOR framing (.kpq extension) so they cannot be accidentally executed.
-/// 4. Stores original file metadata in an atomic JSON manifest and logs every action to quarantine-audit.jsonl.
+/// 2. NEVER quarantines or removes KIRON-excluded items (checked against ExclusionManager).
+/// 3. Protects critical Windows OS directories (%WINDIR%\System32, SysWOW64, WinSxS) from accidental quarantine.
+/// 4. Neutralizes quarantined files via reversible XOR framing (.kpq extension) so they cannot be accidentally executed.
+/// 5. Supports all 5 remediation actions: Quarantine, Restore, PermanentDelete, IgnoreOnce, AddExclusion.
 /// </summary>
 public sealed class QuarantineManager
 {
@@ -30,10 +32,12 @@ public sealed class QuarantineManager
     private readonly string _vaultPayloadsDir;
     private readonly string _manifestFilePath;
     private readonly string _auditLogFilePath;
+    private readonly ExclusionManager? _exclusionManager;
     private readonly SemaphoreSlim _mutex = new(1, 1);
 
-    public QuarantineManager(string? customQuarantineRoot = null)
+    public QuarantineManager(string? customQuarantineRoot = null, ExclusionManager? exclusionManager = null)
     {
+        _exclusionManager = exclusionManager;
         _quarantineRootDir = !string.IsNullOrWhiteSpace(customQuarantineRoot)
             ? customQuarantineRoot
             : Path.Combine(
@@ -53,6 +57,7 @@ public sealed class QuarantineManager
 
     /// <summary>
     /// Isolates a detected or suspicious file into the Quarantine Vault ONLY after explicit user confirmation.
+    /// Blocks quarantine if the path is in KIRON Exclusions or inside protected Windows system folders.
     /// </summary>
     public async Task<QuarantineEntry> QuarantineFileAsync(
         ScanFinding finding,
@@ -72,6 +77,21 @@ public sealed class QuarantineManager
 
             throw new InvalidOperationException(
                 "SECURITY_POLICY_VIOLATION: Explicit user confirmation (userConfirmed: true) is required before quarantining any file.");
+        }
+
+        if (_exclusionManager != null && _exclusionManager.IsPathExcluded(finding.FilePath))
+        {
+            await AppendAuditLogAsync(
+                quarantineId: "N/A",
+                action: "BLOCKED_EXCLUDED_PATH",
+                originalPath: finding.FilePath,
+                sha256: finding.Sha256Hash,
+                userConfirmed: true,
+                notes: "Refused to quarantine path because it is listed in KIRON Exclusions.",
+                cancellationToken).ConfigureAwait(false);
+
+            throw new InvalidOperationException(
+                $"EXCLUSION_POLICY_GUARD: Cannot quarantine '{finding.FilePath}' because it is protected by an active KIRON exclusion.");
         }
 
         if (string.IsNullOrWhiteSpace(finding.FilePath) || !File.Exists(finding.FilePath))
@@ -95,7 +115,6 @@ public sealed class QuarantineManager
             string payloadFileName = $"{quarantineId}.kpq";
             string vaultPayloadPath = Path.Combine(_vaultPayloadsDir, payloadFileName);
 
-            // Read source bytes and write XOR-isolated non-executable .kpq payload
             await TransformFileWithXorKeyAsync(fullSourcePath, vaultPayloadPath, cancellationToken).ConfigureAwait(false);
 
             var entry = new QuarantineEntry(
@@ -117,7 +136,6 @@ public sealed class QuarantineManager
             entries.Add(entry);
             await SaveManifestAtomicInternalAsync(entries, cancellationToken).ConfigureAwait(false);
 
-            // Only remove original file AFTER vault payload and atomic manifest are safely flushed
             File.Delete(fullSourcePath);
 
             await AppendAuditLogAsync(
@@ -135,6 +153,29 @@ public sealed class QuarantineManager
         {
             _mutex.Release();
         }
+    }
+
+    /// <summary>
+    /// Logs an "Ignore Once" user decision without touching the file on disk.
+    /// </summary>
+    public async Task IgnoreFindingOnceAsync(
+        ScanFinding finding,
+        bool userConfirmed,
+        CancellationToken cancellationToken = default)
+    {
+        if (!userConfirmed)
+        {
+            throw new InvalidOperationException("User confirmation is required to ignore a finding.");
+        }
+
+        await AppendAuditLogAsync(
+            quarantineId: "N/A",
+            action: "IGNORED_ONCE",
+            originalPath: finding.FilePath,
+            sha256: finding.Sha256Hash,
+            userConfirmed: true,
+            notes: $"User chose 'Ignore Once' for detection '{finding.DetectionName}'. File left in place.",
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -288,9 +329,6 @@ public sealed class QuarantineManager
         return logs;
     }
 
-    /// <summary>
-    /// Crash recovery routine: recovers from interrupted atomic temp manifest writes if the app crashed mid-save.
-    /// </summary>
     public async Task<int> RecoverAndVerifyVaultIntegrityAsync(CancellationToken cancellationToken = default)
     {
         await _mutex.WaitAsync(cancellationToken).ConfigureAwait(false);

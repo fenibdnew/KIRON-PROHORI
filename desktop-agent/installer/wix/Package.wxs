@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================================
+  KIRON PROHORI V1.0 — WiX Toolset v4 Enterprise MSI Installer Manifest
+  Target Output: KIRON-PROHORI-Setup-x64.msi
+  Publisher: ARIFUZZAMAN KIRON
+  Platform: Windows 10 x64 / Windows 11 x64
+  Supports: Clean Install, Major Upgrade, Repair Installation, Safe Uninstall
+  =============================================================================
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="KIRON PROHORI Windows Security &amp; Antivirus"
+           Manufacturer="ARIFUZZAMAN KIRON"
+           Version="1.0.0.0"
+           UpgradeCode="2944D822-43DC-46F2-875E-2B24F2FFA62E"
+           Scope="perMachine"
+           InstallerVersion="500"
+           Compressed="yes">
+
+    <SummaryInformation Description="KIRON PROHORI V1.0 Windows Security &amp; Antivirus (x64)"
+                        Manufacturer="ARIFUZZAMAN KIRON" />
+
+    <!-- Enforce 64-bit Windows 10 (Build 19041+) or Windows 11 -->
+    <Launch Condition="Installed OR (VersionNT64 &gt;= 603)"
+            Message="KIRON PROHORI V1.0 requires a 64-bit edition of Windows 10 or Windows 11." />
+
+    <!-- Major Upgrade & Repair Support -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of KIRON PROHORI is already installed."
+                  AllowSameVersionUpgrades="yes" />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Property for preserving user quarantine & settings during uninstall unless explicitly purged -->
+    <Property Id="PRESERVE_USER_DATA" Value="1" Secure="yes" />
+
+    <!-- Standard Directory Hierarchy (Strictly scoped to ProgramFiles64Folder\KIRON PROHORI) -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="KIRON PROHORI">
+        <Directory Id="SERVICEFOLDER" Name="service" />
+        <Directory Id="EXTENSIONFOLDER" Name="browser-extension" />
+        <Directory Id="DOCSFOLDER" Name="docs" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="KIRON PROHORI" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- Component Group: Desktop UI, Background Service, Shortcuts & Registry Metadata -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+
+      <Component Id="DesktopUiExecutable" Guid="A1B2C3D4-1111-4E3A-9D82-1A2B3C4D5E11">
+        <File Id="KironProhoriDesktopExe"
+              Source="..\..\publish\win-x64\desktop\KironProhori.Desktop.exe"
+              KeyPath="yes" />
+
+        <Shortcut Id="StartMenuShortcut"
+                  Directory="ApplicationProgramsFolder"
+                  Name="KIRON PROHORI"
+                  Description="KIRON PROHORI Windows Security &amp; Antivirus"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Advertise="yes" />
+
+        <Shortcut Id="DesktopShortcut"
+                  Directory="DesktopFolder"
+                  Name="KIRON PROHORI"
+                  Description="KIRON PROHORI Windows Security &amp; Antivirus"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Advertise="yes" />
+
+        <RemoveFolder Id="CleanUpStartMenuFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+      </Component>
+
+      <Component Id="WindowsBackgroundService" Directory="SERVICEFOLDER" Guid="A1B2C3D4-2222-4E3A-9D82-1A2B3C4D5E22">
+        <File Id="KironProhoriServiceExe"
+              Source="..\..\publish\win-x64\service\KironProhori.Service.exe"
+              KeyPath="yes" />
+
+        <ServiceInstall Id="KironProhoriServiceInstall"
+                        Type="ownProcess"
+                        Name="KironProhoriSecurityService"
+                        DisplayName="KIRON PROHORI Windows Security Service"
+                        Description="User-mode real-time file monitoring, scheduled scanning, and cryptographic update verification service. Coexists safely with Microsoft Defender."
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal" />
+
+        <ServiceControl Id="KironProhoriServiceControl"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Name="KironProhoriSecurityService"
+                        Wait="yes" />
+      </Component>
+
+      <Component Id="ApplicationRegistryMetadata" Guid="A1B2C3D4-3333-4E3A-9D82-1A2B3C4D5E33">
+        <RegistryKey Root="HKLM" Key="Software\KironProhori\SecurityAgent">
+          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLFOLDER]" KeyPath="yes" />
+          <RegistryValue Type="string" Name="Version" Value="1.0.0" />
+          <RegistryValue Type="string" Name="Developer" Value="ARIFUZZAMAN KIRON" />
+          <RegistryValue Type="string" Name="TelemetryDefault" Value="DISABLED" />
+          <RegistryValue Type="string" Name="ThreatRemovalPolicy" Value="QUARANTINE_FIRST" />
+        </RegistryKey>
+      </Component>
+
+    </ComponentGroup>
+
+    <Feature Id="ProductFeature" Title="KIRON PROHORI Security Suite (x64)" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+  </Package>
+</Wix>

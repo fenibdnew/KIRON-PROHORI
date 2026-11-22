@@ -1,26 +1,135 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
+using System.Threading;
+using System.Threading.Tasks;
 using KironProhori.Agent.Core.Models;
 using Microsoft.Win32;
 
 namespace KironProhori.Agent.Core.WindowsSecurity;
 
 /// <summary>
-/// Strictly READ-ONLY Windows 10 and Windows 11 Security Telemetry Monitor.
+/// Strictly READ-ONLY Windows 10 and Windows 11 Security Telemetry Monitor &amp; Supported On-Demand Defender Scan Integrator.
 /// CRITICAL SAFETY INVARIANTS:
 /// - NEVER disables Microsoft Defender.
 /// - NEVER disables Windows Firewall.
 /// - NEVER modifies Windows Security policies or registry keys.
-/// - NEVER registers as a primary SecurityCenter2 AV provider (preserving Microsoft Defender active protection).
+/// - NEVER stops Windows Security services or forces Defender into passive mode.
+/// - NEVER claims KIRON PROHORI is registered as the primary Windows Antivirus provider.
 /// </summary>
 public sealed class WindowsSecurityMonitor
 {
+    public const string DefaultMpCmdRunPath = @"C:\Program Files\Windows Defender\MpCmdRun.exe";
+
+    /// <summary>
+    /// Explains clearly what each scan type does before starting it.
+    /// </summary>
+    public static string GetScanScopeExplanation(ScanType scanType) => scanType switch
+    {
+        ScanType.QuickScan =>
+            "Quick Scan inspects common high-risk user directories (Downloads, Startup, and Temp folders) read-only without modifying system policies.",
+        ScanType.FullScan =>
+            "Full Scan recursively inspects accessible user and application directories across the system while skipping KIRON-excluded paths and respecting CPU throttle limits.",
+        ScanType.CustomFolderScan =>
+            "Custom Folder Scan recursively inspects the specific directory selected by the user and reports SHA-256 and heuristic findings.",
+        ScanType.SingleFileScan =>
+            "File Scan computes the streaming SHA-256 cryptographic digest and static heuristic profile of a single user-selected file without executing it.",
+        ScanType.UsbDriveScan =>
+            "USB Scan inspects mounted removable drives (DriveType.Removable) for known malware hashes and autorun/double-extension anomalies.",
+        _ => "Inspects target paths read-only using local engines."
+    };
+
+    public static bool CheckIsRunningAsAdministrator()
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        try
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Builds a command-injection-safe ProcessStartInfo for invoking official Microsoft Defender on-demand scans via MpCmdRun.exe.
+    /// scanType: QuickScan (-ScanType 1), FullScan (-ScanType 2), CustomFolderScan/SingleFileScan (-ScanType 3 -File &lt;path&gt;)
+    /// </summary>
+    public static ProcessStartInfo BuildSupportedDefenderMpCmdRunStartInfo(
+        ScanType scanType,
+        string? customTargetFilePath = null,
+        string? mpCmdRunOverridePath = null)
+    {
+        string binaryPath = !string.IsNullOrWhiteSpace(mpCmdRunOverridePath)
+            ? mpCmdRunOverridePath
+            : DefaultMpCmdRunPath;
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = binaryPath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        psi.ArgumentList.Add("-Scan");
+        psi.ArgumentList.Add("-ScanType");
+
+        switch (scanType)
+        {
+            case ScanType.QuickScan:
+                psi.ArgumentList.Add("1");
+                break;
+            case ScanType.FullScan:
+                psi.ArgumentList.Add("2");
+                break;
+            default:
+                psi.ArgumentList.Add("3");
+                if (!string.IsNullOrWhiteSpace(customTargetFilePath))
+                {
+                    psi.ArgumentList.Add("-File");
+                    psi.ArgumentList.Add(Path.GetFullPath(customTargetFilePath));
+                }
+                break;
+        }
+
+        return psi;
+    }
+
+    /// <summary>
+    /// Executes an on-demand scan via official Microsoft Defender MpCmdRun.exe if available on the Windows host.
+    /// </summary>
+    public async Task<(bool Invoked, int ExitCode, string Output)> TriggerSupportedDefenderOnDemandScanAsync(
+        ScanType scanType,
+        string? customTargetFilePath = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows() || !File.Exists(DefaultMpCmdRunPath))
+        {
+            return (false, -1, "MpCmdRun.exe is not available on this host environment.");
+        }
+
+        var psi = BuildSupportedDefenderMpCmdRunStartInfo(scanType, customTargetFilePath);
+        using var proc = new Process { StartInfo = psi };
+        proc.Start();
+        string stdout = await proc.StandardOutput.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        await proc.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+        return (true, proc.ExitCode, stdout.Trim());
+    }
+
     public WindowsSecurityTelemetry GetSecuritySnapshot()
     {
         bool is64Bit = Environment.Is64BitOperatingSystem;
         string osArch = RuntimeInformation.OSArchitecture.ToString();
+        bool isAdmin = CheckIsRunningAsAdministrator();
 
         if (!OperatingSystem.IsWindows())
         {
@@ -44,7 +153,9 @@ public sealed class WindowsSecurityMonitor
                 },
                 PendingWindowsUpdatesStatus: "N/A (Non-Windows Host)",
                 ZeroSystemModificationsGuaranteed: true,
-                CapturedAtUtc: DateTimeOffset.UtcNow
+                CapturedAtUtc: DateTimeOffset.UtcNow,
+                IsRunningAsAdministrator: isAdmin,
+                LastSignatureUpdateStatus: "N/A (Non-Windows Host)"
             );
         }
 
@@ -70,7 +181,9 @@ public sealed class WindowsSecurityMonitor
             FirewallProfiles: firewallProfiles,
             PendingWindowsUpdatesStatus: updateStatus,
             ZeroSystemModificationsGuaranteed: true,
-            CapturedAtUtc: DateTimeOffset.UtcNow
+            CapturedAtUtc: DateTimeOffset.UtcNow,
+            IsRunningAsAdministrator: isAdmin,
+            LastSignatureUpdateStatus: defenderInfo.LastSignatureUpdate
         );
     }
 
@@ -115,7 +228,7 @@ public sealed class WindowsSecurityMonitor
                 string stateHex = obj["productState"] != null
                     ? $"0x{Convert.ToUInt32(obj["productState"]):X6}"
                     : "UnknownState";
-                list.Add($"{name} (State: {stateHex})");
+                list.Add($"{name} (Primary WSC Provider · State: {stateHex})");
             }
         }
         catch (Exception ex)
@@ -125,7 +238,7 @@ public sealed class WindowsSecurityMonitor
 
         if (list.Count == 0)
         {
-            list.Add("Microsoft Defender Antivirus (Default Windows 10/11 Provider)");
+            list.Add("Microsoft Defender Antivirus (Primary Windows 10/11 Provider)");
         }
         return list;
     }
@@ -137,13 +250,14 @@ public sealed class WindowsSecurityMonitor
         string SignatureVersion,
         string EngineVersion,
         string LastQuickScan,
-        string LastFullScan) QueryDefenderComputerStatus()
+        string LastFullScan,
+        string LastSignatureUpdate) QueryDefenderComputerStatus()
     {
         try
         {
             using var searcher = new ManagementObjectSearcher(
                 @"root\Microsoft\Windows\Defender",
-                "SELECT AMServiceEnabled, RealTimeProtectionEnabled, AntivirusSignatureVersion, AMEngineVersion, QuickScanEndTime, FullScanEndTime FROM MSFT_MpComputerStatus");
+                "SELECT AMServiceEnabled, RealTimeProtectionEnabled, AntivirusSignatureVersion, AMEngineVersion, QuickScanEndTime, FullScanEndTime, AntivirusSignatureLastUpdated FROM MSFT_MpComputerStatus");
             using var results = searcher.Get();
             foreach (ManagementBaseObject obj in results)
             {
@@ -153,14 +267,15 @@ public sealed class WindowsSecurityMonitor
                 string engVer = obj["AMEngineVersion"]?.ToString() ?? "Unknown";
                 string quickScan = obj["QuickScanEndTime"]?.ToString() ?? "Unknown";
                 string fullScan = obj["FullScanEndTime"]?.ToString() ?? "Unknown";
+                string sigUpdated = obj["AntivirusSignatureLastUpdated"]?.ToString() ?? "Unknown";
 
                 string status = amEnabled && rtpEnabled
-                    ? "ACTIVE_COEXISTENT (Microsoft Defender Real-Time Shield Active)"
+                    ? "ACTIVE_COEXISTENT (Primary Microsoft Defender Shield Active)"
                     : amEnabled
                         ? "SERVICE_RUNNING_RTP_DISABLED"
                         : "SNOOZED_OR_DISABLED";
 
-                return (status, rtpEnabled, sigVer, engVer, quickScan, fullScan);
+                return (status, rtpEnabled, sigVer, engVer, quickScan, fullScan, sigUpdated);
             }
         }
         catch
@@ -172,6 +287,7 @@ public sealed class WindowsSecurityMonitor
             "ACCESS_LIMITED_STANDARD_USER (Read-Only Fallback)",
             true,
             "Unknown (Run WMI check to read MSFT_MpComputerStatus)",
+            "Unknown",
             "Unknown",
             "Unknown",
             "Unknown"

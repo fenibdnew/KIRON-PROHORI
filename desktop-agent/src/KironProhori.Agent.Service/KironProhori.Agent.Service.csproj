@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>KironProhori.Service</AssemblyName>
+    <RootNamespace>KironProhori.Agent.Service</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>ARIFUZZAMAN KIRON</Authors>
+    <Company>KIRON PROHORI Independent Security</Company>
+    <Product>KIRON PROHORI Windows Security Background Service</Product>
+    <Description>Privacy-first Windows 10/11 x64 background security service for local real-time user-mode file monitoring, scheduled scanning, and cryptographic update verification. Coexists safely with Microsoft Defender and Windows Firewall.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KironProhori.Agent.Core\KironProhori.Agent.Core.csproj" />
+  </ItemGroup>
+
+</Project>

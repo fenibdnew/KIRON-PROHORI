@@ -5,26 +5,42 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using KironProhori.Agent.Core.Exclusions;
 using KironProhori.Agent.Core.Models;
+using KironProhori.Agent.Core.Notifications;
+using KironProhori.Agent.Core.Performance;
 
 namespace KironProhori.Agent.Core.Scanning;
 
 /// <summary>
 /// Coordinates multi-engine local scanning (Quick Scan, Full Scan, Custom Folder Scan, Single File Scan, USB Drive Scan).
 /// Features:
-/// - Cooperative cancellation via CancellationToken
-/// - Real-time progress reporting via IProgress&lt;ScanProgressUpdate&gt;
-/// - Reparse-point / symlink loop prevention
-/// - Graceful handling of UnauthorizedAccessException and locked system files without crashing
+/// - Strict ExclusionManager enforcement (never scans KIRON-excluded files or folders).
+/// - Lightweight PerformanceProtectionGuard (Pause/Resume, CPU pacing, low background priority, unchanged file cache).
+/// - SmartNotificationManager integration (deduplicated threat notification + single gentle chime).
+/// - Four-tier DetectionVerdict (ConfirmedDetection, Suspicious, Unknown, CleanAccordingToAvailableEngines).
+/// - Cooperative cancellation via CancellationToken and permission error resilience.
 /// </summary>
 public sealed class ModularScanPipeline
 {
     private readonly List<IScanEngine> _engines = new();
+    private readonly ExclusionManager _exclusionManager;
+    private readonly PerformanceProtectionGuard _performanceGuard;
+    private readonly SmartNotificationManager _notificationManager;
     private readonly long _maxSingleFileBytes;
 
-    public ModularScanPipeline(IEnumerable<IScanEngine>? engines = null, long maxSingleFileBytes = 256L * 1024L * 1024L)
+    public ModularScanPipeline(
+        IEnumerable<IScanEngine>? engines = null,
+        ExclusionManager? exclusionManager = null,
+        PerformanceProtectionGuard? performanceGuard = null,
+        SmartNotificationManager? notificationManager = null,
+        long maxSingleFileBytes = 256L * 1024L * 1024L)
     {
         _maxSingleFileBytes = maxSingleFileBytes;
+        _exclusionManager = exclusionManager ?? new ExclusionManager();
+        _performanceGuard = performanceGuard ?? new PerformanceProtectionGuard();
+        _notificationManager = notificationManager ?? new SmartNotificationManager();
+
         if (engines != null)
         {
             _engines.AddRange(engines);
@@ -39,9 +55,15 @@ public sealed class ModularScanPipeline
     }
 
     public IReadOnlyList<IScanEngine> Engines => _engines;
+    public ExclusionManager Exclusions => _exclusionManager;
+    public PerformanceProtectionGuard PerformanceGuard => _performanceGuard;
+    public SmartNotificationManager NotificationManager => _notificationManager;
 
     public IReadOnlyList<EngineDescriptor> GetEngineStatuses() =>
         _engines.Select(e => e.GetDescriptor()).ToList();
+
+    public void PauseActiveScan() => _performanceGuard.PauseScan();
+    public void ResumeActiveScan() => _performanceGuard.ResumeScan();
 
     /// <summary>
     /// Resolves default high-risk user-mode target folders for a Quick Scan.
@@ -89,7 +111,7 @@ public sealed class ModularScanPipeline
     }
 
     /// <summary>
-    /// Scans a single file across all active engines.
+    /// Scans a single file across all active engines while respecting KIRON exclusions and performance guards.
     /// </summary>
     public async Task<ScanReport> ScanSingleFileAsync(
         string filePath,
@@ -101,6 +123,8 @@ public sealed class ModularScanPipeline
         var findings = new List<ScanFinding>();
         var warnings = new List<string>();
         int skippedPermissions = 0;
+        int skippedExclusions = 0;
+        int skippedUnchanged = 0;
         long bytesScanned = 0;
         int filesScanned = 0;
         string status = "COMPLETED";
@@ -108,8 +132,14 @@ public sealed class ModularScanPipeline
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            await _performanceGuard.WaitForPauseAndThrottleAsync(cancellationToken).ConfigureAwait(false);
 
-            if (!File.Exists(filePath))
+            if (_exclusionManager.IsPathExcluded(filePath))
+            {
+                skippedExclusions = 1;
+                warnings.Add($"Skipped KIRON-excluded path: '{filePath}'");
+            }
+            else if (!File.Exists(filePath))
             {
                 warnings.Add($"Target file does not exist or is inaccessible: '{filePath}'");
                 skippedPermissions = 1;
@@ -118,17 +148,31 @@ public sealed class ModularScanPipeline
             else
             {
                 var info = new FileInfo(filePath);
-                bytesScanned = info.Length;
-                string sha256 = await Sha256HashEngine.ComputeFileSha256Async(filePath, cancellationToken).ConfigureAwait(false);
-                filesScanned = 1;
-
-                foreach (var engine in _engines)
+                if (_performanceGuard.CanSkipUnchangedCleanFile(info))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var finding = await engine.ScanFileAsync(filePath, sha256, info.Length, cancellationToken).ConfigureAwait(false);
-                    if (finding != null)
+                    skippedUnchanged = 1;
+                }
+                else
+                {
+                    bytesScanned = info.Length;
+                    string sha256 = await Sha256HashEngine.ComputeFileSha256Async(filePath, cancellationToken).ConfigureAwait(false);
+                    filesScanned = 1;
+
+                    foreach (var engine in _engines)
                     {
-                        findings.Add(finding);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var rawFinding = await engine.ScanFileAsync(filePath, sha256, info.Length, cancellationToken).ConfigureAwait(false);
+                        if (rawFinding != null)
+                        {
+                            var classified = ClassifyFindingVerdict(rawFinding);
+                            findings.Add(classified);
+                            _notificationManager.TryNotifyDetection(classified);
+                        }
+                    }
+
+                    if (findings.Count == 0)
+                    {
+                        _performanceGuard.RecordCleanFile(info);
                     }
                 }
 
@@ -139,7 +183,10 @@ public sealed class ModularScanPipeline
                     findings.Count,
                     skippedPermissions,
                     bytesScanned,
-                    sw.Elapsed.TotalSeconds));
+                    sw.Elapsed.TotalSeconds,
+                    _performanceGuard.IsPaused,
+                    skippedUnchanged,
+                    skippedExclusions));
             }
         }
         catch (OperationCanceledException)
@@ -170,6 +217,8 @@ public sealed class ModularScanPipeline
             filesScanned,
             bytesScanned,
             skippedPermissions,
+            skippedExclusions,
+            skippedUnchanged,
             findings,
             warnings);
     }
@@ -190,11 +239,14 @@ public sealed class ModularScanPipeline
         int filesScanned = 0;
         long bytesScanned = 0;
         int skippedPermissions = 0;
+        int skippedExclusions = 0;
+        int skippedUnchanged = 0;
         string status = "COMPLETED";
 
         var roots = rootDirectories.Where(r => !string.IsNullOrWhiteSpace(r)).ToList();
         string targetScope = roots.Count > 0 ? string.Join("; ", roots) : "(No directories specified)";
 
+        PerformanceProtectionGuard.TrySetBackgroundLowPriority(true);
         try
         {
             var pendingDirs = new Stack<string>(roots);
@@ -202,7 +254,15 @@ public sealed class ModularScanPipeline
             while (pendingDirs.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                await _performanceGuard.WaitForPauseAndThrottleAsync(cancellationToken).ConfigureAwait(false);
+
                 string currentDir = pendingDirs.Pop();
+
+                if (_exclusionManager.IsPathExcluded(currentDir))
+                {
+                    skippedExclusions++;
+                    continue;
+                }
 
                 if (!Directory.Exists(currentDir))
                 {
@@ -243,7 +303,6 @@ public sealed class ModularScanPipeline
                     skippedPermissions++;
                 }
 
-                // Enumerate files in currentDir
                 IEnumerable<string> filesInDir;
                 try
                 {
@@ -263,12 +322,25 @@ public sealed class ModularScanPipeline
                 foreach (string filePath in filesInDir)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    await _performanceGuard.WaitForPauseAndThrottleAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (_exclusionManager.IsPathExcluded(filePath))
+                    {
+                        skippedExclusions++;
+                        continue;
+                    }
 
                     try
                     {
                         var fileInfo = new FileInfo(filePath);
                         if (!fileInfo.Exists || (fileInfo.Attributes & FileAttributes.ReparsePoint) != 0)
                         {
+                            continue;
+                        }
+
+                        if (_performanceGuard.CanSkipUnchangedCleanFile(fileInfo))
+                        {
+                            skippedUnchanged++;
                             continue;
                         }
 
@@ -281,15 +353,24 @@ public sealed class ModularScanPipeline
                         string sha256 = await Sha256HashEngine.ComputeFileSha256Async(filePath, cancellationToken).ConfigureAwait(false);
                         filesScanned++;
                         bytesScanned += fileInfo.Length;
+                        int fileFindingsCount = 0;
 
                         foreach (var engine in _engines)
                         {
                             cancellationToken.ThrowIfCancellationRequested();
-                            var finding = await engine.ScanFileAsync(filePath, sha256, fileInfo.Length, cancellationToken).ConfigureAwait(false);
-                            if (finding != null)
+                            var rawFinding = await engine.ScanFileAsync(filePath, sha256, fileInfo.Length, cancellationToken).ConfigureAwait(false);
+                            if (rawFinding != null)
                             {
-                                findings.Add(finding);
+                                var classified = ClassifyFindingVerdict(rawFinding);
+                                findings.Add(classified);
+                                fileFindingsCount++;
+                                _notificationManager.TryNotifyDetection(classified);
                             }
+                        }
+
+                        if (fileFindingsCount == 0)
+                        {
+                            _performanceGuard.RecordCleanFile(fileInfo);
                         }
 
                         progress?.Report(new ScanProgressUpdate(
@@ -299,7 +380,10 @@ public sealed class ModularScanPipeline
                             findings.Count,
                             skippedPermissions,
                             bytesScanned,
-                            sw.Elapsed.TotalSeconds));
+                            sw.Elapsed.TotalSeconds,
+                            _performanceGuard.IsPaused,
+                            skippedUnchanged,
+                            skippedExclusions));
                     }
                     catch (OperationCanceledException)
                     {
@@ -326,6 +410,10 @@ public sealed class ModularScanPipeline
             status = "CANCELLED_BY_USER";
             warnings.Add($"Scan cancelled by user after inspecting {filesScanned} file(s).");
         }
+        finally
+        {
+            PerformanceProtectionGuard.TrySetBackgroundLowPriority(false);
+        }
 
         sw.Stop();
         return BuildReport(
@@ -337,8 +425,25 @@ public sealed class ModularScanPipeline
             filesScanned,
             bytesScanned,
             skippedPermissions,
+            skippedExclusions,
+            skippedUnchanged,
             findings,
             warnings);
+    }
+
+    private static ScanFinding ClassifyFindingVerdict(ScanFinding raw)
+    {
+        var verdict = raw.Confidence == DetectionConfidence.VerifiedSignature
+            ? DetectionVerdict.ConfirmedDetection
+            : raw.Confidence == DetectionConfidence.HeuristicSuspicious
+                ? DetectionVerdict.Suspicious
+                : DetectionVerdict.Unknown;
+
+        return raw with
+        {
+            Verdict = verdict,
+            RecommendedAction = RemediationAction.Quarantine
+        };
     }
 
     private ScanReport BuildReport(
@@ -350,11 +455,13 @@ public sealed class ModularScanPipeline
         int filesScanned,
         long bytesScanned,
         int skippedPermissions,
+        int skippedExclusions,
+        int skippedUnchanged,
         IReadOnlyList<ScanFinding> findings,
         IReadOnlyList<string> warnings)
     {
-        int verifiedThreats = findings.Count(f => f.Confidence == DetectionConfidence.VerifiedSignature);
-        int heuristics = findings.Count(f => f.Confidence == DetectionConfidence.HeuristicSuspicious);
+        int verifiedThreats = findings.Count(f => f.Verdict == DetectionVerdict.ConfirmedDetection);
+        int heuristics = findings.Count(f => f.Verdict == DetectionVerdict.Suspicious);
         var activeEngines = _engines
             .Select(e => e.GetDescriptor())
             .Where(d => d.Status == EngineStatus.Ready)
@@ -376,7 +483,9 @@ public sealed class ModularScanPipeline
             SkippedPermissionCount: skippedPermissions,
             Findings: findings,
             ActiveEnginesUsed: activeEngines,
-            NonFatalWarnings: warnings
+            NonFatalWarnings: warnings,
+            SkippedExcludedCount: skippedExclusions,
+            SkippedUnchangedCount: skippedUnchanged
         );
     }
 }

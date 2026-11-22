@@ -1,0 +1,61 @@
+=============================================================================
+KIRON PROHORI — Windows Security & Antivirus V1.0 (Release Notes)
+=============================================================================
+Product Name       : KIRON PROHORI
+Subtitle           : Windows Security & Antivirus V1.0
+Developer          : ARIFUZZAMAN KIRON
+Target Platform    : Windows 10 x64 (Build 19041+) & Windows 11 x64
+Budget & Privacy   : Strict $0 · NO TELEMETRY BY DEFAULT
+Threat Policy      : QUARANTINE FIRST (Permanent deletion requires separate confirmation)
+=============================================================================
+
+1. RELEASE OVERVIEW
+-------------------
+KIRON PROHORI is an independent Windows security application designed to help
+protect computers through threat intelligence, malware scanning, browser
+protection and security monitoring.
+
+Thank you for choosing KIRON PROHORI.
+Your privacy matters. Your security matters. Your trust matters.
+Built with care for a safer digital world.
+
+2. INCLUDED COMPONENTS
+----------------------
+A. KIRON PROHORI Windows Desktop Security Agent (KironProhori.Desktop.exe)
+   - Quick Scan, Full Scan, Custom Folder Scan, Single File Scan, and USB Scan
+   - Streaming 64 KB FIPS 180-4 SHA-256 Calculator & Signature Engine
+   - Static PE, Script & Double-Extension (.pdf.exe / RTLO) Heuristic Analyzer
+   - 4-Tier Verdict Transparency: Confirmed Detection, Suspicious, Unknown, Clean
+   - Quarantine Vault (.kpq XOR isolation) with Restore & Separate Delete Confirmation
+   - Canonical Exclusion Manager (Never modifies Microsoft Defender exclusions)
+   - Smart Notifications with 280 ms Gentle Chime & Duplicate Suppression
+
+B. KIRON PROHORI Windows Background Service (KironProhori.Service.exe)
+   - Service Name: KironProhoriSecurityService (Delayed Auto-Start + Crash Recovery)
+   - User-Mode Real-Time File Protection Monitor across Downloads, Temp & Startup
+   - Local Named Pipe IPC Server (KironProhori.SecurityService.Ipc.v1)
+   - Cryptographic HTTPS Update & Rollback Manager (.known_good backup)
+
+C. KIRON PROHORI Chrome & Microsoft Edge Browser Extension (Manifest V3)
+   - Blocks verified phishing, malware distribution, scam, and malvertising domains
+   - Native Messaging 4-State Download Protection (Clean / Suspicious / Malicious / Unknown / Not scanned)
+   - Never reports an unscanned or incomplete download as Clean
+   - User-controlled 30-minute Temporary Allowlist & Local False-Positive Reporting
+
+3. RELEASE CHANNEL GOVERNANCE
+-----------------------------
+- Developer Build (v1.0.0-DEV_BUILD): Source-verified automated GitHub Actions build for developer testing.
+- Beta Build (v1.0.0-BETA_BUILD): Pre-release evaluation build for Windows 10/11 x64 testing.
+- Stable V1.0 (v1.0.0-STABLE_V1_0): Promoted only after public CA Authenticode signing and 15/15 Windows VM test matrix verification.
+
+4. VERIFICATION & SHA-256 INTEGRITY
+-----------------------------------
+Before running KIRON-PROHORI-Setup-x64.exe, verify its SHA-256 hash in PowerShell:
+  Get-FileHash .\KIRON-PROHORI-Setup-x64.exe -Algorithm SHA256
+and confirm that it matches the exact digest listed in SHA256SUMS.txt.
+
+5. KNOWN LIMITATIONS & COEXISTENCE
+----------------------------------
+- Operates safely alongside Microsoft Defender and Windows Firewall (read-only WMI monitoring; never disables Windows security).
+- V1.0 operates in user-mode and does not install a kernel-mode (.sys) filesystem minifilter driver.
+=============================================================================

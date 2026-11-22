@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KIRON PROHORI — Browser Protection</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b11;
+      --panel: #101725;
+      --border: #1e293b;
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 380px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 14px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-title { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; }
+    .brand-sub { font-size: 10px; color: var(--muted); font-family: monospace; }
+    .status-badge {
+      font-family: monospace;
+      font-size: 10px;
+      padding: 3px 6px;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      background: rgba(16, 185, 129, 0.12);
+      color: #6ee7b7;
+    }
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 10px;
+      font-family: monospace;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 3px 0;
+      font-family: monospace;
+    }
+    .list-item {
+      font-size: 11px;
+      font-family: monospace;
+      padding: 6px 0;
+      border-bottom: 1px solid #172133;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .footer {
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M32 4L8 14V30C8 46.5 18.2 57.6 32 61C45.8 57.6 56 46.5 56 30V14L32 4Z" fill="#0F172A" stroke="#06B6D4" stroke-width="3.5"/>
+        <path d="M22 33L29 40L43 24" stroke="#10B981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <div class="brand-title">KIRON PROHORI</div>
+        <div class="brand-sub">Chrome &amp; Edge Web Protection</div>
+      </div>
+    </div>
+    <span id="webGuardStatus" class="status-badge">PROTECTED</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Component Status</div>
+    <div class="kv">
+      <span>declarativeNetRequest Rules:</span>
+      <span style="color:#6ee7b7">ACTIVE (5 Verified Rules)</span>
+    </div>
+    <div class="kv">
+      <span>Windows Desktop Agent Link:</span>
+      <span id="nativeAgentLinkStatus" style="color:#fcd34d">CHECKING...</span>
+    </div>
+    <div class="kv">
+      <span>Browsing History Collection:</span>
+      <span style="color:#67e8f9">DISABLED (0 Bytes)</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Recent Download Protection Verdicts</div>
+    <div id="downloadVerdictsContainer">
+      <div class="list-item" style="color:#94a3b8">No browser downloads scanned in this session yet.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Temporary Allowlist (30m Auto-Expiry)</div>
+    <div id="allowlistContainer">
+      <div class="list-item" style="color:#94a3b8">No domains temporarily allowlisted.</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Developer: ARIFUZZAMAN KIRON</span>
+    <span>No Telemetry · $0</span>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

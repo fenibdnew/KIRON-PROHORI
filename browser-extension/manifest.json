@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "KIRON PROHORI — Web & Download Protection",
+  "short_name": "KIRON PROHORI",
+  "version": "1.0.0",
+  "description": "Privacy-first Chrome and Microsoft Edge protection against verified malicious URLs, phishing domains, malicious ad redirects, and unsafe downloads via local KIRON PROHORI Windows Agent Native Messaging. Zero browsing-history collection.",
+  "author": "ARIFUZZAMAN KIRON",
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "downloads",
+    "nativeMessaging",
+    "storage",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "*://*.kiron-test.invalid/*"
+  ],
+  "background": {
+    "service_worker": "background/service_worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "KIRON PROHORI — Web & Download Protection (Developer: ARIFUZZAMAN KIRON)",
+    "default_popup": "popup/popup.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "verified_malicious_ruleset",
+        "enabled": true,
+        "path": "rules/verified_malicious_rules.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "blocked/blocked.html",
+        "blocked/blocked.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

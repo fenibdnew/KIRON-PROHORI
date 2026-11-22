@@ -1,0 +1,9 @@
+{
+  "name": "com.kironprohori.security_agent",
+  "description": "KIRON PROHORI V1.0 Windows Security Agent — Local Native Messaging Host for Automatic Download Protection (Developer: ARIFUZZAMAN KIRON)",
+  "path": "C:\\Program Files\\KironProhori\\KironProhori.Agent.Desktop.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/"
+  ]
+}

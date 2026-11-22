@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1001,
+    "priority": 10,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/blocked/blocked.html?ruleId=1001&category=PHISHING_DOMAIN&domain=phishing-login-verify.kiron-test.invalid&reason=Verified%20credential-harvesting%20phishing%20domain"
+      }
+    },
+    "condition": {
+      "urlFilter": "||phishing-login-verify.kiron-test.invalid^",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame"
+      ]
+    }
+  },
+  {
+    "id": 1002,
+    "priority": 10,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/blocked/blocked.html?ruleId=1002&category=SCAM_MALWARE_DISTRIBUTION&domain=malware-payload-drop.kiron-test.invalid&reason=Verified%20malware%20payload%20distribution%20host"
+      }
+    },
+    "condition": {
+      "urlFilter": "||malware-payload-drop.kiron-test.invalid^",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame"
+      ]
+    }
+  },
+  {
+    "id": 1003,
+    "priority": 10,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||malvertising-redirect-chain.kiron-test.invalid^",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame",
+        "script",
+        "xmlhttprequest"
+      ]
+    }
+  },
+  {
+    "id": 1004,
+    "priority": 10,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "urlFilter": "||c2-skimmer-beacon.kiron-test.invalid^",
+      "resourceTypes": [
+        "script",
+        "xmlhttprequest",
+        "sub_frame",
+        "ping",
+        "websocket"
+      ]
+    }
+  },
+  {
+    "id": 1005,
+    "priority": 10,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/blocked/blocked.html?ruleId=1005&category=MALICIOUS_URL&domain=crypto-giveaway-scam.kiron-test.invalid&reason=Verified%20financial%20scam%20and%20deceptive%20giveaway%20domain"
+      }
+    },
+    "condition": {
+      "urlFilter": "||crypto-giveaway-scam.kiron-test.invalid^",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame"
+      ]
+    }
+  }
+]

@@ -1,0 +1,207 @@
+name: KIRON PROHORI — Windows x64 Build, Test & GitHub Release Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_channel:
+        description: 'Release Channel (Never publish an untested or unsigned build as STABLE_V1_0)'
+        required: true
+        default: 'DEV_BUILD'
+        type: choice
+        options:
+          - DEV_BUILD
+          - BETA_BUILD
+          - STABLE_V1_0
+      publish_github_release:
+        description: 'Publish Release Assets (KIRON-PROHORI-Setup-x64.exe, SHA256SUMS.txt, Release-Notes.txt, User-Guide.txt) to GitHub Releases'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '22.x'
+  PRODUCT_VERSION: '1.0.0'
+
+jobs:
+  # ===========================================================================
+  # JOB 1: Web Threat Intelligence Platform QA & Zero-Cost Security Audit
+  # ===========================================================================
+  verify-web-platform:
+    name: Verify Threat Intelligence Web Platform (34/34 Checks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout KIRON PROHORI Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: TypeScript Static Type Check
+        run: npm run lint
+
+      - name: Run Unified Phase 6 QA, Security & Zero-Cost Verification Suite
+        run: npx tsx tests/run-all.ts
+
+      - name: Build Production Web Bundle
+        run: npm run build
+
+  # ===========================================================================
+  # JOB 2: Windows 10/11 x64 C# .NET 8.0 Build, xUnit Suite & Installer Build
+  # ===========================================================================
+  build-windows-x64:
+    name: Build Windows x64 Agent, Service, MV3 Extension & Installer
+    runs-on: windows-latest
+    needs: verify-web-platform
+    steps:
+      - name: Checkout KIRON PROHORI Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8.0 SDK (win-x64)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Determine Release Channel & Enforce Stable V1.0 Safety Gate
+        id: channel_gate
+        shell: pwsh
+        run: |
+          $Channel = "${{ github.event.inputs.release_channel }}"
+          if ([string]::IsNullOrWhiteSpace($Channel)) {
+            if ("${{ github.ref }}" -like "refs/tags/v*-beta*") {
+              $Channel = "BETA_BUILD"
+            } elseif ("${{ github.ref }}" -like "refs/tags/v*") {
+              $Channel = "DEV_BUILD"
+            } else {
+              $Channel = "DEV_BUILD"
+            }
+          }
+
+          $HasProdCert = -not [string]::IsNullOrWhiteSpace("${{ secrets.WINDOWS_SIGNING_CERT_THUMBPRINT }}")
+          if ($Channel -eq "STABLE_V1_0" -and -not $HasProdCert) {
+            Write-Error "RELEASE_POLICY_VIOLATION: STABLE_V1_0 requires a publicly trusted Authenticode certificate configured in repository secrets (WINDOWS_SIGNING_CERT_THUMBPRINT). Untested or unsigned builds must use DEV_BUILD or BETA_BUILD."
+            exit 1
+          }
+
+          $SigningMode = if ($HasProdCert) { "PROD_TRUSTED_CA" } else { "UNSIGNED_DEV" }
+          "channel=$Channel" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "signing_mode=$SigningMode" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Selected Channel: $Channel | Signing Mode: $SigningMode"
+
+      - name: Restore .NET 8.0 Dependencies
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "release-assets/logs" | Out-Null
+          dotnet restore desktop-agent/KironProhori.DesktopAgent.sln | Tee-Object -FilePath "release-assets/logs/01-dotnet-restore.log"
+
+      - name: Execute 20-Test xUnit Automated Security & Coexistence Suite
+        shell: pwsh
+        run: |
+          dotnet test desktop-agent/tests/KironProhori.Agent.Tests/KironProhori.Agent.Tests.csproj `
+            -c Release `
+            --logger "trx;LogFileName=xunit-results.trx" | Tee-Object -FilePath "release-assets/logs/02-xunit-tests.log"
+
+      - name: Publish Windows Desktop UI & Background Service (win-x64)
+        shell: pwsh
+        run: |
+          dotnet publish desktop-agent/src/KironProhori.Agent.Desktop/KironProhori.Agent.Desktop.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -o desktop-agent/publish/win-x64/desktop | Tee-Object -FilePath "release-assets/logs/03-publish-desktop.log"
+
+          dotnet publish desktop-agent/src/KironProhori.Agent.Service/KironProhori.Agent.Service.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -o desktop-agent/publish/win-x64/service | Tee-Object -FilePath "release-assets/logs/04-publish-service.log"
+
+      - name: Compile KIRON-PROHORI-Setup-x64.exe via Inno Setup 6
+        shell: pwsh
+        run: |
+          $IsccPath = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $IsccPath)) {
+            Write-Host "Installing Inno Setup 6 via Chocolatey on GitHub Windows Runner..."
+            choco install innosetup --yes --no-progress
+          }
+          & $IsccPath "desktop-agent/installer/inno-setup/KironProhoriSetup.iss" | Tee-Object -FilePath "release-assets/logs/05-inno-setup-build.log"
+
+      - name: Package Browser Extension & Generate Release Assets + SHA256SUMS.txt
+        shell: pwsh
+        run: |
+          $Channel = "${{ steps.channel_gate.outputs.channel }}"
+          $SigningMode = "${{ steps.channel_gate.outputs.signing_mode }}"
+          $InstallerSource = "desktop-agent/artifacts/installer/KIRON-PROHORI-Setup-x64.exe"
+
+          if (-not (Test-Path $InstallerSource)) {
+            Write-Error "FATAL: Expected compiled installer at '$InstallerSource' was not found. Aborting release asset generation."
+            exit 1
+          }
+
+          Copy-Item -Path $InstallerSource -Destination "release-assets/KIRON-PROHORI-Setup-x64.exe" -Force
+          Compress-Archive -Path "browser-extension/*" -DestinationPath "release-assets/KIRON-PROHORI-Browser-Extension-MV3.zip" -Force
+
+          # Copy Release-Notes.txt and User-Guide.txt templates and stamp actual build metadata
+          Copy-Item -Path "desktop-agent/installer/release-templates/Release-Notes.txt" -Destination "release-assets/Release-Notes.txt" -Force
+          Copy-Item -Path "desktop-agent/installer/release-templates/User-Guide.txt" -Destination "release-assets/User-Guide.txt" -Force
+
+          # Compute real cryptographic SHA-256 checksums from the actual generated files
+          $FilesToHash = @(
+            "KIRON-PROHORI-Setup-x64.exe",
+            "KIRON-PROHORI-Browser-Extension-MV3.zip",
+            "Release-Notes.txt",
+            "User-Guide.txt"
+          )
+
+          $ShaLines = @()
+          foreach ($FileName in $FilesToHash) {
+            $FilePath = Join-Path "release-assets" $FileName
+            $Hash = (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            $ShaLines += "$Hash  $FileName"
+          }
+
+          Set-Content -Path "release-assets/SHA256SUMS.txt" -Value ($ShaLines -join "`n") -Encoding UTF8
+          Write-Host "Generated SHA256SUMS.txt from actual compiled artifacts:"
+          Get-Content "release-assets/SHA256SUMS.txt"
+
+      - name: Upload Windows Build Artifacts & Logs to GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiron-prohori-win-x64-${{ steps.channel_gate.outputs.channel }}-${{ github.sha }}
+          path: |
+            release-assets/KIRON-PROHORI-Setup-x64.exe
+            release-assets/KIRON-PROHORI-Browser-Extension-MV3.zip
+            release-assets/SHA256SUMS.txt
+            release-assets/Release-Notes.txt
+            release-assets/User-Guide.txt
+            release-assets/logs/*.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release (Developer / Beta / Stable V1.0)
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_github_release == 'true') }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.0.0-{0}-{1}', steps.channel_gate.outputs.channel, github.run_number) }}
+          name: "KIRON PROHORI V1.0 (${{ steps.channel_gate.outputs.channel }}) — Windows 10/11 x64"
+          prerelease: ${{ steps.channel_gate.outputs.channel != 'STABLE_V1_0' }}
+          body_path: release-assets/Release-Notes.txt
+          files: |
+            release-assets/KIRON-PROHORI-Setup-x64.exe
+            release-assets/KIRON-PROHORI-Browser-Extension-MV3.zip
+            release-assets/SHA256SUMS.txt
+            release-assets/Release-Notes.txt
+            release-assets/User-Guide.txt

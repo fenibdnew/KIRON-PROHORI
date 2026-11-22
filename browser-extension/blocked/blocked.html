@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KIRON PROHORI — Unsafe Website Blocked</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b11;
+      --panel: #0f1623;
+      --border: #1e293b;
+      --danger: #ef4444;
+      --amber: #f59e0b;
+      --cyan: #06b6d4;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 680px;
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--danger);
+      padding: 28px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+    }
+    .badge {
+      font-family: monospace;
+      font-size: 11px;
+      padding: 4px 8px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      color: #fecaca;
+    }
+    p.lead {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .details-box {
+      background: #090d16;
+      border: 1px solid var(--border);
+      padding: 16px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #151e2e;
+      gap: 16px;
+    }
+    .details-row:last-child {
+      border-bottom: none;
+    }
+    .label { color: var(--muted); }
+    .val { color: var(--text); word-break: break-all; text-align: right; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    button {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      background: #162032;
+      color: var(--text);
+    }
+    button.primary {
+      background: #0891b2;
+      border-color: #06b6d4;
+      color: #ffffff;
+    }
+    button.warn {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: #fcd34d;
+    }
+    .status-msg {
+      font-size: 12px;
+      font-family: monospace;
+      color: #67e8f9;
+      min-height: 18px;
+      margin-top: 8px;
+    }
+    .footer {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand-row">
+      <div class="brand-left">
+        <!-- Original KIRON PROHORI Shield SVG (No Personal Photo / No Third-Party Logos) -->
+        <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 4L8 14V30C8 46.5 18.2 57.6 32 61C45.8 57.6 56 46.5 56 30V14L32 4Z" fill="#0F172A" stroke="#EF4444" stroke-width="3"/>
+          <path d="M32 18V36" stroke="#FCA5A5" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="32" cy="45" r="2.5" fill="#FCA5A5"/>
+        </svg>
+        <div>
+          <div class="title">KIRON PROHORI</div>
+          <div class="subtitle">Browser Web Protection · Manifest V3</div>
+        </div>
+      </div>
+      <span id="categoryBadge" class="badge">MALICIOUS_URL_BLOCKED</span>
+    </div>
+
+    <h1>Navigation Blocked for Your Safety</h1>
+    <p class="lead">
+      KIRON PROHORI prevented navigation to this address because it matched a verified phishing, malware distribution, or scam indicator. No browsing history or page contents were collected.
+    </p>
+
+    <div class="details-box">
+      <div class="details-row">
+        <span class="label">Blocked Domain:</span>
+        <span id="blockedDomainText" class="val">example-domain.invalid</span>
+      </div>
+      <div class="details-row">
+        <span class="label">Reason for Blocking:</span>
+        <span id="blockReasonText" class="val">Matched verified threat intelligence rule</span>
+      </div>
+      <div class="details-row">
+        <span class="label">Rule ID:</span>
+        <span id="ruleIdText" class="val">#1001</span>
+      </div>
+      <div class="details-row">
+        <span class="label">Privacy Guarantee:</span>
+        <span class="val">Evaluated locally via declarativeNetRequest · Zero Telemetry</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="returnSafeBtn" class="primary">Return to Safety</button>
+      <button id="reportFpBtn">Report False Positive</button>
+      <button id="tempAllowBtn" class="warn">Temporarily Allow Domain (30m — Reduces Protection)</button>
+    </div>
+
+    <div id="actionStatusText" class="status-msg"></div>
+
+    <div class="footer">
+      <span>Developer: ARIFUZZAMAN KIRON</span>
+      <span>Independent Security Product · Not Affiliated with Other Vendors</span>
+    </div>
+  </div>
+  <script src="blocked.js"></script>
+</body>
+</html>
