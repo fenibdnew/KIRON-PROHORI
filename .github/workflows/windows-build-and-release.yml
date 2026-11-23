@@ -49,19 +49,31 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Setup Bun Package Manager
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Bun Dependencies (bun.lock)
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install Dependencies from bun.lock
+        run: bun install --frozen-lockfile
 
       - name: TypeScript Static Type Check
-        run: npm run lint
+        run: bun run lint
 
       - name: Run Unified Phase 6 QA, Security & Zero-Cost Verification Suite
         run: npx tsx tests/run-all.ts
 
       - name: Build Production Web Bundle
-        run: npm run build
+        run: bun run build
 
   # ===========================================================================
   # JOB 2: Windows 10/11 x64 C# .NET 8.0 Build, xUnit Suite & Installer Build
