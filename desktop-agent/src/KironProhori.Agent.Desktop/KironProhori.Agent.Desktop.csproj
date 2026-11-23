@@ -9,6 +9,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\KironProhori.ico</ApplicationIcon>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
@@ -17,6 +18,13 @@
     <Version>1.0.0</Version>
     <Description>KIRON PROHORI Phase 7A Windows 10/11 (64-bit) Endpoint Security Desktop Agent</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\KironProhori.ico" />
+    <Content Include="Assets\KironProhori.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\KironProhori.Agent.Core\KironProhori.Agent.Core.csproj" />

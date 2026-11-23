@@ -47,8 +47,9 @@ OutputBaseFilename=KIRON-PROHORI-Setup-x64
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\assets\KironProhori.ico
 UninstallDisplayName={#MyAppName} {#MyAppSubtitle} V{#MyAppVersion}
-UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayIcon={app}\KironProhori.ico
 VersionInfoVersion=1.0.0.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Windows Security & Antivirus Setup (x64)
@@ -66,6 +67,7 @@ Name: "browserguide"; Description: "Stage Chrome & Microsoft Edge Browser Protec
 [Files]
 ; Core Desktop Application & Background Service Binaries (Published from dotnet publish -c Release -r win-x64)
 Source: "..\..\publish\win-x64\desktop\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\assets\KironProhori.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\publish\win-x64\service\*"; DestDir: "{app}\service"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Browser Extension Manifest V3 Package & Native Messaging Host Template
 Source: "..\..\..\browser-extension\*"; DestDir: "{app}\browser-extension"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -73,10 +75,10 @@ Source: "..\..\..\browser-extension\*"; DestDir: "{app}\browser-extension"; Flag
 Source: "..\..\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "KIRON PROHORI Windows Security & Antivirus"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\KironProhori.ico"; Comment: "KIRON PROHORI Windows Security & Antivirus"
 Name: "{group}\Browser Protection Setup Guide"; Filename: "{app}\docs\11_V1_0_COMPLETE_ARCHITECTURE_AND_BROWSER_EXTENSION.md"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"; IconFilename: "{app}\KironProhori.ico"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\KironProhori.ico"; Tasks: desktopicon
 
 [Registry]
 ; Optional Startup Launch (Only when user selects 'startupagent' task)

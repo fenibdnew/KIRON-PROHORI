@@ -35,6 +35,10 @@
     <!-- Property for preserving user quarantine & settings during uninstall unless explicitly purged -->
     <Property Id="PRESERVE_USER_DATA" Value="1" Secure="yes" />
 
+    <!-- Official Cyber Security Shield + K Application & Add/Remove Programs Icon -->
+    <Icon Id="KironProhoriIcon.ico" SourceFile="..\assets\KironProhori.ico" />
+    <Property Id="ARPPRODUCTICON" Value="KironProhoriIcon.ico" />
+
     <!-- Standard Directory Hierarchy (Strictly scoped to ProgramFiles64Folder\KIRON PROHORI) -->
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="KIRON PROHORI">
@@ -63,6 +67,7 @@
                   Name="KIRON PROHORI"
                   Description="KIRON PROHORI Windows Security &amp; Antivirus"
                   WorkingDirectory="INSTALLFOLDER"
+                  Icon="KironProhoriIcon.ico"
                   Advertise="yes" />
 
         <Shortcut Id="DesktopShortcut"
@@ -70,6 +75,7 @@
                   Name="KIRON PROHORI"
                   Description="KIRON PROHORI Windows Security &amp; Antivirus"
                   WorkingDirectory="INSTALLFOLDER"
+                  Icon="KironProhoriIcon.ico"
                   Advertise="yes" />
 
         <RemoveFolder Id="CleanUpStartMenuFolder" Directory="ApplicationProgramsFolder" On="uninstall" />

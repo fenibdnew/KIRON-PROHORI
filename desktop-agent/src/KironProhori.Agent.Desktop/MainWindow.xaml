@@ -1,258 +1,1108 @@
 <Window x:Class="KironProhori.Agent.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="KIRON PROHORI V1.0 — Windows Security &amp; Antivirus (Developer: ARIFUZZAMAN KIRON)"
-        Height="880"
-        Width="1380"
-        MinHeight="720"
-        MinWidth="1120"
-        Background="#0B0F17"
-        Foreground="#F3F4F6"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="KIRON PROHORI — Windows Security"
+        Icon="pack://application:,,,/Assets/KironProhori.ico"
+        Height="780"
+        Width="1240"
+        MinHeight="640"
+        MinWidth="980"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{DynamicResource AppCanvasBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        FontFamily="Segoe UI"
         WindowStartupLocation="CenterScreen">
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="42"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="10"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
 
-        <!-- Left Sidebar: V1.0 Complete Navigation Views -->
-        <Border Grid.Column="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="0,0,1,0" Padding="18">
-            <DockPanel LastChildFill="True">
-                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
-                    <TextBlock x:Name="AppTitleBlock" Text="KIRON PROHORI" FontSize="19" FontWeight="Bold" Foreground="#F9FAFB" />
-                    <TextBlock x:Name="AppSubtitleBlock" Text="Windows Security &amp; Antivirus V1.0" FontSize="11" Foreground="#38BDF8" Margin="0,3,0,0" />
-                    <TextBlock Text="Developer: ARIFUZZAMAN KIRON · $0 · NO TELEMETRY" FontSize="10" Foreground="#10B981" Margin="0,4,0,0" />
-                </StackPanel>
-
-                <!-- Bottom Language, Theme & Sound Controls -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                    <Button x:Name="LanguageToggleButton"
-                            Content="Language: EN / বাংলা"
-                            Click="OnToggleLanguageClick"
-                            Background="#1F2937"
-                            Foreground="#E5E7EB"
-                            BorderBrush="#374151"
-                            Padding="10,7"
-                            Margin="0,0,0,6" />
-                    <Button x:Name="ThemeToggleButton"
-                            Content="Theme: Obsidian Dark / Slate Light"
-                            Click="OnToggleThemeClick"
-                            Background="#1F2937"
-                            Foreground="#E5E7EB"
-                            BorderBrush="#374151"
-                            Padding="10,7" />
-                </StackPanel>
-
-                <!-- V1.0 Navigation Views -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <Button x:Name="NavOverviewBtn" Content="01. Dashboard" Click="OnNavigateOverviewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#1E293B" Foreground="#F9FAFB" />
-                        <Button x:Name="NavQuickScanBtn" Content="02. Quick Scan" Click="OnQuickScanClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavFullScanBtn" Content="03. Full Scan" Click="OnFullScanClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavCustomScanBtn" Content="04. Custom Scan" Click="OnCustomScanClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavUsbScanBtn" Content="05. USB Scan" Click="OnUsbScanClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavWebProtectionBtn" Content="06. Web Protection (Chrome/Edge)" Click="OnWebProtectionViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavDownloadProtectionBtn" Content="07. Download Protection" Click="OnDownloadProtectionViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavRealtimeBtn" Content="08. Real-Time Protection" Click="OnRealtimeGuardToggleClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavHistoryBtn" Content="09. Threat History" Click="OnThreatHistoryClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavQuarantineBtn" Content="10. Quarantine" Click="OnRefreshQuarantineClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavExclusionsBtn" Content="11. Exclusions" Click="OnExclusionsViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavSecurityIntelBtn" Content="12. Security Intelligence" Click="OnSecurityIntelligenceViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavDefenderBtn" Content="13. Microsoft Defender Status" Click="OnRefreshWindowsSecurityClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavFirewallBtn" Content="14. Firewall Status" Click="OnFirewallViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavUpdatesBtn" Content="15. Updates" Click="OnCheckUpdatesClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavNotificationsBtn" Content="16. Notifications" Click="OnNotificationsViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavSettingsBtn" Content="17. Settings" Click="OnSettingsViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#D1D5DB" />
-                        <Button x:Name="NavAboutBtn" Content="18. About" Click="OnAboutViewClick" Margin="0,0,0,4" Padding="10,6" HorizontalContentAlignment="Left" Background="#111827" Foreground="#38BDF8" />
-                    </StackPanel>
-                </ScrollViewer>
-            </DockPanel>
-        </Border>
-
-        <!-- Main Workspace Content -->
-        <Grid Grid.Column="1" Margin="24">
+    <Border x:Name="OuterWindowFrame"
+            Background="{DynamicResource AppCanvasBrush}"
+            BorderBrush="{DynamicResource GlassBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10">
+        <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <!-- Row 0: Draggable Top Fluent Title Bar -->
+                <RowDefinition Height="42" />
+                <!-- Row 1: Main Application Canvas -->
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
+                <!-- Row 2: Clean Bottom Utility Bar (Settings Gear, Notifications Bell, About/License, Status) -->
+                <RowDefinition Height="48" />
             </Grid.RowDefinitions>
 
-            <!-- Top Action Bar with Pause/Resume/Cancel, EICAR Test, Exclusions, Chime & Diagnostics -->
-            <Border Grid.Row="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="16" Margin="0,0,0,14">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Left">
-                        <TextBlock x:Name="CurrentSectionTitle" Text="01. Security Overview — Privacy-First Windows Companion" FontSize="17" FontWeight="SemiBold" Foreground="#F9FAFB" />
-                        <TextBlock x:Name="DisclosureBannerText"
-                                   Text="User-Mode Windows Companion · Coexists with Microsoft Defender · No Automatic File Upload · No Telemetry by Default"
-                                   FontSize="11"
-                                   Foreground="#9CA3AF"
-                                   Margin="0,4,0,0" />
+            <!-- ========================================================================= -->
+            <!-- ROW 0: DRAGGABLE FLUENT TITLE BAR & WINDOW CONTROLS (—, □, ✕)             -->
+            <!-- ========================================================================= -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource TitleBarBackgroundBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    CornerRadius="10,10,0,0"
+                    MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Transparent Shield + K Icon & App Title -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <Image Source="pack://application:,,,/Assets/KironProhori.ico"
+                               Width="22"
+                               Height="22"
+                               Margin="0,0,10,0"
+                               VerticalAlignment="Center" />
+                        <TextBlock x:Name="AppTitleBlock"
+                                   Text="KIRON PROHORI"
+                                   FontSize="13"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Text="—"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   Margin="6,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <TextBlock x:Name="AppSubtitleBlock"
+                                   Text="Windows Security &amp; Antivirus V1.0"
+                                   FontSize="12"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   VerticalAlignment="Center" />
+                        <Border Background="#D1FAE5"
+                                BorderBrush="#10B981"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="7,1.5"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="ZERO TELEMETRY · $0 FREE"
+                                       FontSize="9.5"
+                                       FontWeight="Bold"
+                                       Foreground="#065F46" />
+                        </Border>
                     </StackPanel>
 
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button x:Name="PauseResumeScanBtn"
-                                Content="Pause Scan"
-                                Click="OnPauseResumeScanClick"
-                                Background="#1E293B"
-                                Foreground="#FBBF24"
-                                BorderBrush="#F59E0B"
-                                Padding="10,7"
-                                Margin="0,0,8,0" />
-                        <Button x:Name="CancelScanBtn"
-                                Content="Stop Scan"
-                                Click="OnCancelScanClick"
-                                Background="#3F1D24"
-                                Foreground="#FCA5A5"
-                                BorderBrush="#EF4444"
-                                Padding="10,7"
-                                Margin="0,0,8,0" />
-                        <Button x:Name="RunEicarSelfTestBtn"
-                                Content="Run Safe EICAR Self-Test"
-                                Click="OnRunEicarSelfTestClick"
-                                Background="#0284C7"
-                                Foreground="#FFFFFF"
-                                Padding="12,7"
-                                Margin="0,0,8,0" />
-                        <Button x:Name="TestGentleChimeBtn"
-                                Content="Play Gentle Chime"
-                                Click="OnPlayGentleChimeClick"
-                                Background="#065F46"
-                                Foreground="#A7F3D0"
-                                Padding="10,7" />
+                    <!-- Right: Quick Language/Theme Pills + Minimize (—), Maximize/Restore (□), Close (✕) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="LanguageToggleButton"
+                                Content="EN / বাংলা"
+                                ToolTip="Switch Interface Language (English / বাংলা)"
+                                Click="OnToggleLanguageClick"
+                                Style="{StaticResource CaptionControlButtonStyle}"
+                                Width="74"
+                                FontSize="11.5"
+                                FontWeight="SemiBold" />
+                        <Button x:Name="ThemeToggleButton"
+                                Content="☀ / ☾"
+                                ToolTip="Toggle Light Minimal Glass / Obsidian Dark Theme"
+                                Click="OnToggleThemeClick"
+                                Style="{StaticResource CaptionControlButtonStyle}"
+                                Width="52"
+                                FontSize="12" />
+                        <Button x:Name="MinimizeWindowBtn"
+                                Content="—"
+                                ToolTip="Minimize Window"
+                                Click="OnMinimizeWindowClick"
+                                Style="{StaticResource CaptionControlButtonStyle}" />
+                        <Button x:Name="MaximizeRestoreWindowBtn"
+                                Content="□"
+                                ToolTip="Maximize / Restore Window"
+                                Click="OnMaximizeRestoreWindowClick"
+                                Style="{StaticResource CaptionControlButtonStyle}" />
+                        <Button x:Name="CloseWindowBtn"
+                                Content="✕"
+                                ToolTip="Close to System Tray (or Exit)"
+                                Click="OnCloseWindowClick"
+                                Style="{StaticResource CaptionCloseButtonStyle}" />
                     </StackPanel>
-                </DockPanel>
+                </Grid>
             </Border>
 
-            <!-- Telemetry Strip: Windows Defender, Firewall, Active Exclusions, Diagnostics & Scan Progress -->
-            <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,14">
-                <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="14" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="WINDOWS DEFENDER &amp; ADMIN" FontSize="10" Foreground="#9CA3AF" FontWeight="Bold" />
-                        <TextBlock x:Name="DefenderStatusText" Text="Checking WMI..." FontSize="14" FontWeight="Bold" Foreground="#10B981" Margin="0,5,0,0" />
-                        <TextBlock x:Name="SignatureVersionText" Text="Signature: --" FontSize="11" Foreground="#9CA3AF" Margin="0,3,0,0" />
-                    </StackPanel>
-                </Border>
+            <!-- ========================================================================= -->
+            <!-- ROW 1: MAIN WORKSPACE CANVAS                                              -->
+            <!-- ========================================================================= -->
+            <Grid Grid.Row="1" Margin="24,18,24,14">
 
-                <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="14" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="FIREWALL &amp; PRIVACY POSTURE" FontSize="10" Foreground="#9CA3AF" FontWeight="Bold" />
-                        <TextBlock x:Name="FirewallStatusText" Text="Domain/Private/Public: --" FontSize="13" FontWeight="Bold" Foreground="#38BDF8" Margin="0,5,0,0" />
-                        <TextBlock x:Name="UacStatusText" Text="Telemetry: OFF (Local-Only)" FontSize="11" Foreground="#10B981" Margin="0,3,0,0" />
-                    </StackPanel>
-                </Border>
+                <!-- ===================================================================== -->
+                <!-- VIEW 1: KASPERSKY-INSPIRED MINIMAL GLASS DASHBOARD (HERO + 4x2 TILES) -->
+                <!-- ===================================================================== -->
+                <Grid x:Name="DashboardHeroViewPanel" Visibility="Visible">
+                    <Grid.RowDefinitions>
+                        <!-- Top Hero Protection Banner -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Main 4x2 Clickable Glass Tile Grid -->
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="14" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="SCAN ENGINE &amp; THROTTLE" FontSize="10" Foreground="#9CA3AF" FontWeight="Bold" />
-                        <TextBlock x:Name="ScanStateText" Text="IDLE (Balanced Profile)" FontSize="14" FontWeight="Bold" Foreground="#F9FAFB" Margin="0,5,0,0" />
-                        <TextBlock x:Name="ScanMetricsText" Text="0 scanned · 0 detections · 0 skipped" FontSize="11" Foreground="#9CA3AF" Margin="0,3,0,0" />
-                    </StackPanel>
-                </Border>
+                    <!-- TOP HERO PROTECTION BANNER -->
+                    <Border x:Name="HeroProtectionBannerBorder"
+                            Grid.Row="0"
+                            CornerRadius="16"
+                            BorderBrush="#A7F3D0"
+                            BorderThickness="1.5"
+                            Padding="26,22"
+                            Margin="6,0,6,14"
+                            Effect="{StaticResource FluentGlassShadow}">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop x:Name="HeroGradStop1" Color="#ECFDF5" Offset="0.0" />
+                                <GradientStop x:Name="HeroGradStop2" Color="#E0F2FE" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
 
-                <Border Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="14">
-                    <StackPanel>
-                        <TextBlock Text="QUARANTINE &amp; EXCLUSIONS" FontSize="10" Foreground="#9CA3AF" FontWeight="Bold" />
-                        <TextBlock x:Name="QuarantineCountText" Text="0 Quarantined · 0 Excluded" FontSize="14" FontWeight="Bold" Foreground="#F59E0B" Margin="0,5,0,0" />
-                        <TextBlock x:Name="DiagnosticsHealthText" Text="Diagnostics: Healthy (.known_good ready)" FontSize="11" Foreground="#10B981" Margin="0,3,0,0" />
-                    </StackPanel>
-                </Border>
-            </UniformGrid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-            <!-- Split Findings & Multi-Function Inspector Table -->
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*" />
-                    <ColumnDefinition Width="2*" />
-                </Grid.ColumnDefinitions>
+                            <!-- Glowing Shield + K Emblem -->
+                            <Border x:Name="HeroShieldIconBadge"
+                                    Grid.Column="0"
+                                    Width="72"
+                                    Height="72"
+                                    CornerRadius="18"
+                                    Background="#FFFFFF"
+                                    BorderBrush="#10B981"
+                                    BorderThickness="2"
+                                    Margin="0,0,22,0"
+                                    VerticalAlignment="Center"
+                                    Effect="{StaticResource FluentGlassShadow}">
+                                <Grid>
+                                    <Image Source="pack://application:,,,/Assets/KironProhori.ico"
+                                           Width="46"
+                                           Height="46"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                                    <Border x:Name="HeroShieldCornerCheck"
+                                            Width="22"
+                                            Height="22"
+                                            CornerRadius="11"
+                                            Background="#059669"
+                                            BorderBrush="#FFFFFF"
+                                            BorderThickness="2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Margin="0,0,-4,-4">
+                                        <TextBlock x:Name="HeroShieldGlyphText"
+                                                   Text="✓"
+                                                   FontSize="11"
+                                                   FontWeight="ExtraBold"
+                                                   Foreground="#FFFFFF"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </Border>
 
-                <!-- Left Table: Detection Findings with 4-Tier Verdict & 5 Remediation Actions -->
-                <Border Grid.Column="0" Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="14" Margin="0,0,12,0">
-                    <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                            <TextBlock Text="SCAN DETECTIONS (CONFIRMED / SUSPICIOUS / UNKNOWN / CLEAN)"
-                                       FontSize="12"
-                                       FontWeight="Bold"
-                                       Foreground="#E5E7EB"
-                                       VerticalAlignment="Center" />
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="Quarantine (Recommended)"
-                                        Click="OnQuarantineSelectedFindingClick"
-                                        Background="#B45309"
-                                        Foreground="#FFFFFF"
-                                        Padding="9,4"
-                                        Margin="0,0,6,0" />
-                                <Button Content="Ignore Once"
-                                        Click="OnIgnoreSelectedFindingOnceClick"
-                                        Background="#1F2937"
-                                        Foreground="#D1D5DB"
-                                        Padding="9,4"
-                                        Margin="0,0,6,0" />
-                                <Button Content="Add Exclusion"
-                                        Click="OnExcludeSelectedFindingClick"
-                                        Background="#1E293B"
-                                        Foreground="#38BDF8"
-                                        Padding="9,4" />
+                            <!-- Headline, Live Coexistence Badges & Subtext -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border x:Name="HeroStatusPillBorder"
+                                            Background="#059669"
+                                            CornerRadius="5"
+                                            Padding="9,3"
+                                            Margin="0,0,8,4">
+                                        <TextBlock x:Name="HeroStatusPillText"
+                                                   Text="PROTECTION LIVE"
+                                                   FontSize="10"
+                                                   FontWeight="Bold"
+                                                   Foreground="#FFFFFF" />
+                                    </Border>
+                                    <Border Background="#FFFFFF"
+                                            BorderBrush="#CBD5E1"
+                                            BorderThickness="1"
+                                            CornerRadius="5"
+                                            Padding="8,3"
+                                            Margin="0,0,8,4">
+                                        <TextBlock x:Name="DefenderStatusText"
+                                                   Text="Defender: Coexisting"
+                                                   FontSize="10.5"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#0F172A" />
+                                    </Border>
+                                    <Border Background="#FFFFFF"
+                                            BorderBrush="#CBD5E1"
+                                            BorderThickness="1"
+                                            CornerRadius="5"
+                                            Padding="8,3"
+                                            Margin="0,0,8,4">
+                                        <TextBlock x:Name="FirewallStatusText"
+                                                   Text="Firewall: Active"
+                                                   FontSize="10.5"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#0284C7" />
+                                    </Border>
+                                    <Border Background="#FFFFFF"
+                                            BorderBrush="#CBD5E1"
+                                            BorderThickness="1"
+                                            CornerRadius="5"
+                                            Padding="8,3"
+                                            Margin="0,0,0,4">
+                                        <TextBlock x:Name="SignatureVersionText"
+                                                   Text="Signature: Ready"
+                                                   FontSize="10.5"
+                                                   Foreground="#475569" />
+                                    </Border>
+                                </WrapPanel>
+
+                                <TextBlock x:Name="HeroHeadlineText"
+                                           Text="Your protection is live now"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="#0F172A"
+                                           Margin="0,4,0,3" />
+
+                                <TextBlock x:Name="HeroSubheadlineText"
+                                           Text="Multi-engine SHA-256 + Heuristic PE scanner, User-Mode Real-Time File Guard, and Chrome/Edge Manifest V3 Web Protection are active."
+                                           FontSize="12.5"
+                                           Foreground="#334155"
+                                           TextWrapping="Wrap" />
                             </StackPanel>
-                        </DockPanel>
-                        <ListBox x:Name="FindingsListBox"
-                                 Background="#0B0F17"
-                                 Foreground="#E5E7EB"
-                                 BorderBrush="#1F2937"
-                                 FontFamily="Consolas"
-                                 FontSize="12" />
-                    </DockPanel>
+
+                            <!-- Primary Quick Scan & Details Buttons -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="HeroQuickScanCtaBtn"
+                                        Content="Quick Scan"
+                                        Click="OnQuickScanClick"
+                                        Style="{StaticResource PrimaryFluentCtaButtonStyle}"
+                                        Margin="0,0,10,0" />
+                                <Button x:Name="HeroDetailsBtn"
+                                        Content="Details"
+                                        Click="OnRefreshWindowsSecurityClick"
+                                        Style="{StaticResource ModernActionButtonStyle}"
+                                        Background="#FFFFFF"
+                                        Foreground="#0F172A"
+                                        BorderBrush="#CBD5E1"
+                                        Padding="16,10" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- MAIN 4x2 ACTION TILE GRID (8 CLICKABLE GLASS CARDS) -->
+                    <UniformGrid Grid.Row="1" Columns="4" Rows="2">
+
+                        <!-- Tile 1: Scan (Quick / Full / Custom / USB) -->
+                        <Button x:Name="NavQuickScanBtn"
+                                Click="OnOpenScanCenterTileClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#E0F2FE" BorderBrush="#BAE6FD" BorderThickness="1">
+                                        <TextBlock Text="🔍" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#E0F2FE" CornerRadius="5" Padding="7,2">
+                                        <TextBlock x:Name="TileScanBadgeText" Text="4 MODES" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Scanner →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile1TitleText" Text="Scan" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Quick, Full, Custom Folder &amp; Removable USB Drive malware scanning."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 2: Web & Download Guard (Chrome/Edge MV3 + Native Messaging) -->
+                        <Button x:Name="NavWebProtectionBtn"
+                                Click="OnWebProtectionViewClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1">
+                                        <TextBlock Text="🌐" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#D1FAE5" CornerRadius="5" Padding="7,2">
+                                        <TextBlock Text="MV3 READY" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Web &amp; Download Rules →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile2TitleText" Text="Web &amp; Download Guard" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Chrome &amp; Edge phishing blocker + 4-state Native Messaging download guard."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 3: Real-Time Protection -->
+                        <Button x:Name="NavRealtimeBtn"
+                                Click="OnRealtimeGuardToggleClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1">
+                                        <TextBlock Text="🛡" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#D1FAE5" CornerRadius="5" Padding="7,2">
+                                        <TextBlock x:Name="DashCardRealtimeBadge" Text="READY" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Configure Real-Time Guard →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile3TitleText" Text="Real-Time Protection" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Monitors Downloads, Temp &amp; Startup folders in user-mode without kernel drivers."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 4: Quarantine Vault -->
+                        <Button x:Name="NavQuarantineBtn"
+                                Click="OnRefreshQuarantineClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1">
+                                        <TextBlock Text="🔒" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#FEF3C7" CornerRadius="5" Padding="7,2">
+                                        <TextBlock x:Name="DashCardQuarantineBadge" Text="0 ISOLATED" FontSize="9.5" FontWeight="Bold" Foreground="#D97706" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Quarantine Vault →" FontSize="11" FontWeight="SemiBold" Foreground="#D97706" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile4TitleText" Text="Quarantine Vault" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="XOR-isolated .kpq files with SHA-256 verification, Restore &amp; Permanent Delete."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 5: Threat History & Logs -->
+                        <Button x:Name="NavHistoryBtn"
+                                Click="OnThreatHistoryClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1">
+                                        <TextBlock Text="📋" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#F1F5F9" CornerRadius="5" Padding="7,2">
+                                        <TextBlock x:Name="DiagnosticsHealthText" Text="HEALTHY" FontSize="9.5" FontWeight="Bold" Foreground="#475569" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="View Scan &amp; Threat Logs →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile5TitleText" Text="Threat History &amp; Logs" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Local scan session ledger, EICAR self-test records, and self-repair diagnostics."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 6: Security Intelligence -->
+                        <Button x:Name="NavSecurityIntelBtn"
+                                Click="OnSecurityIntelligenceViewClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#E0F2FE" BorderBrush="#BAE6FD" BorderThickness="1">
+                                        <TextBlock Text="🧠" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#E0F2FE" CornerRadius="5" Padding="7,2">
+                                        <TextBlock Text="MULTI-ENGINE" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Engine Status &amp; Feeds →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile6TitleText" Text="Security Intelligence" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="64 KB Incremental SHA-256, Heuristic PE/Script analyzer, YARA &amp; ClamAV adapters."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 7: Database & App Updates -->
+                        <Button x:Name="NavUpdatesBtn"
+                                Click="OnCheckUpdatesClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1">
+                                        <TextBlock Text="🔄" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#D1FAE5" CornerRadius="5" Padding="7,2">
+                                        <TextBlock Text="SIGNED HTTPS" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Check for Updates →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile7TitleText" Text="Database &amp; App Updates" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Cryptographically verified SHA-256 + digital signature update checks &amp; rollback."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                        <!-- Tile 8: Exclusions & Firewall -->
+                        <Button x:Name="NavExclusionsBtn"
+                                Click="OnExclusionsViewClick"
+                                Style="{StaticResource FluentGlassTileButtonStyle}">
+                            <DockPanel LastChildFill="True">
+                                <DockPanel DockPanel.Dock="Top">
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1">
+                                        <TextBlock Text="⚙" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#F1F5F9" CornerRadius="5" Padding="7,2">
+                                        <TextBlock x:Name="QuarantineCountText" Text="0 EXCLUDED" FontSize="9.5" FontWeight="Bold" Foreground="#475569" />
+                                    </Border>
+                                </DockPanel>
+                                <TextBlock DockPanel.Dock="Bottom" Text="Exclusions &amp; Firewall →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
+                                    <TextBlock x:Name="Tile8TitleText" Text="Exclusions &amp; Firewall" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Canonical path exclusions and Windows Defender / Firewall coexistence monitor."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+
+                    </UniformGrid>
+                </Grid>
+
+                <!-- ===================================================================== -->
+                <!-- VIEW 2: DEDICATED SUB-PAGE WORKSPACE (WITH BACK TO DASHBOARD ←)       -->
+                <!-- ===================================================================== -->
+                <Grid x:Name="ScannerAndInspectorViewPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <!-- Sub-Page Top Header with Back Button & Contextual Module Selectors -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Live Scan Progress & Contextual Action Bar -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Split Detection Findings & Contextual Inspector -->
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Sub-Page Header Bar with Back to Dashboard (←) -->
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource GlassCardBrush}"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="16,12"
+                            Margin="0,0,0,12"
+                            Effect="{StaticResource FluentGlassShadow}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Back to Dashboard Button -->
+                            <Button x:Name="NavOverviewBtn"
+                                    Grid.Column="0"
+                                    Content="← Back to Dashboard"
+                                    Click="OnNavigateOverviewClick"
+                                    Style="{StaticResource ModernActionButtonStyle}"
+                                    Margin="0,0,14,0" />
+
+                            <!-- Sub-Page Section Title & Disclosure -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,14,0">
+                                <TextBlock x:Name="CurrentSectionTitle"
+                                           Text="Scan Center"
+                                           FontSize="16"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="DisclosureBannerText"
+                                           Text="User-Mode Windows Companion · Coexists with Microsoft Defender · No Automatic File Upload · No Telemetry by Default"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <!-- Global Scan Control Buttons -->
+                            <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="PauseResumeScanBtn"
+                                        Content="Pause Scan"
+                                        Click="OnPauseResumeScanClick"
+                                        Style="{StaticResource ModernActionButtonStyle}"
+                                        Margin="0,0,6,0" />
+                                <Button x:Name="CancelScanBtn"
+                                        Content="Stop Scan"
+                                        Click="OnCancelScanClick"
+                                        Style="{StaticResource ModernActionButtonStyle}"
+                                        Foreground="#DC2626"
+                                        BorderBrush="#FCA5A5"
+                                        Margin="0,0,6,0" />
+                                <Button x:Name="RunEicarSelfTestBtn"
+                                        Content="Run Safe EICAR Self-Test"
+                                        Click="OnRunEicarSelfTestClick"
+                                        Style="{StaticResource ModernActionButtonStyle}"
+                                        Background="#0284C7"
+                                        Foreground="#FFFFFF"
+                                        BorderBrush="#0284C7" />
+                            </WrapPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Contextual Sub-Navigation & Progress Strip -->
+                    <Border Grid.Row="1"
+                            Background="{DynamicResource GlassCardBrush}"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="16,12"
+                            Margin="0,0,0,12"
+                            Effect="{StaticResource FluentGlassShadow}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                                <DockPanel>
+                                    <TextBlock x:Name="ActiveScanBannerTitle"
+                                               Text="MODULAR MULTI-ENGINE SCANNER PIPELINE"
+                                               FontSize="12"
+                                               FontWeight="Bold"
+                                               Foreground="#0284C7" />
+                                    <TextBlock x:Name="ScanStateText"
+                                               Text=" · IDLE"
+                                               FontSize="12"
+                                               FontWeight="Bold"
+                                               Foreground="#059669" />
+                                    <TextBlock x:Name="ScanMetricsText"
+                                               DockPanel.Dock="Right"
+                                               Text="0 scanned · 0 detections · 0 skipped"
+                                               FontSize="11.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               HorizontalAlignment="Right" />
+                                </DockPanel>
+                                <ProgressBar x:Name="ScanProgressBar"
+                                             Height="7"
+                                             Minimum="0"
+                                             Maximum="100"
+                                             Value="0"
+                                             Background="#E2E8F0"
+                                             Foreground="#0284C7"
+                                             BorderThickness="0"
+                                             Margin="0,7,0,4" />
+                                <TextBlock x:Name="ActiveScanLivePathText"
+                                           Text="Ready"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <!-- Contextual Mode Switcher Buttons (Scan modes, Web/Download, Real-Time Toggle, Exclusions/Firewall) -->
+                            <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Scan Mode Selector Bar -->
+                                <StackPanel x:Name="ScanModesSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
+                                    <Button Content="Quick Scan" Click="OnQuickScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavFullScanBtn" Content="Full Scan" Click="OnFullScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavCustomScanBtn" Content="Custom Folder" Click="OnCustomScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavUsbScanBtn" Content="USB Drive Scan" Click="OnUsbScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                </StackPanel>
+
+                                <!-- Web & Download Sub-Tab Switcher -->
+                                <StackPanel x:Name="WebAndDownloadSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
+                                    <Button Content="Web Protection Rules (MV3)" Click="OnWebProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavDownloadProtectionBtn" Content="Download Guard (Native Host)" Click="OnDownloadProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                </StackPanel>
+
+                                <!-- Exclusions, Defender & Firewall Sub-Tab Switcher -->
+                                <StackPanel x:Name="ExclusionsAndFirewallSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
+                                    <Button Content="Path Exclusions" Click="OnExclusionsViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavDefenderBtn" Content="Defender Coexistence" Click="OnRefreshWindowsSecurityClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavFirewallBtn" Content="Firewall Profiles" Click="OnFirewallViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                </StackPanel>
+
+                                <!-- Real-Time Guard Live Toggle -->
+                                <Button x:Name="ToggleRealtimeMonitoringBtn"
+                                        Content="Enable Real-Time File Guard"
+                                        Click="OnToggleRealtimeEngineClick"
+                                        Style="{StaticResource PrimaryFluentCtaButtonStyle}"
+                                        Padding="14,7"
+                                        FontSize="12"
+                                        Visibility="Collapsed" />
+                            </WrapPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Split Detections Table & Contextual Module Inspector -->
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.25*" />
+                            <ColumnDefinition Width="1.15*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left Card: Detection Findings (Quarantine-First Remediation) -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource GlassCardBrush}"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="16"
+                                Margin="0,0,8,0"
+                                Effect="{StaticResource FluentGlassShadow}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                    <TextBlock Text="SCAN DETECTIONS (QUARANTINE-FIRST POLICY)"
+                                               FontSize="11.5"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               VerticalAlignment="Center" />
+                                    <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                                        <Button Content="Quarantine (Recommended)"
+                                                Click="OnQuarantineSelectedFindingClick"
+                                                Style="{StaticResource ModernActionButtonStyle}"
+                                                Background="#D97706"
+                                                Foreground="#FFFFFF"
+                                                BorderBrush="#B45309"
+                                                Padding="10,5"
+                                                Margin="0,0,6,0" />
+                                        <Button Content="Ignore Once"
+                                                Click="OnIgnoreSelectedFindingOnceClick"
+                                                Style="{StaticResource ModernActionButtonStyle}"
+                                                Padding="10,5"
+                                                Margin="0,0,6,0" />
+                                        <Button Content="Add Exclusion"
+                                                Click="OnExcludeSelectedFindingClick"
+                                                Style="{StaticResource ModernActionButtonStyle}"
+                                                Foreground="#0284C7"
+                                                BorderBrush="#7DD3FC"
+                                                Padding="10,5" />
+                                    </WrapPanel>
+                                </DockPanel>
+
+                                <ListBox x:Name="FindingsListBox"
+                                         Background="{DynamicResource GlassElevatedBrush}"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"
+                                         BorderBrush="{DynamicResource GlassBorderBrush}"
+                                         BorderThickness="1"
+                                         FontFamily="Consolas"
+                                         FontSize="12"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Right Card: Contextual Inspector / Quarantine Vault -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource GlassCardBrush}"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="16"
+                                Margin="8,0,0,0"
+                                Effect="{StaticResource FluentGlassShadow}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                    <TextBlock x:Name="RightPanelHeaderText"
+                                               Text="MODULE DETAILS &amp; RECORDS"
+                                               FontSize="11.5"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+
+                                    <!-- STRICT RULE: Restore & Permanent Delete ONLY appear inside Quarantine Vault -->
+                                    <StackPanel x:Name="QuarantineActionButtonsPanel"
+                                                DockPanel.Dock="Right"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                Visibility="Collapsed">
+                                        <Button Content="Restore Selected"
+                                                Click="OnRestoreSelectedQuarantineClick"
+                                                Style="{StaticResource ModernActionButtonStyle}"
+                                                Background="#059669"
+                                                Foreground="#FFFFFF"
+                                                BorderBrush="#047857"
+                                                Padding="10,5"
+                                                Margin="0,0,6,0" />
+                                        <Button Content="Permanent Delete"
+                                                Click="OnDeleteSelectedQuarantineClick"
+                                                Style="{StaticResource ModernActionButtonStyle}"
+                                                Background="#DC2626"
+                                                Foreground="#FFFFFF"
+                                                BorderBrush="#B91C1C"
+                                                Padding="10,5" />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <ListBox x:Name="QuarantineListBox"
+                                         Background="{DynamicResource GlassElevatedBrush}"
+                                         Foreground="{DynamicResource PrimaryTextBrush}"
+                                         BorderBrush="{DynamicResource GlassBorderBrush}"
+                                         BorderThickness="1"
+                                         FontFamily="Consolas"
+                                         FontSize="12"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- ===================================================================== -->
+                <!-- VIEW 3: SETTINGS SUB-PAGE (THEME, LANGUAGE, TRAY BEHAVIOR, THROTTLE)  -->
+                <!-- ===================================================================== -->
+                <ScrollViewer x:Name="SettingsDedicatedViewPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Background="{DynamicResource GlassCardBrush}"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="14"
+                                Padding="22,18"
+                                Effect="{StaticResource FluentGlassShadow}">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,14">
+                                    <Button Content="← Back to Dashboard"
+                                            Click="OnNavigateOverviewClick"
+                                            Style="{StaticResource ModernActionButtonStyle}"
+                                            Margin="0,0,14,0" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="KIRON PROHORI Settings &amp; Preferences"
+                                                   FontSize="17"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}" />
+                                        <TextBlock Text="Stored locally in %LOCALAPPDATA%\KironProhori with automatic .known_good self-repair backup."
+                                                   FontSize="11.5"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <UniformGrid Columns="2" Rows="2">
+                                    <!-- Card 1: Visual Theme (Light Minimal Glass / Obsidian Dark) -->
+                                    <Border Background="{DynamicResource GlassElevatedBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="18" Margin="0,0,8,8">
+                                        <StackPanel>
+                                            <TextBlock Text="APPEARANCE &amp; GLASS THEME" FontSize="10.5" FontWeight="Bold" Foreground="#0284C7" />
+                                            <TextBlock x:Name="SettingsThemeStatusText" Text="Light Minimal Glass (Default)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,6,0,4" />
+                                            <TextBlock Text="Switch between Windows 11 Light Minimal Glass (#F4F7FB) and Obsidian Dark (#0B1120)." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                            <Button Content="Toggle Light Minimal Glass / Obsidian Dark"
+                                                    Click="OnToggleThemeClick"
+                                                    Style="{StaticResource ModernActionButtonStyle}"
+                                                    HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Card 2: Interface Language (EN / বাংলা) -->
+                                    <Border Background="{DynamicResource GlassElevatedBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="18" Margin="8,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="BILINGUAL INTERFACE LANGUAGE" FontSize="10.5" FontWeight="Bold" Foreground="#059669" />
+                                            <TextBlock x:Name="SettingsLanguageStatusText" Text="English (EN)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,6,0,4" />
+                                            <TextBlock Text="Instantaneously translate dashboard headers, tiles, and guidance between English and Bengali (বাংলা)." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                            <Button Content="Switch Language (EN / বাংলা)"
+                                                    Click="OnToggleLanguageClick"
+                                                    Style="{StaticResource ModernActionButtonStyle}"
+                                                    HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Card 3: Close Button & System Tray Behavior -->
+                                    <Border Background="{DynamicResource GlassElevatedBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="18" Margin="0,8,8,0">
+                                        <StackPanel>
+                                            <TextBlock Text="WINDOW CLOSE (✕) &amp; SYSTEM TRAY BEHAVIOR" FontSize="10.5" FontWeight="Bold" Foreground="#0284C7" />
+                                            <TextBlock x:Name="SettingsCloseBehaviorText" Text="Minimize to System Tray on Close (Recommended)" FontSize="14.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,6,0,4" />
+                                            <TextBlock Text="Choose whether clicking ✕ keeps KIRON PROHORI protecting quietly in the Windows System Tray or exits the application." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                            <Button x:Name="ToggleCloseBehaviorBtn"
+                                                    Content="Toggle: Minimize to Tray / Exit on Close"
+                                                    Click="OnToggleCloseToTrayBehaviorClick"
+                                                    Style="{StaticResource ModernActionButtonStyle}"
+                                                    HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Card 4: Scanner CPU Throttle & Gentle 280ms Chime -->
+                                    <Border Background="{DynamicResource GlassElevatedBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="18" Margin="8,8,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="CPU THROTTLE &amp; GENTLE AUDIO CHIME" FontSize="10.5" FontWeight="Bold" Foreground="#059669" />
+                                            <TextBlock x:Name="SettingsPerformanceProfileText" Text="Balanced Profile · BelowNormal CPU" FontSize="14.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,6,0,4" />
+                                            <TextBlock Text="Uses 64 KB IncrementalHash streaming, skips unchanged clean files, and plays a non-intrusive 280ms chime." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button x:Name="TestGentleChimeBtn"
+                                                        Content="Play Gentle Chime"
+                                                        Click="OnPlayGentleChimeClick"
+                                                        Style="{StaticResource ModernActionButtonStyle}"
+                                                        Margin="0,0,8,0" />
+                                                <Button Content="Reset First-Run Welcome"
+                                                        Click="OnShowWelcomeScreenClick"
+                                                        Style="{StaticResource ModernActionButtonStyle}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ===================================================================== -->
+                <!-- VIEW 4: ABOUT & LICENSE SUB-PAGE                                      -->
+                <!-- ===================================================================== -->
+                <ScrollViewer x:Name="AboutDedicatedViewPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <Border Background="{DynamicResource GlassCardBrush}"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="24,20"
+                            Effect="{StaticResource FluentGlassShadow}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,16">
+                                <Button Content="← Back to Dashboard"
+                                        Click="OnNavigateOverviewClick"
+                                        Style="{StaticResource ModernActionButtonStyle}"
+                                        Margin="0,0,16,0" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="About KIRON PROHORI &amp; Open Security Architecture"
+                                               FontSize="17"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="UacStatusText"
+                                               Text="Telemetry: OFF (Local-Only) · Privacy-First Windows 10 &amp; 11 (x64) Companion"
+                                               FontSize="11.5"
+                                               Foreground="#059669" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="84"
+                                        Height="84"
+                                        CornerRadius="20"
+                                        Background="{DynamicResource GlassElevatedBrush}"
+                                        BorderBrush="#0284C7"
+                                        BorderThickness="1.5"
+                                        VerticalAlignment="Top"
+                                        Margin="0,0,22,0">
+                                    <Image Source="pack://application:,,,/Assets/KironProhori.ico"
+                                           Width="56"
+                                           Height="56"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                                </Border>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="KIRON PROHORI — Windows Security &amp; Antivirus V1.0"
+                                               FontSize="19"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Developer &amp; Architect: ARIFUZZAMAN KIRON · Target Platform: Windows 10 &amp; Windows 11 (x64)"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="#0284C7"
+                                               Margin="0,4,0,14" />
+
+                                    <Border Background="{DynamicResource GlassElevatedBrush}"
+                                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="10"
+                                            Padding="16"
+                                            Margin="0,0,0,12">
+                                        <TextBlock x:Name="AboutOfficialMessageBlock"
+                                                   Text="KIRON PROHORI is an independent security application designed to help protect Windows computers through intelligent threat detection, malware scanning and security monitoring.&#x0a;&#x0a;Thank you for choosing KIRON PROHORI.&#x0a;&#x0a;Your privacy matters. Your security matters. Your trust matters.&#x0a;&#x0a;Built with care for a safer digital world."
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="20" />
+                                    </Border>
+
+                                    <TextBlock x:Name="AboutNonAffiliationBlock"
+                                               Text="Non-Affiliation Notice: KIRON PROHORI is an independent product developed by ARIFUZZAMAN KIRON and is not affiliated with Microsoft, Kaspersky, ESET, Malwarebytes, Norton, McAfee, or other antivirus vendors."
+                                               FontSize="11.5"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+
+                <!-- ===================================================================== -->
+                <!-- VIEW 5: FIRST-RUN LIGHT MINIMAL GLASS WELCOME OVERLAY                 -->
+                <!-- ===================================================================== -->
+                <Border x:Name="FirstRunWelcomeOverlayPanel"
+                        Visibility="Collapsed"
+                        Background="{DynamicResource AppCanvasBrush}"
+                        CornerRadius="14"
+                        Padding="32">
+                    <Border MaxWidth="620"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Background="{DynamicResource GlassCardBrush}"
+                            BorderBrush="{DynamicResource GlassBorderBrush}"
+                            BorderThickness="1.5"
+                            CornerRadius="18"
+                            Padding="36,30"
+                            Effect="{StaticResource FluentGlassShadow}">
+                        <StackPanel HorizontalAlignment="Center">
+                            <Border Width="78"
+                                    Height="78"
+                                    CornerRadius="20"
+                                    Background="#ECFDF5"
+                                    BorderBrush="#10B981"
+                                    BorderThickness="2"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,16">
+                                <Image Source="pack://application:,,,/Assets/KironProhori.ico"
+                                       Width="52"
+                                       Height="52"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                            </Border>
+
+                            <TextBlock Text="Welcome to KIRON PROHORI"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       HorizontalAlignment="Center" />
+
+                            <TextBlock Text="Windows 10 &amp; Windows 11 (x64) Security Companion · By ARIFUZZAMAN KIRON"
+                                       FontSize="12.5"
+                                       FontWeight="SemiBold"
+                                       Foreground="#0284C7"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,4,0,18" />
+
+                            <Border Background="{DynamicResource GlassElevatedBrush}"
+                                    BorderBrush="{DynamicResource GlassBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="18,14"
+                                    Margin="0,0,0,22">
+                                <StackPanel>
+                                    <TextBlock Text="✓  Zero Telemetry by Default — No personal files or browsing history ever leave your PC."
+                                               FontSize="12.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               Margin="0,0,0,6" />
+                                    <TextBlock Text="✓  Coexists with Microsoft Defender — Never disables Windows Defender or Windows Firewall."
+                                               FontSize="12.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               Margin="0,0,0,6" />
+                                    <TextBlock Text="✓  Quarantine-First Policy — Isolates threats safely; permanent deletion always requires your consent."
+                                               FontSize="12.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Button x:Name="WelcomeGetStartedBtn"
+                                    Content="Get Started"
+                                    Click="OnDismissWelcomeGetStartedClick"
+                                    Style="{StaticResource PrimaryFluentCtaButtonStyle}"
+                                    Padding="36,12"
+                                    FontSize="14"
+                                    HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
                 </Border>
 
-                <!-- Right Panel: Quarantine Vault, Exclusions & About Summary -->
-                <Border Grid.Column="1" Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="14">
-                    <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                            <TextBlock x:Name="RightPanelHeaderText"
-                                       Text="AES-256-GCM QUARANTINE VAULT &amp; EXCLUSIONS"
-                                       FontSize="12"
-                                       FontWeight="Bold"
-                                       Foreground="#E5E7EB"
-                                       VerticalAlignment="Center" />
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="Restore Selected"
-                                        Click="OnRestoreSelectedQuarantineClick"
-                                        Background="#065F46"
-                                        Foreground="#FFFFFF"
-                                        Padding="8,4"
-                                        Margin="0,0,6,0" />
-                                <Button Content="Permanent Delete"
-                                        Click="OnDeleteSelectedQuarantineClick"
-                                        Background="#7F1D1D"
-                                        Foreground="#FCA5A5"
-                                        Padding="8,4" />
-                            </StackPanel>
-                        </DockPanel>
-                        <ListBox x:Name="QuarantineListBox"
-                                 Background="#0B0F17"
-                                 Foreground="#E5E7EB"
-                                 BorderBrush="#1F2937"
-                                 FontFamily="Consolas"
-                                 FontSize="12" />
-                    </DockPanel>
-                </Border>
             </Grid>
 
-            <!-- Bottom Status Bar -->
-            <Border Grid.Row="3" Background="#111827" BorderBrush="#1F2937" BorderThickness="1" Padding="12,8" Margin="0,12,0,0">
-                <DockPanel>
+            <!-- ========================================================================= -->
+            <!-- ROW 2: CLEAN BOTTOM UTILITY BAR (SETTINGS GEAR, NOTIFICATIONS, ABOUT)     -->
+            <!-- ========================================================================= -->
+            <Border Grid.Row="2"
+                    Background="{DynamicResource UtilityBarBackgroundBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    CornerRadius="0,0,10,10"
+                    Padding="20,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Bottom-Left: Settings Gear Icon, Notifications Bell Icon, About/License Link -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="NavSettingsBtn"
+                                Content="⚙ Settings"
+                                Click="OnSettingsViewClick"
+                                Style="{StaticResource ModernActionButtonStyle}"
+                                Padding="11,5"
+                                Margin="0,0,8,0" />
+                        <Button x:Name="NavNotificationsBtn"
+                                Content="🔔 Notifications"
+                                Click="OnNotificationsViewClick"
+                                Style="{StaticResource ModernActionButtonStyle}"
+                                Padding="11,5"
+                                Margin="0,0,8,0" />
+                        <Button x:Name="NavAboutBtn"
+                                Content="ℹ About &amp; License"
+                                Click="OnAboutViewClick"
+                                Style="{StaticResource ModernActionButtonStyle}"
+                                Padding="11,5" />
+                    </StackPanel>
+
+                    <!-- Center: Live Status Message -->
                     <TextBlock x:Name="StatusFooterText"
-                               Text="Ready · KIRON PROHORI Windows Security &amp; Antivirus · Developer: ARIFUZZAMAN · Cloud Sync: OFF by Default"
-                               FontSize="11"
-                               Foreground="#9CA3AF" />
-                    <TextBlock DockPanel.Dock="Right"
-                               Text="SHA-256 · Heuristic PE · YARA · ClamAV · Defender Coexistence"
-                               FontSize="11"
-                               Foreground="#38BDF8"
-                               HorizontalAlignment="Right" />
-                </DockPanel>
+                               Grid.Column="1"
+                               Text="Ready · Click any glass tile to inspect or run a Quick Scan."
+                               FontSize="11.5"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Margin="16,0" />
+
+                    <!-- Bottom-Right: Signature Tagline -->
+                    <TextBlock Grid.Column="2"
+                               Text="KIRON PROHORI v1.0 · Free Forever · Zero Telemetry"
+                               FontSize="11.5"
+                               FontWeight="SemiBold"
+                               Foreground="#059669"
+                               VerticalAlignment="Center" />
+                </Grid>
             </Border>
+
         </Grid>
-    </Grid>
+    </Border>
 </Window>

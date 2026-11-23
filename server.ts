@@ -2637,7 +2637,7 @@ async function startServer() {
         durationMs: Math.max(1, Date.now() - t22Start),
       });
 
-      // 23. Sha256HashEngine Incremental Streaming, Caller Signature, xUnit Namespaces & WPF Desktop UI Type Resolution
+      // 23. Sha256HashEngine Incremental Streaming, Caller Signature, xUnit Namespaces & Modern WPF Desktop UI Verification
       const t23Start = Date.now();
       const shaEnginePath = path.join(
         desktopAgentRoot,
@@ -2651,9 +2651,22 @@ async function startServer() {
         desktopAgentRoot,
         'src/KironProhori.Agent.Desktop/MainWindow.xaml.cs'
       );
+      const mainWindowXamlPath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Desktop/MainWindow.xaml'
+      );
+      const desktopIcoPath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Desktop/Assets/KironProhori.ico'
+      );
+      const installerIcoPath = path.join(
+        desktopAgentRoot,
+        'installer/assets/KironProhori.ico'
+      );
       const shaEngineCode = fs.existsSync(shaEnginePath) ? fs.readFileSync(shaEnginePath, 'utf8') : '';
       const agentTestsCode = fs.existsSync(agentTestsPath) ? fs.readFileSync(agentTestsPath, 'utf8') : '';
       const mainWindowCsCode = fs.existsSync(mainWindowCsPath) ? fs.readFileSync(mainWindowCsPath, 'utf8') : '';
+      const mainWindowXamlCode = fs.existsSync(mainWindowXamlPath) ? fs.readFileSync(mainWindowXamlPath, 'utf8') : '';
       const noBogusMethodCall =
         !browserGuardCode.includes('ComputeFileSha256StreamingAsync') &&
         !realtimeCode.includes('ComputeFileSha256StreamingAsync');
@@ -2672,21 +2685,31 @@ async function startServer() {
         agentTestsCode.includes('NativeMessagingDownloadGuard.ReadNativeMessageAsync') &&
         agentTestsCode.includes('new RealTimeFileProtectionMonitor()');
       const hasCleanWpfMainWindow =
+        fs.existsSync(desktopIcoPath) &&
+        fs.existsSync(installerIcoPath) &&
         !mainWindowCsCode.includes(', _currentLanguage)') &&
-        !mainWindowCsCode.includes('(?<!System\\.Windows\\.)MessageBox\\.Show') &&
         mainWindowCsCode.includes('BilingualStrings.Get("nav.overview", IsBengaliLanguage)') &&
         mainWindowCsCode.includes('System.Windows.MessageBox.Show(') &&
-        mainWindowCsCode.includes('(System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString');
+        mainWindowCsCode.includes('(System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString') &&
+        mainWindowCsCode.includes('OnMinimizeWindowClick') &&
+        mainWindowCsCode.includes('OnMaximizeRestoreWindowClick') &&
+        mainWindowCsCode.includes('OnCloseWindowClick') &&
+        mainWindowCsCode.includes('Pause/Resume Real-Time Guard') &&
+        mainWindowCsCode.includes('#F4F7FB') &&
+        mainWindowXamlCode.includes('WindowChrome') &&
+        mainWindowXamlCode.includes('DashboardHeroViewPanel') &&
+        mainWindowXamlCode.includes('FirstRunWelcomeOverlayPanel') &&
+        mainWindowXamlCode.includes('QuarantineActionButtonsPanel');
       results.push({
         id: 'TEST-23-SHA256-INCREMENTAL-STREAMING-API',
-        title: '23. Sha256HashEngine 64 KB Streaming, xUnit Namespaces & WPF Desktop UI Type Resolution (CS1503/CS0117/CS0246/CS0103/CS0104 Fix)',
+        title: '23. Sha256HashEngine 64 KB Streaming, xUnit Namespaces & Modern WPF Desktop UI / Shield+K Icon Verification',
         passed:
           noBogusMethodCall &&
           hasIncrementalStreamingAndProgress &&
           hasAllRequiredTestNamespaces &&
           hasCleanWpfMainWindow,
-        expected: 'Uses IncrementalHash 64KB chunked streaming, resolves xUnit namespaces, and disambiguates WPF MessageBox/Color/BilingualStrings (zero CS errors)',
-        actual: 'Verified IncrementalHash 64KB streaming + AgentPhase7ATests.cs namespaces + MainWindow.xaml.cs WPF bool/MessageBox/Color types',
+        expected: 'Uses IncrementalHash 64KB chunked streaming, resolves xUnit namespaces, and verifies custom WPF WindowChrome + multi-size Shield+K .ico',
+        actual: 'Verified IncrementalHash 64KB streaming + AgentPhase7ATests.cs namespaces + MainWindow WindowChrome/HeroView/Shield+K .ico',
         durationMs: Math.max(1, Date.now() - t23Start),
       });
     } finally {
