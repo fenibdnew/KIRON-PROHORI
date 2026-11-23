@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
@@ -121,10 +122,10 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
         _logger.LogInformation("Startup configuration health check completed: {Status}", health.Status);
 
         // 2. Start User-Mode Real-Time File Protection Monitor on Downloads, Temp, and Startup folders
-        _realTimeMonitor.StartDefaultUserModeWatchers();
+        _realTimeMonitor.StartMonitoring();
         _logger.LogInformation(
             "User-Mode Real-Time File Protection started across {Count} monitored directories.",
-            _realTimeMonitor.GetMonitoredDirectories().Count);
+            RealTimeFileProtectionMonitor.GetDefaultWatchedDirectories().Count);
 
         // 3. Run Local Named Pipe IPC loop for Desktop UI and Native Messaging Host status synchronization
         Task ipcTask = RunLocalNamedPipeServerLoopAsync(stoppingToken);
@@ -142,7 +143,7 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
         }
         finally
         {
-            _realTimeMonitor.StopAllWatchers();
+            _realTimeMonitor.StopMonitoring();
             await ipcTask.ConfigureAwait(false);
             _logger.LogInformation("{Service} stopped cleanly.", Program.WindowsServiceName);
         }
@@ -172,7 +173,7 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
                 string? commandLine = await reader.ReadLineAsync(stoppingToken).ConfigureAwait(false);
                 if (!string.IsNullOrWhiteSpace(commandLine))
                 {
-                    string responseJson = HandleIpcCommand(commandLine.Trim());
+                    string responseJson = await HandleIpcCommandAsync(commandLine.Trim(), stoppingToken).ConfigureAwait(false);
                     await writer.WriteLineAsync(responseJson.AsMemory(), stoppingToken).ConfigureAwait(false);
                 }
             }
@@ -188,8 +189,9 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
         }
     }
 
-    public string HandleIpcCommand(string command)
+    public async Task<string> HandleIpcCommandAsync(string command, CancellationToken cancellationToken = default)
     {
+        var entries = await _quarantineManager.ListQuarantineEntriesAsync(cancellationToken).ConfigureAwait(false);
         var statusPayload = new
         {
             serviceName = Program.WindowsServiceName,
@@ -198,8 +200,8 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
             developer = AboutBrandMetadata.DeveloperName,
             uptimeSeconds = Math.Round((DateTimeOffset.UtcNow - _serviceStartedAtUtc).TotalSeconds, 1),
             realTimeMonitoringActive = _realTimeMonitor.IsMonitoringActive,
-            monitoredDirectories = _realTimeMonitor.GetMonitoredDirectories(),
-            quarantinedCount = _quarantineManager.GetActiveEntries().Count,
+            monitoredDirectories = RealTimeFileProtectionMonitor.GetDefaultWatchedDirectories(),
+            quarantinedCount = entries.Count(e => !e.IsRestored),
             exclusionsCount = _exclusionManager.GetExclusions().Count,
             webProtectionRuleCount = NativeMessagingDownloadGuard.GetVerifiedWebProtectionRules().Count,
             telemetryEnabled = false,

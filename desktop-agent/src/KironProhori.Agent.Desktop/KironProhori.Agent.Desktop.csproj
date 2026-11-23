@@ -12,9 +12,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
-    <AssemblyName>KironProhori.Agent.Desktop</AssemblyName>
+    <AssemblyName>KironProhori.Desktop</AssemblyName>
     <RootNamespace>KironProhori.Agent.Desktop</RootNamespace>
-    <Version>0.7.0-phase7a</Version>
+    <Version>1.0.0</Version>
     <Description>KIRON PROHORI Phase 7A Windows 10/11 (64-bit) Endpoint Security Desktop Agent</Description>
   </PropertyGroup>
 

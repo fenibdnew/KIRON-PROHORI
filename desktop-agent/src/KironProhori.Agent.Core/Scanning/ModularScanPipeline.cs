@@ -155,7 +155,11 @@ public sealed class ModularScanPipeline
                 else
                 {
                     bytesScanned = info.Length;
-                    string sha256 = await Sha256HashEngine.ComputeFileSha256Async(filePath, cancellationToken).ConfigureAwait(false);
+                    string sha256 = await Sha256HashEngine.ComputeFileSha256Async(
+                        filePath,
+                        cancellationToken,
+                        progress,
+                        ScanType.SingleFileScan).ConfigureAwait(false);
                     filesScanned = 1;
 
                     foreach (var engine in _engines)

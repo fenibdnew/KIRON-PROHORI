@@ -147,7 +147,8 @@ public sealed class RealTimeFileProtectionMonitor : IDisposable
         string filePath,
         string changeType = "CREATED",
         bool isStartupDirectory = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IProgress<ScanProgressUpdate>? progress = null)
     {
         string fileName = Path.GetFileName(filePath);
         var now = DateTimeOffset.UtcNow;
@@ -199,13 +200,33 @@ public sealed class RealTimeFileProtectionMonitor : IDisposable
         _debounceMap[filePath] = now;
 
         // 3. Scan the file via ModularScanPipeline (SHA-256 + Verified Intel + Heuristics + YARA/ClamAV where installed)
-        var report = await _scanPipeline.ScanSingleFileAsync(filePath, cancellationToken);
-        string sha256 = await Sha256HashEngine.ComputeFileSha256StreamingAsync(filePath, cancellationToken);
+        var report = await _scanPipeline.ScanSingleFileAsync(
+            filePath,
+            progress: progress,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        string sha256 = "NOT_AVAILABLE";
+        try
+        {
+            sha256 = await Sha256HashEngine.ComputeFileSha256Async(
+                filePath,
+                cancellationToken,
+                progress: progress,
+                scanType: ScanType.RealTimeFileEventScan).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // File locked or permission error; handled below as Unknown / Not scanned
+        }
 
         DownloadScanStatus scanStatus;
         string summary;
 
-        if (report.SkippedPermissionCount > 0 || report.TotalFilesScanned == 0)
+        if (report.SkippedPermissionCount > 0 || report.TotalFilesScanned == 0 || sha256 == "NOT_AVAILABLE")
         {
             scanStatus = DownloadScanStatus.UnknownNotScanned;
             summary = "Unknown / Not scanned: File could not be read due to OS lock or permissions.";

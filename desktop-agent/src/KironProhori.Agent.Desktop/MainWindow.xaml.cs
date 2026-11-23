@@ -257,7 +257,7 @@ public partial class MainWindow : Window
         CurrentSectionTitle.Text = "12. Security Intelligence & Multi-Engine Architecture";
         RightPanelHeaderText.Text = "LOCAL & PUBLIC THREAT INTELLIGENCE ENGINES ($0)";
         QuarantineListBox.Items.Clear();
-        foreach (var eng in _scanPipeline.GetEngineDescriptors())
+        foreach (var eng in _scanPipeline.GetEngineStatuses())
         {
             QuarantineListBox.Items.Add(
                 $"[{eng.Status}] {eng.DisplayName} ({eng.License}) | {eng.StatusDetail}"

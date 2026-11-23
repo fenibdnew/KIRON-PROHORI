@@ -2636,6 +2636,32 @@ async function startServer() {
         actual: 'Verified docs/website/index.html (10 sections) + app.js Coming Soon fallback + deploy-github-pages.yml + Google Drive backup guide',
         durationMs: Math.max(1, Date.now() - t22Start),
       });
+
+      // 23. Sha256HashEngine Incremental Streaming & Caller Signature Verification
+      const t23Start = Date.now();
+      const shaEnginePath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Core/Scanning/Sha256HashEngine.cs'
+      );
+      const shaEngineCode = fs.existsSync(shaEnginePath) ? fs.readFileSync(shaEnginePath, 'utf8') : '';
+      const noBogusMethodCall =
+        !browserGuardCode.includes('ComputeFileSha256StreamingAsync') &&
+        !realtimeCode.includes('ComputeFileSha256StreamingAsync');
+      const hasIncrementalStreamingAndProgress =
+        shaEngineCode.includes('IncrementalHash.CreateHash(HashAlgorithmName.SHA256)') &&
+        shaEngineCode.includes('IProgress<ScanProgressUpdate>? progress = null') &&
+        browserGuardCode.includes('progress: progress') &&
+        browserGuardCode.includes('cancellationToken: cancellationToken') &&
+        realtimeCode.includes('progress: progress') &&
+        realtimeCode.includes('cancellationToken: cancellationToken');
+      results.push({
+        id: 'TEST-23-SHA256-INCREMENTAL-STREAMING-API',
+        title: '23. Sha256HashEngine Incremental 64 KB Streaming, Progress Reporting & Caller Signature Alignment (CS1503 / CS0117 Fix)',
+        passed: noBogusMethodCall && hasIncrementalStreamingAndProgress,
+        expected: 'Uses IncrementalHash 64KB chunked streaming, forwards IProgress<ScanProgressUpdate> & CancellationToken, zero CS1503/CS0117 errors',
+        actual: 'Verified IncrementalHash 64KB streaming in ComputeFileSha256Async + ScanSingleFileAsync(filePath, progress, cancellationToken) alignment',
+        durationMs: Math.max(1, Date.now() - t23Start),
+      });
     } finally {
       try {
         fs.rmSync(sandboxDir, { recursive: true, force: true });

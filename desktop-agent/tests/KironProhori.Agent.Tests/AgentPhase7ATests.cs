@@ -749,4 +749,76 @@ public sealed class AgentPhase7ATests
         Assert.False(devRelease.IsVerifiedInstallerArtifactPresent);
         Assert.NotEqual("STABLE_V1_0", devRelease.ReleaseChannel);
     }
+
+    // 21. V1.0 Sha256HashEngine Incremental Streaming (Empty, Small, Large Multi-Chunk, Progress, Cancellation & File Access Failure)
+    [Fact]
+    public async Task Test21_Sha256HashEngine_StreamingEmptySmallLargeCancellationFailureAndProgress()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "Kiron_Sha256Stream_" + Guid.NewGuid().ToString("N")[..6]);
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            // 1. Empty File Hashing (0 bytes)
+            var emptyFile = Path.Combine(tempDir, "empty.bin");
+            await File.WriteAllBytesAsync(emptyFile, Array.Empty<byte>());
+            var emptyProgress = new List<ScanProgressUpdate>();
+            string emptyHash = await Sha256HashEngine.ComputeFileSha256Async(
+                emptyFile,
+                CancellationToken.None,
+                new SynchronousProgress(emptyProgress));
+            Assert.Equal("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", emptyHash);
+            Assert.NotEmpty(emptyProgress);
+            Assert.Equal(0, emptyProgress[^1].TotalBytesRead);
+
+            // 2. Small File Hashing (68-byte harmless EICAR test string)
+            var smallFile = Path.Combine(tempDir, "small_eicar.txt");
+            await File.WriteAllTextAsync(smallFile, BuildEicarString(), Encoding.ASCII);
+            string smallHash = await Sha256HashEngine.ComputeFileSha256Async(smallFile, CancellationToken.None);
+            Assert.Equal(Sha256HashEngine.OfficialEicarSha256, smallHash);
+
+            // 3. Large Multi-Chunk File Hashing (256 KB = four 64 KB chunks) + Progress Reporting
+            var largeFile = Path.Combine(tempDir, "large_multi_chunk.bin");
+            byte[] largePayload = new byte[256 * 1024];
+            for (int i = 0; i < largePayload.Length; i++)
+            {
+                largePayload[i] = (byte)(i % 251);
+            }
+            await File.WriteAllBytesAsync(largeFile, largePayload);
+            string expectedLargeHash = Convert.ToHexString(SHA256.HashData(largePayload)).ToLowerInvariant();
+
+            var largeProgressUpdates = new List<ScanProgressUpdate>();
+            string actualLargeHash = await Sha256HashEngine.ComputeFileSha256Async(
+                largeFile,
+                CancellationToken.None,
+                new SynchronousProgress(largeProgressUpdates),
+                ScanType.SingleFileScan);
+
+            Assert.Equal(expectedLargeHash, actualLargeHash);
+            Assert.True(largeProgressUpdates.Count >= 4);
+            Assert.Equal(largePayload.Length, largeProgressUpdates[^1].TotalBytesRead);
+
+            // 4. Cooperative Cancellation
+            using var cancelledCts = new CancellationTokenSource();
+            cancelledCts.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                Sha256HashEngine.ComputeFileSha256Async(largeFile, cancelledCts.Token));
+
+            // 5. File Access Failure (Non-existent file)
+            string missingFile = Path.Combine(tempDir, "does_not_exist.bin");
+            await Assert.ThrowsAsync<FileNotFoundException>(() =>
+                Sha256HashEngine.ComputeFileSha256Async(missingFile, CancellationToken.None));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    private sealed class SynchronousProgress : IProgress<ScanProgressUpdate>
+    {
+        private readonly List<ScanProgressUpdate> _sink;
+        public SynchronousProgress(List<ScanProgressUpdate> sink) => _sink = sink;
+        public void Report(ScanProgressUpdate value) => _sink.Add(value);
+    }
 }

@@ -103,21 +103,67 @@ public sealed class Sha256HashEngine : IScanEngine
     );
 
     /// <summary>
-    /// Computes streaming SHA-256 hash using a 64 KB buffer without loading the entire file into memory.
+    /// Computes streaming SHA-256 hash in bounded 64 KB chunks using IncrementalHash without loading the entire file into memory.
+    /// Supports cooperative cancellation via CancellationToken and optional progress reporting via IProgress&lt;ScanProgressUpdate&gt;.
+    /// Never executes scanned files and disposes all stream and cryptographic resources safely.
     /// </summary>
     public static async Task<string> ComputeFileSha256Async(
         string filePath,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IProgress<ScanProgressUpdate>? progress = null,
+        ScanType scanType = ScanType.SingleFileScan)
     {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("File path must not be empty.", nameof(filePath));
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        long totalBytesRead = 0;
+        byte[] buffer = new byte[65536]; // 64 KB bounded buffer
+
         await using var stream = new FileStream(
             filePath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.ReadWrite,
-            bufferSize: 65536,
+            bufferSize: buffer.Length,
             useAsync: true);
 
-        byte[] hashBytes = await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
+        using var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+        int bytesRead;
+        while ((bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false)) > 0)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            hasher.AppendData(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+
+            progress?.Report(new ScanProgressUpdate(
+                ScanType: scanType,
+                CurrentFilePath: filePath,
+                FilesScanned: 0,
+                ThreatsFound: 0,
+                SkippedPermissionCount: 0,
+                TotalBytesRead: totalBytesRead,
+                ElapsedSeconds: sw.Elapsed.TotalSeconds));
+        }
+
+        if (totalBytesRead == 0)
+        {
+            progress?.Report(new ScanProgressUpdate(
+                ScanType: scanType,
+                CurrentFilePath: filePath,
+                FilesScanned: 0,
+                ThreatsFound: 0,
+                SkippedPermissionCount: 0,
+                TotalBytesRead: 0,
+                ElapsedSeconds: sw.Elapsed.TotalSeconds));
+        }
+
+        byte[] hashBytes = hasher.GetHashAndReset();
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 

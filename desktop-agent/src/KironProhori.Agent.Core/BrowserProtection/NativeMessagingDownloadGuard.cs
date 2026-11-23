@@ -305,7 +305,8 @@ public sealed class NativeMessagingDownloadGuard
     public async Task<DownloadScanVerdictResult> EvaluateBrowserDownloadAsync(
         BrowserDownloadEventPayload payload,
         bool userApprovedAutoQuarantine = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IProgress<ScanProgressUpdate>? progress = null)
     {
         var now = DateTimeOffset.UtcNow;
         string domain = NormalizeHost(string.IsNullOrWhiteSpace(payload.WebsiteDomain) ? payload.DownloadUrl : payload.WebsiteDomain);
@@ -364,11 +365,31 @@ public sealed class NativeMessagingDownloadGuard
         }
 
         // 3. Scan the completed file locally
-        var scanReport = await _scanPipeline.ScanSingleFileAsync(payload.LocalFilePath, cancellationToken);
-        string sha256 = await Sha256HashEngine.ComputeFileSha256StreamingAsync(payload.LocalFilePath, cancellationToken);
+        var scanReport = await _scanPipeline.ScanSingleFileAsync(
+            payload.LocalFilePath,
+            progress: progress,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        string sha256 = "NOT_AVAILABLE";
+        try
+        {
+            sha256 = await Sha256HashEngine.ComputeFileSha256Async(
+                payload.LocalFilePath,
+                cancellationToken,
+                progress: progress,
+                scanType: ScanType.BrowserDownloadScan).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // File locked or permission error; handled below as Unknown / Not scanned
+        }
 
         // If permission error prevented scanning, return Unknown / Not scanned
-        if (scanReport.SkippedPermissionCount > 0 || scanReport.TotalFilesScanned == 0)
+        if (scanReport.SkippedPermissionCount > 0 || scanReport.TotalFilesScanned == 0 || sha256 == "NOT_AVAILABLE")
         {
             var lockedResult = new DownloadScanVerdictResult(
                 DownloadId: payload.DownloadId,
