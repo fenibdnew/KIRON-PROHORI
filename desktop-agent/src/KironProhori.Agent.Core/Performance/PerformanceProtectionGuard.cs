@@ -39,8 +39,8 @@ public sealed class PerformanceProtectionGuard
     /// Eco-Power Mode (Green Computing): automatically throttles background scanning when CPU usage &gt; 40%
     /// or when running on laptop battery power.
     /// </summary>
+    public const int EcoCpuThresholdPercent = 40;
     public bool EcoPowerModeEnabled { get; set; } = true;
-    public int EcoCpuThresholdPercent { get; set; } = 40;
 
     public bool IsPaused => !_pauseGate.IsSet;
     public int CachedCleanFileCount => _cleanFileCache.Count;

@@ -2615,8 +2615,12 @@ async function startServer() {
         fs.existsSync(gdriveBackupDocPath);
       const ghPagesHtml = hasGhPages ? fs.readFileSync(ghPagesHtmlPath, 'utf8') : '';
       const ghPagesJs = hasGhPages ? fs.readFileSync(ghPagesJsPath, 'utf8') : '';
+      const ghPagesWorkflow = hasGhPages ? fs.readFileSync(ghPagesWorkflowPath, 'utf8') : '';
       const t22Passed =
         hasGhPages &&
+        ghPagesWorkflow.includes('needs: build') &&
+        ghPagesWorkflow.includes('name: github-pages') &&
+        ghPagesWorkflow.includes('path: docs/website') &&
         ghPagesHtml.includes('#home') &&
         ghPagesHtml.includes('#download') &&
         ghPagesHtml.includes('#features') &&
@@ -2630,10 +2634,10 @@ async function startServer() {
         ghPagesJs.includes('Coming Soon');
       results.push({
         id: 'TEST-22-GITHUB-PAGES-DOWNLOAD-WEBSITE',
-        title: '22. GitHub Pages 10-Section Download Website, Coming Soon Honesty Gate & Google Drive Manual Backup Procedure',
+        title: '22. GitHub Pages Two-Job Build/Deploy Workflow, 10-Section Download Website & Coming Soon Honesty Gate',
         passed: t22Passed,
-        expected: 'Verifies all 10 required website sections, dynamic GitHub Release asset check with Coming Soon fallback, and Google Drive manual backup guide',
-        actual: 'Verified docs/website/index.html (10 sections) + app.js Coming Soon fallback + deploy-github-pages.yml + Google Drive backup guide',
+        expected: 'Verifies two-job (build + deploy with needs: build) GitHub Pages workflow, all 10 required website sections, and Coming Soon fallback',
+        actual: 'Verified deploy-github-pages.yml (build + deploy with needs: build & name: github-pages) + docs/website/index.html (10 sections)',
         durationMs: Math.max(1, Date.now() - t22Start),
       });
 
