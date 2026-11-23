@@ -287,8 +287,7 @@ public sealed class HeuristicSuspiciousFileEngine : IScanEngine
 
         bool hasInfostealerBrowserPattern = bytesRead > 0 &&
             HighRiskExecutableExtensions.Contains(ext) &&
-            InfostealerBrowserTargetPatterns.Count(p => asciiSample.Contains(p, StringComparison.OrdinalIgnoreCase)) >= 1 &&
-            (isFakeAiLauncher || InfostealerBrowserTargetPatterns.Count(p => asciiSample.Contains(p, StringComparison.OrdinalIgnoreCase)) >= 2);
+            InfostealerBrowserTargetPatterns.Any(p => asciiSample.Contains(p, StringComparison.OrdinalIgnoreCase));
 
         if (isFakeAiLauncher || hasInfostealerBrowserPattern)
         {
