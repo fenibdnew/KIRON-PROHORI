@@ -2637,13 +2637,18 @@ async function startServer() {
         durationMs: Math.max(1, Date.now() - t22Start),
       });
 
-      // 23. Sha256HashEngine Incremental Streaming & Caller Signature Verification
+      // 23. Sha256HashEngine Incremental Streaming, Caller Signature & xUnit Namespace Resolution Verification
       const t23Start = Date.now();
       const shaEnginePath = path.join(
         desktopAgentRoot,
         'src/KironProhori.Agent.Core/Scanning/Sha256HashEngine.cs'
       );
+      const agentTestsPath = path.join(
+        desktopAgentRoot,
+        'tests/KironProhori.Agent.Tests/AgentPhase7ATests.cs'
+      );
       const shaEngineCode = fs.existsSync(shaEnginePath) ? fs.readFileSync(shaEnginePath, 'utf8') : '';
+      const agentTestsCode = fs.existsSync(agentTestsPath) ? fs.readFileSync(agentTestsPath, 'utf8') : '';
       const noBogusMethodCall =
         !browserGuardCode.includes('ComputeFileSha256StreamingAsync') &&
         !realtimeCode.includes('ComputeFileSha256StreamingAsync');
@@ -2654,12 +2659,19 @@ async function startServer() {
         browserGuardCode.includes('cancellationToken: cancellationToken') &&
         realtimeCode.includes('progress: progress') &&
         realtimeCode.includes('cancellationToken: cancellationToken');
+      const hasAllRequiredTestNamespaces =
+        agentTestsCode.includes('using KironProhori.Agent.Core.BrowserProtection;') &&
+        agentTestsCode.includes('using KironProhori.Agent.Core.Realtime;') &&
+        agentTestsCode.includes('new NativeMessagingDownloadGuard()') &&
+        agentTestsCode.includes('NativeMessagingDownloadGuard.WriteNativeMessageAsync') &&
+        agentTestsCode.includes('NativeMessagingDownloadGuard.ReadNativeMessageAsync') &&
+        agentTestsCode.includes('new RealTimeFileProtectionMonitor()');
       results.push({
         id: 'TEST-23-SHA256-INCREMENTAL-STREAMING-API',
-        title: '23. Sha256HashEngine Incremental 64 KB Streaming, Progress Reporting & Caller Signature Alignment (CS1503 / CS0117 Fix)',
-        passed: noBogusMethodCall && hasIncrementalStreamingAndProgress,
-        expected: 'Uses IncrementalHash 64KB chunked streaming, forwards IProgress<ScanProgressUpdate> & CancellationToken, zero CS1503/CS0117 errors',
-        actual: 'Verified IncrementalHash 64KB streaming in ComputeFileSha256Async + ScanSingleFileAsync(filePath, progress, cancellationToken) alignment',
+        title: '23. Sha256HashEngine Incremental 64 KB Streaming, Caller Signature & xUnit Namespace Resolution (CS1503/CS0117/CS0246/CS0103 Fix)',
+        passed: noBogusMethodCall && hasIncrementalStreamingAndProgress && hasAllRequiredTestNamespaces,
+        expected: 'Uses IncrementalHash 64KB chunked streaming, forwards IProgress<ScanProgressUpdate> & CancellationToken, and resolves all xUnit namespaces (zero CS1503/CS0117/CS0246/CS0103)',
+        actual: 'Verified IncrementalHash 64KB streaming + ScanSingleFileAsync alignment + AgentPhase7ATests.cs BrowserProtection/Realtime namespace imports',
         durationMs: Math.max(1, Date.now() - t23Start),
       });
     } finally {
