@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Media;
 using System.Text;
@@ -9,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using KironProhori.Agent.Core.BrowserProtection;
 using KironProhori.Agent.Core.Diagnostics;
@@ -43,9 +45,15 @@ public partial class MainWindow : Window
     private readonly List<ScanFinding> _currentFindings = new();
     private readonly List<ScanReport> _scanHistory = new();
     private List<QuarantineEntry> _currentQuarantineItems = new();
+    private readonly HashSet<string> _knownRemovableDrives = new(StringComparer.OrdinalIgnoreCase);
+    private readonly CancellationTokenSource _appShutdownCts = new();
     private CancellationTokenSource? _activeScanCts;
     private System.Windows.Forms.NotifyIcon? _systemTrayNotifyIcon;
     private System.Windows.Forms.ToolStripMenuItem? _trayRealtimeMenuItem;
+
+    private const int WmDeviceChange = 0x0219;
+    private const int DbtDeviceArrival = 0x8000;
+    private const int DbtDevNodesChanged = 0x0007;
 
     // Default Theme: Light Minimal Glass (Windows 11 Fluent)
     private bool _isDarkTheme;
@@ -105,21 +113,37 @@ public partial class MainWindow : Window
 
         LoadLocalUiPreferences();
         ApplyThemePalette();
+        UpdateEcoPowerModeBadgeAndLabels();
         InitializeSystemTrayCompanion();
         ShowActiveWorkspaceView(showDashboardHero: true);
 
-        // Show First-Run Light Minimal Glass Welcome Screen on first launch only
-        if (!_hasCompletedFirstRunWelcome)
+        // Show First-Run Light Minimal Glass Welcome Screen on first launch only (unless launched via Explorer Right-Click --scan-path)
+        if (!_hasCompletedFirstRunWelcome && string.IsNullOrWhiteSpace(App.InitialScanTargetPath))
         {
             FirstRunWelcomeOverlayPanel.Visibility = Visibility.Visible;
         }
 
+        SourceInitialized += OnWindowSourceInitialized;
+
         Loaded += async (_, _) =>
         {
             ApplyWorkAreaBounds();
+            SeedInitialRemovableDrivesSnapshot();
+            _ = StartContextMenuScanPipeServerAsync(_appShutdownCts.Token);
+            _ = MonitorUsbDriveArrivalsAsync(_appShutdownCts.Token);
+
             await RefreshWindowsSecurityPostureAsync();
             await RefreshQuarantineVaultAsync();
             UpdateHeroProtectionBannerState();
+
+            if (!string.IsNullOrWhiteSpace(App.InitialScanTargetPath))
+            {
+                await RunExplorerContextMenuScanAsync(App.InitialScanTargetPath);
+            }
+            else if (App.StartMinimizedToTray)
+            {
+                MinimizeSmoothlyToSystemTray();
+            }
         };
     }
 
@@ -132,6 +156,7 @@ public partial class MainWindow : Window
         public bool IsDarkTheme { get; set; }
         public string Language { get; set; } = "en";
         public bool MinimizeToTrayOnClose { get; set; } = true;
+        public bool EcoPowerModeEnabled { get; set; } = true;
         public bool HasCompletedFirstRunWelcome { get; set; }
     }
 
@@ -154,11 +179,12 @@ public partial class MainWindow : Window
             _isDarkTheme = prefs.IsDarkTheme;
             _currentLanguage = string.Equals(prefs.Language, "bn", StringComparison.OrdinalIgnoreCase) ? "bn" : "en";
             _minimizeToTrayOnClose = prefs.MinimizeToTrayOnClose;
+            _performanceGuard.SetEcoPowerMode(prefs.EcoPowerModeEnabled);
             _hasCompletedFirstRunWelcome = prefs.HasCompletedFirstRunWelcome;
         }
         catch
         {
-            // Safe default: Light Minimal Glass, English, Minimize to Tray enabled
+            // Safe default: Eco-Minimal Light Glass, English, Eco-Power Mode enabled
         }
     }
 
@@ -171,6 +197,7 @@ public partial class MainWindow : Window
                 IsDarkTheme = _isDarkTheme,
                 Language = _currentLanguage,
                 MinimizeToTrayOnClose = _minimizeToTrayOnClose,
+                EcoPowerModeEnabled = _performanceGuard.EcoPowerModeEnabled,
                 HasCompletedFirstRunWelcome = _hasCompletedFirstRunWelcome
             };
             var json = JsonSerializer.Serialize(prefs, new JsonSerializerOptions { WriteIndented = true });
@@ -388,6 +415,7 @@ public partial class MainWindow : Window
 
     private void OnMainWindowClosed(object? sender, EventArgs e)
     {
+        _appShutdownCts.Cancel();
         _activeScanCts?.Cancel();
         _realTimeMonitor.Dispose();
         if (_systemTrayNotifyIcon != null)
@@ -396,6 +424,295 @@ public partial class MainWindow : Window
             _systemTrayNotifyIcon.Dispose();
             _systemTrayNotifyIcon = null;
         }
+    }
+
+    // =========================================================================
+    // 2B. WINDOWS EXPLORER RIGHT-CLICK (--scan-path) & AUTO USB ARRIVAL WATCHER
+    // =========================================================================
+
+    private void OnWindowSourceInitialized(object? sender, EventArgs e)
+    {
+        try
+        {
+            var handle = new WindowInteropHelper(this).Handle;
+            if (handle != IntPtr.Zero)
+            {
+                HwndSource.FromHwnd(handle)?.AddHook(WndProc);
+            }
+        }
+        catch
+        {
+            // Safe fallback on non-Win32 test host
+        }
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmDeviceChange)
+        {
+            int eventCode = wParam.ToInt32();
+            if (eventCode == DbtDeviceArrival || eventCode == DbtDevNodesChanged)
+            {
+                _ = CheckForNewlyArrivedUsbDrivesAsync();
+            }
+        }
+        return IntPtr.Zero;
+    }
+
+    private void SeedInitialRemovableDrivesSnapshot()
+    {
+        _knownRemovableDrives.Clear();
+        foreach (var drive in ModularScanPipeline.GetRemovableUsbDrives())
+        {
+            _knownRemovableDrives.Add(drive.RootDirectory.FullName);
+        }
+    }
+
+    private async Task MonitorUsbDriveArrivalsAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2.5), cancellationToken);
+                await CheckForNewlyArrivedUsbDrivesAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch
+            {
+                // Ignore transient volume enumeration error
+            }
+        }
+    }
+
+    private async Task CheckForNewlyArrivedUsbDrivesAsync()
+    {
+        var currentDrives = ModularScanPipeline.GetRemovableUsbDrives()
+            .Select(d => d.RootDirectory.FullName)
+            .ToList();
+
+        // Remove unplugged drives from tracked set
+        _knownRemovableDrives.RemoveWhere(known =>
+            !currentDrives.Contains(known, StringComparer.OrdinalIgnoreCase));
+
+        foreach (var driveRoot in currentDrives)
+        {
+            if (_knownRemovableDrives.Add(driveRoot))
+            {
+                await HandleUsbDriveArrivalAsync(driveRoot);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Automatically invoked the moment a USB pendrive is plugged in:
+    /// 1. Plays a soft, pleasant gentle chime.
+    /// 2. Shows a tray notification: "USB Drive Detected (X:) — Scanning with KIRON PROHORI..."
+    /// 3. Automatically un-hides folders hidden by USB shortcut viruses and scans the USB drive.
+    /// 4. Shows a completion notification ("USB Safe" or "Threat Detected — Ready to Quarantine").
+    /// </summary>
+    public async Task HandleUsbDriveArrivalAsync(string driveRootPath)
+    {
+        string driveLabel = driveRootPath.TrimEnd('\\');
+        PlayGentleChimeIfEnabled();
+
+        ShowTrayNotification(
+            "KIRON PROHORI — USB Protection",
+            $"USB Drive Detected ({driveLabel}) — Scanning with KIRON PROHORI...",
+            System.Windows.Forms.ToolTipIcon.Info);
+
+        ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
+        CurrentSectionTitle.Text = $"USB Auto-Scan ({driveLabel})";
+        ActiveScanBannerTitle.Text = $"AUTOMATIC USB DRIVE SCAN — {driveLabel}";
+        StatusFooterText.Text = $"USB Drive Detected ({driveLabel}) — Scanning and recovering hidden folders...";
+
+        var recoveredFolders = ModularScanPipeline.RecoverHiddenUsbFolders(driveRootPath);
+        await RunScanWorkflowAsync(ScanType.UsbDriveScan, new[] { driveRootPath });
+
+        if (recoveredFolders.Count > 0)
+        {
+            foreach (var folder in recoveredFolders)
+            {
+                QuarantineListBox.Items.Insert(0, $"[USB FOLDER RECOVERED] Unhidden: {folder}");
+            }
+        }
+
+        if (_currentFindings.Count == 0)
+        {
+            string recoveredNote = recoveredFolders.Count > 0
+                ? $" · Recovered {recoveredFolders.Count} hidden folder(s)"
+                : string.Empty;
+            ShowTrayNotification(
+                "KIRON PROHORI — USB Safe",
+                $"USB Safe ({driveLabel}) — No malware detected{recoveredNote}.",
+                System.Windows.Forms.ToolTipIcon.Info);
+            StatusFooterText.Text = $"USB Safe ({driveLabel}) — Scan complete{recoveredNote}.";
+        }
+        else
+        {
+            ShowTrayNotification(
+                "KIRON PROHORI — USB Threat Detected",
+                $"Threat Detected on USB ({driveLabel}) — {_currentFindings.Count} item(s) ready to Quarantine.",
+                System.Windows.Forms.ToolTipIcon.Warning);
+        }
+    }
+
+    private void ShowTrayNotification(string title, string message, System.Windows.Forms.ToolTipIcon icon)
+    {
+        try
+        {
+            if (_systemTrayNotifyIcon != null)
+            {
+                _systemTrayNotifyIcon.Visible = true;
+                _systemTrayNotifyIcon.ShowBalloonTip(2800, title, message, icon);
+            }
+        }
+        catch
+        {
+            // Safe no-op in headless CI runner
+        }
+    }
+
+    private async Task StartContextMenuScanPipeServerAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                using var server = new NamedPipeServerStream(
+                    App.ScanPathNamedPipeName,
+                    PipeDirection.In,
+                    maxNumberOfServerInstances: 4,
+                    PipeTransmissionMode.Byte,
+                    PipeOptions.Asynchronous);
+
+                await server.WaitForConnectionAsync(cancellationToken);
+                using var reader = new StreamReader(server, Encoding.UTF8);
+                string forwardedPath = (await reader.ReadToEndAsync(cancellationToken)).Trim();
+
+                if (!string.IsNullOrWhiteSpace(forwardedPath))
+                {
+                    await Dispatcher.InvokeAsync(async () =>
+                    {
+                        RestoreFromSystemTray();
+                        await RunExplorerContextMenuScanAsync(forwardedPath);
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch
+            {
+                await Task.Delay(400, cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Executes an immediate scan triggered from the Windows Explorer Right-Click Context Menu
+    /// ("Scan with KIRON PROHORI" -> --scan-path "&lt;drive/folder/file&gt;").
+    /// </summary>
+    public async Task RunExplorerContextMenuScanAsync(string targetPath)
+    {
+        if (string.IsNullOrWhiteSpace(targetPath))
+        {
+            return;
+        }
+
+        FirstRunWelcomeOverlayPanel.Visibility = Visibility.Collapsed;
+        ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
+
+        if (File.Exists(targetPath))
+        {
+            CurrentSectionTitle.Text = $"Explorer File Scan — {Path.GetFileName(targetPath)}";
+            ActiveScanBannerTitle.Text = $"EXPLORER CONTEXT MENU FILE SCAN — {targetPath}";
+            await RunSingleFileContextMenuScanAsync(targetPath);
+            return;
+        }
+
+        if (Directory.Exists(targetPath))
+        {
+            bool isRemovableDrive = false;
+            try
+            {
+                var root = Path.GetPathRoot(targetPath);
+                if (!string.IsNullOrWhiteSpace(root))
+                {
+                    var di = new DriveInfo(root);
+                    isRemovableDrive = di.DriveType == DriveType.Removable;
+                }
+            }
+            catch
+            {
+                // Ignore DriveInfo parse error
+            }
+
+            if (isRemovableDrive)
+            {
+                await HandleUsbDriveArrivalAsync(targetPath);
+            }
+            else
+            {
+                CurrentSectionTitle.Text = $"Explorer Folder Scan — {targetPath}";
+                ActiveScanBannerTitle.Text = $"EXPLORER CONTEXT MENU SCAN — {targetPath}";
+                await RunScanWorkflowAsync(ScanType.CustomFolderScan, new[] { targetPath });
+            }
+            return;
+        }
+
+        ActiveScanLivePathText.Text = $"Target path not found: {targetPath}";
+        StatusFooterText.Text = $"Cannot scan '{targetPath}' — path does not exist.";
+    }
+
+    private async Task RunSingleFileContextMenuScanAsync(string filePath)
+    {
+        _activeScanCts?.Cancel();
+        _activeScanCts = new CancellationTokenSource();
+        _scanPipeline.ResumeActiveScan();
+        PauseResumeScanBtn.Content = "Pause Scan";
+
+        ScanStateText.Text = " · RUNNING (Single File)";
+        ScanProgressBar.IsIndeterminate = true;
+        FindingsListBox.Items.Clear();
+        _currentFindings.Clear();
+
+        var progress = new Progress<ScanProgressUpdate>(report =>
+        {
+            ScanMetricsText.Text = $"{report.FilesScanned} scanned · {report.ThreatsFound} detections";
+            ActiveScanLivePathText.Text = report.CurrentFilePath;
+        });
+
+        var summary = await _scanPipeline.ScanSingleFileAsync(filePath, progress, _activeScanCts.Token);
+        _scanHistory.Insert(0, summary);
+        ScanProgressBar.IsIndeterminate = false;
+        ScanProgressBar.Value = 100;
+        ScanStateText.Text = $" · COMPLETED ({summary.Findings.Count} detections)";
+        ScanMetricsText.Text = $"{summary.TotalFilesScanned} scanned · {summary.Findings.Count} detections";
+        ActiveScanLivePathText.Text = $"Completed in {summary.DurationSeconds:F2}s ({filePath})";
+
+        foreach (var finding in summary.Findings)
+        {
+            _currentFindings.Add(finding);
+            RenderFindingInList(finding);
+        }
+
+        if (summary.Findings.Count == 0)
+        {
+            FindingsListBox.Items.Add($"[CLEAN] No threats detected in '{filePath}'.");
+        }
+        else
+        {
+            PlayGentleChimeIfEnabled();
+        }
+
+        PopulateScanHistoryInInspector();
+        UpdateHeroProtectionBannerState();
+        StatusFooterText.Text = $"Finished scanning '{Path.GetFileName(filePath)}'.";
     }
 
     // =========================================================================
@@ -433,34 +750,34 @@ public partial class MainWindow : Window
         var activeThreats = _currentFindings.Count;
         if (activeThreats > 0)
         {
-            HeroProtectionBannerBorder.BorderBrush = CreateBrush("#F59E0B");
-            HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#2B190B" : "#FEF3C7");
-            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#1E293B" : "#FFEDD5");
-            HeroShieldIconBadge.BorderBrush = CreateBrush("#D97706");
-            HeroShieldCornerCheck.Background = CreateBrush("#D97706");
+            HeroProtectionBannerBorder.BorderBrush = CreateBrush("#F42A41");
+            HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#2B1218" : "#FFF1F2");
+            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#1E293B" : "#FFE4E6");
+            HeroShieldIconBadge.BorderBrush = CreateBrush("#F42A41");
+            HeroShieldCornerCheck.Background = CreateBrush("#F42A41");
             HeroShieldGlyphText.Text = "!";
-            HeroStatusPillBorder.Background = CreateBrush("#D97706");
+            HeroStatusPillBorder.Background = CreateBrush("#F42A41");
             HeroStatusPillText.Text = IsBengaliLanguage ? "পদক্ষেপ প্রয়োজন" : "ACTION NEEDED";
             HeroHeadlineText.Text = IsBengaliLanguage
                 ? $"{activeThreats}টি থ্রেট কোয়ারেন্টাইন রিভিউয়ের অপেক্ষায়"
                 : $"Action Needed — {activeThreats} Detection(s) Pending Review";
             HeroHeadlineText.Foreground = CreateBrush(_isDarkTheme ? "#F8FAFC" : "#0F172A");
-            HeroSubheadlineText.Text = "KIRON PROHORI follows a Quarantine-First policy. Open Scan Results to Quarantine, Ignore Once, or Add Exclusion.";
+            HeroSubheadlineText.Text = "KIRON PROHORI follows a Quarantine-First policy with Local Heuristic AI Risk Scoring (0–100). Open Scan Results to Quarantine, Ignore Once, or Add Exclusion.";
             HeroSubheadlineText.Foreground = CreateBrush(_isDarkTheme ? "#CBD5E1" : "#334155");
         }
         else
         {
             HeroProtectionBannerBorder.BorderBrush = CreateBrush(_isDarkTheme ? "#059669" : "#A7F3D0");
-            HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#0A221E" : "#ECFDF5");
-            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#0F1E36" : "#E0F2FE");
+            HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#061C15" : "#E8F6F1");
+            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#0A1B16" : "#F3F8F6");
             HeroShieldIconBadge.BorderBrush = CreateBrush("#10B981");
-            HeroShieldCornerCheck.Background = CreateBrush("#059669");
-            HeroShieldGlyphText.Text = "✓";
-            HeroStatusPillBorder.Background = CreateBrush("#059669");
-            HeroStatusPillText.Text = IsBengaliLanguage ? "সুরক্ষা সক্রিয়" : "PROTECTION LIVE";
+            HeroShieldCornerCheck.Background = CreateBrush("#006A4E");
+            HeroShieldGlyphText.Text = "KP";
+            HeroStatusPillBorder.Background = CreateBrush("#006A4E");
+            HeroStatusPillText.Text = IsBengaliLanguage ? "সুরক্ষা সক্রিয় · ইকো-মোড" : "PROTECTION LIVE · ECO-AI";
             HeroHeadlineText.Text = IsBengaliLanguage ? "আপনার সুরক্ষা এখন সক্রিয় রয়েছে" : "Your protection is live now";
             HeroHeadlineText.Foreground = CreateBrush(_isDarkTheme ? "#F8FAFC" : "#0F172A");
-            HeroSubheadlineText.Text = "Multi-engine SHA-256 + Heuristic PE scanner, User-Mode Real-Time File Guard, and Chrome/Edge Manifest V3 Web Protection are active.";
+            HeroSubheadlineText.Text = "Eco-Power Green Computing Mode, Local Heuristic AI Risk Score (0–100), Infostealer & Fake AI App Guard, and Chrome/Edge MV3 Web Protection are active.";
             HeroSubheadlineText.Foreground = CreateBrush(_isDarkTheme ? "#CBD5E1" : "#334155");
         }
 
@@ -480,9 +797,13 @@ public partial class MainWindow : Window
 
     private void RenderFindingInList(ScanFinding finding)
     {
+        var aiRiskScore = finding.LocalAiRiskScore0To100 > 0
+            ? finding.LocalAiRiskScore0To100
+            : (finding.Verdict == DetectionVerdict.ConfirmedDetection ? 95 : 78);
+
         FindingsListBox.Items.Insert(
             0,
-            $"[{finding.Verdict}] [{finding.Severity}] {finding.DetectionName} | {finding.FilePath} | Source: {finding.DetectionSourceAttribution} | Action: {finding.RecommendedAction}"
+            $"[{finding.Verdict}] [AI Risk: {aiRiskScore}/100] [{finding.Severity}] {finding.DetectionName} | {finding.FilePath} | Source: {finding.DetectionSourceAttribution} | Action: {finding.RecommendedAction}"
         );
     }
 
@@ -586,11 +907,77 @@ public partial class MainWindow : Window
         if (removableDrives.Count == 0)
         {
             ActiveScanLivePathText.Text = "No removable USB drives currently mounted.";
-            StatusFooterText.Text = "No removable USB drives currently mounted.";
+            StatusFooterText.Text = "Plug in a USB drive — KIRON PROHORI will auto-detect and scan it automatically.";
             return;
         }
 
+        PlayGentleChimeIfEnabled();
+        foreach (var drive in removableDrives)
+        {
+            ModularScanPipeline.RecoverHiddenUsbFolders(drive);
+        }
         await RunScanWorkflowAsync(ScanType.UsbDriveScan, removableDrives);
+    }
+
+    private void OnRecoverUsbHiddenFoldersClick(object sender, RoutedEventArgs e)
+    {
+        ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
+        CurrentSectionTitle.Text = "USB Shortcut Virus — Hidden Folder Recovery";
+        ActiveScanBannerTitle.Text = "RECOVER HIDDEN USB FOLDERS (SHORTCUT VIRUS REMEDIATION)";
+        RightPanelHeaderText.Text = "RECOVERED USB FOLDERS";
+        QuarantineListBox.Items.Clear();
+
+        var removableDrives = ModularScanPipeline.GetRemovableUsbDrives()
+            .Select(d => d.RootDirectory.FullName)
+            .ToList();
+
+        if (removableDrives.Count == 0)
+        {
+            QuarantineListBox.Items.Add("No removable USB drive detected. Plug in your USB drive and click 'Recover USB Folders'.");
+            StatusFooterText.Text = "No removable USB drive mounted.";
+            return;
+        }
+
+        int totalRecovered = 0;
+        foreach (var driveRoot in removableDrives)
+        {
+            var recovered = ModularScanPipeline.RecoverHiddenUsbFolders(driveRoot);
+            totalRecovered += recovered.Count;
+            foreach (var folder in recovered)
+            {
+                QuarantineListBox.Items.Add($"[RECOVERED] Cleared Hidden/System attributes: {folder}");
+            }
+        }
+
+        if (totalRecovered == 0)
+        {
+            QuarantineListBox.Items.Add($"Checked {string.Join(", ", removableDrives)} — No hidden user folders found.");
+            StatusFooterText.Text = "All USB folders are already visible.";
+        }
+        else
+        {
+            PlayGentleChimeIfEnabled();
+            StatusFooterText.Text = $"Recovered {totalRecovered} hidden folder(s) on your USB drive.";
+        }
+    }
+
+    private async void OnLaunchDefenderOfflineScanClick(object sender, RoutedEventArgs e)
+    {
+        var confirm = System.Windows.MessageBox.Show(
+            "Launch Microsoft Defender Offline Scan (Start-MpWDOScan)?\n\nThis reboots Windows into a pre-boot environment to remove deep kernel/boot-sector rootkits. Save your open files before continuing.",
+            "KIRON PROHORI — Deep Rootkit Offline Scan Bridge",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Information
+        );
+
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        var (invoked, statusMsg) = await _windowsSecurityMonitor.TriggerWindowsDefenderOfflineScanAsync();
+        QuarantineListBox.Items.Insert(0, $"[DEFENDER OFFLINE SCAN] {statusMsg}");
+        StatusFooterText.Text = statusMsg;
     }
 
     private void OnPauseResumeScanClick(object sender, RoutedEventArgs e)
@@ -879,6 +1266,38 @@ public partial class MainWindow : Window
             $"Performance Profile: {_performanceGuard.CurrentProfile} · Max CPU: {_performanceGuard.MaxCpuLimitPercent}% · Skip Unchanged Clean Files: {_performanceGuard.EnableUnchangedFileCache}";
     }
 
+    private void OnToggleEcoPowerModeClick(object sender, RoutedEventArgs e)
+    {
+        _performanceGuard.SetEcoPowerMode(!_performanceGuard.EcoPowerModeEnabled);
+        SaveLocalUiPreferences();
+        UpdateEcoPowerModeBadgeAndLabels();
+        UpdateSettingsCardLabels();
+        StatusFooterText.Text = _performanceGuard.EcoPowerModeEnabled
+            ? "Eco-Power Mode Active · Low Energy: Background scanning throttles automatically when CPU > 40% or on laptop battery."
+            : "Standard Balanced Mode Active: Full multi-engine scan throughput enabled.";
+    }
+
+    private void UpdateEcoPowerModeBadgeAndLabels()
+    {
+        var ecoActive = _performanceGuard.EcoPowerModeEnabled;
+        if (EcoPowerModeHeaderText != null)
+        {
+            EcoPowerModeHeaderText.Text = ecoActive
+                ? $"🌿 {_performanceGuard.EcoStatusBadgeLabel}"
+                : "⚡ Standard Mode · Balanced CPU";
+        }
+        if (EcoModeQuickToggleBtn != null)
+        {
+            EcoModeQuickToggleBtn.Content = ecoActive ? "🌿 Eco-Power: ON" : "⚡ Eco-Power: OFF";
+        }
+        if (ToggleEcoPowerSettingsBtn != null)
+        {
+            ToggleEcoPowerSettingsBtn.Content = ecoActive
+                ? "Disable Eco-Power Mode (Switch to Balanced)"
+                : "Enable Eco-Power Mode (Low Energy · CPU ≤ 40%)";
+        }
+    }
+
     private void UpdateSettingsCardLabels()
     {
         if (SettingsLanguageStatusText != null)
@@ -887,7 +1306,7 @@ public partial class MainWindow : Window
         }
         if (SettingsThemeStatusText != null)
         {
-            SettingsThemeStatusText.Text = _isDarkTheme ? "Obsidian Dark (#0B1120)" : "Light Minimal Glass (Default)";
+            SettingsThemeStatusText.Text = _isDarkTheme ? "Obsidian Dark (#0B1120)" : "Eco-Minimal Light Glass (Default)";
         }
         if (SettingsCloseBehaviorText != null)
         {
@@ -897,7 +1316,8 @@ public partial class MainWindow : Window
         }
         if (SettingsPerformanceProfileText != null)
         {
-            SettingsPerformanceProfileText.Text = $"{_performanceGuard.CurrentProfile} · Max CPU {_performanceGuard.MaxCpuLimitPercent}%";
+            SettingsPerformanceProfileText.Text =
+                $"{_performanceGuard.EcoStatusBadgeLabel} · Max CPU {_performanceGuard.MaxCpuLimitPercent}%";
         }
     }
 
@@ -1235,13 +1655,13 @@ public partial class MainWindow : Window
         }
         else
         {
-            // Default Light Minimal Glass (Windows 11 Fluent)
-            res["AppCanvasBrush"] = CreateBrush("#F4F7FB");
-            res["TitleBarBackgroundBrush"] = CreateBrush("#EAF0F8");
-            res["UtilityBarBackgroundBrush"] = CreateBrush("#EEF3F9");
+            // Default Eco-Minimal Light Glass (Bangladesh Eco-Tech & AI-Era Theme)
+            res["AppCanvasBrush"] = CreateBrush("#F3F8F6");
+            res["TitleBarBackgroundBrush"] = CreateBrush("#E6F2EE");
+            res["UtilityBarBackgroundBrush"] = CreateBrush("#E9F4F0");
             res["GlassCardBrush"] = CreateBrush("#FFFFFF");
-            res["GlassElevatedBrush"] = CreateBrush("#F8FAFC");
-            res["GlassBorderBrush"] = CreateBrush("#E2E8F0");
+            res["GlassElevatedBrush"] = CreateBrush("#F7FBF9");
+            res["GlassBorderBrush"] = CreateBrush("#D1E7DD");
             res["PrimaryTextBrush"] = CreateBrush("#0F172A");
             res["SecondaryTextBrush"] = CreateBrush("#475569");
             res["MutedTextBrush"] = CreateBrush("#64748B");

@@ -2684,9 +2684,37 @@ async function startServer() {
         agentTestsCode.includes('NativeMessagingDownloadGuard.WriteNativeMessageAsync') &&
         agentTestsCode.includes('NativeMessagingDownloadGuard.ReadNativeMessageAsync') &&
         agentTestsCode.includes('new RealTimeFileProtectionMonitor()');
+      const websiteSvgPath = path.resolve(__dirname, 'docs/website/assets/kp-logo.svg');
+      const desktopSvgPath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Desktop/Assets/kp-logo.svg'
+      );
+      const heuristicEnginePath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Core/Scanning/HeuristicSuspiciousFileEngine.cs'
+      );
+      const scanPipelinePath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Core/Scanning/ModularScanPipeline.cs'
+      );
+      const innoIssPath = path.join(
+        desktopAgentRoot,
+        'installer/inno-setup/KironProhoriSetup.iss'
+      );
+      const heuristicEngineCode = fs.existsSync(heuristicEnginePath)
+        ? fs.readFileSync(heuristicEnginePath, 'utf8')
+        : '';
+      const scanPipelineCode = fs.existsSync(scanPipelinePath)
+        ? fs.readFileSync(scanPipelinePath, 'utf8')
+        : '';
+      const innoIssCode = fs.existsSync(innoIssPath)
+        ? fs.readFileSync(innoIssPath, 'utf8')
+        : '';
       const hasCleanWpfMainWindow =
         fs.existsSync(desktopIcoPath) &&
         fs.existsSync(installerIcoPath) &&
+        fs.existsSync(websiteSvgPath) &&
+        fs.existsSync(desktopSvgPath) &&
         !mainWindowCsCode.includes(', _currentLanguage)') &&
         mainWindowCsCode.includes('BilingualStrings.Get("nav.overview", IsBengaliLanguage)') &&
         mainWindowCsCode.includes('System.Windows.MessageBox.Show(') &&
@@ -2694,22 +2722,37 @@ async function startServer() {
         mainWindowCsCode.includes('OnMinimizeWindowClick') &&
         mainWindowCsCode.includes('OnMaximizeRestoreWindowClick') &&
         mainWindowCsCode.includes('OnCloseWindowClick') &&
+        mainWindowCsCode.includes('OnToggleEcoPowerModeClick') &&
+        mainWindowCsCode.includes('HandleUsbDriveArrivalAsync') &&
+        mainWindowCsCode.includes('RunExplorerContextMenuScanAsync') &&
+        mainWindowCsCode.includes('OnRecoverUsbHiddenFoldersClick') &&
+        mainWindowCsCode.includes('OnLaunchDefenderOfflineScanClick') &&
         mainWindowCsCode.includes('Pause/Resume Real-Time Guard') &&
-        mainWindowCsCode.includes('#F4F7FB') &&
+        mainWindowCsCode.includes('#F3F8F6') &&
+        scanPipelineCode.includes('RecoverHiddenUsbFolders') &&
+        scanPipelineCode.includes('ParseCliScanPathArguments') &&
+        innoIssCode.includes('Drive\\shell\\KironProhoriScan') &&
+        innoIssCode.includes('Directory\\shell\\KironProhoriScan') &&
+        innoIssCode.includes('*\\shell\\KironProhoriScan') &&
+        innoIssCode.includes('--scan-path') &&
+        heuristicEngineCode.includes('ComputeLocalHeuristicAiRiskScore') &&
+        heuristicEngineCode.includes('Heuristic.FakeAIApp.MasqueradeDropper') &&
+        heuristicEngineCode.includes('Heuristic.UsbWorm.ShortcutVirus') &&
+        heuristicEngineCode.includes('Heuristic.ScriptMalware.ObfuscatedCommand') &&
         mainWindowXamlCode.includes('WindowChrome') &&
         mainWindowXamlCode.includes('DashboardHeroViewPanel') &&
         mainWindowXamlCode.includes('FirstRunWelcomeOverlayPanel') &&
         mainWindowXamlCode.includes('QuarantineActionButtonsPanel');
       results.push({
         id: 'TEST-23-SHA256-INCREMENTAL-STREAMING-API',
-        title: '23. Sha256HashEngine 64 KB Streaming, xUnit Namespaces & Modern WPF Desktop UI / Shield+K Icon Verification',
+        title: '23. Sha256HashEngine 64 KB Streaming, Explorer Context Menu (--scan-path), USB Auto-Scan & Multi-Threat Heuristic Verification',
         passed:
           noBogusMethodCall &&
           hasIncrementalStreamingAndProgress &&
           hasAllRequiredTestNamespaces &&
           hasCleanWpfMainWindow,
-        expected: 'Uses IncrementalHash 64KB chunked streaming, resolves xUnit namespaces, and verifies custom WPF WindowChrome + multi-size Shield+K .ico',
-        actual: 'Verified IncrementalHash 64KB streaming + AgentPhase7ATests.cs namespaces + MainWindow WindowChrome/HeroView/Shield+K .ico',
+        expected: 'Verifies IncrementalHash 64KB streaming, Explorer Right-Click (--scan-path), USB Auto-Scan + Hidden Folder Recovery, and Multi-Threat Heuristics',
+        actual: 'Verified Explorer Right-Click Context Menu (--scan-path) + USB Auto-Scan + Hidden Folder Recovery + Multi-Threat Heuristics + Decluttered WPF UI',
         durationMs: Math.max(1, Date.now() - t23Start),
       });
     } finally {

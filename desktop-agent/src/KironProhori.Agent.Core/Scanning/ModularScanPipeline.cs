@@ -110,6 +110,122 @@ public sealed class ModularScanPipeline
         }
     }
 
+    private static readonly HashSet<string> ProtectedSystemVolumeFolders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "System Volume Information",
+        "$RECYCLE.BIN",
+        "RECYCLER",
+        "FOUND.000",
+        "Config.Msi",
+        ".Trashes",
+        ".Spotlight-V100",
+        ".fseventsd"
+    };
+
+    /// <summary>
+    /// Safe USB Shortcut Virus Remediation: Clears Hidden and System attributes on legitimate user folders
+    /// inside a USB drive or directory that were hidden by USB shortcut (.lnk / autorun.inf / .vbs) worms.
+    /// Never modifies protected OS volume folders.
+    /// </summary>
+    public static IReadOnlyList<string> RecoverHiddenUsbFolders(string driveOrDirectoryPath)
+    {
+        var recoveredFolders = new List<string>();
+        if (string.IsNullOrWhiteSpace(driveOrDirectoryPath) || !Directory.Exists(driveOrDirectoryPath))
+        {
+            return recoveredFolders;
+        }
+
+        try
+        {
+            foreach (string subDir in Directory.EnumerateDirectories(driveOrDirectoryPath, "*", SearchOption.TopDirectoryOnly))
+            {
+                string folderName = Path.GetFileName(subDir);
+                if (string.IsNullOrWhiteSpace(folderName) || ProtectedSystemVolumeFolders.Contains(folderName))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var dirInfo = new DirectoryInfo(subDir);
+                    var attrs = dirInfo.Attributes;
+                    bool isHiddenOrSystem = (attrs & (FileAttributes.Hidden | FileAttributes.System)) != 0;
+                    if (isHiddenOrSystem)
+                    {
+                        dirInfo.Attributes = attrs & ~(FileAttributes.Hidden | FileAttributes.System);
+                        recoveredFolders.Add(subDir);
+                    }
+                }
+                catch
+                {
+                    // Skip individual locked or read-only directory smoothly
+                }
+            }
+        }
+        catch
+        {
+            // Non-fatal if drive was unplugged mid-operation
+        }
+
+        return recoveredFolders;
+    }
+
+    /// <summary>
+    /// Parses Windows Explorer Right-Click Context Menu CLI arguments (e.g., --scan-path "E:\" or --minimized-tray).
+    /// </summary>
+    public static (string? ScanTargetPath, bool StartMinimizedToTray) ParseCliScanPathArguments(IReadOnlyList<string>? args)
+    {
+        if (args == null || args.Count == 0)
+        {
+            return (null, false);
+        }
+
+        string? scanPath = null;
+        bool minimized = false;
+
+        for (int i = 0; i < args.Count; i++)
+        {
+            string current = args[i]?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(current))
+            {
+                continue;
+            }
+
+            if (current.Equals("--minimized-tray", StringComparison.OrdinalIgnoreCase))
+            {
+                minimized = true;
+                continue;
+            }
+
+            if (current.Equals("--scan-path", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Count)
+            {
+                string rawTarget = args[i + 1]?.Trim().Trim('"') ?? string.Empty;
+                // Handle Windows Explorer trailing backslash quote escaping (e.g. "E:\"")
+                if (rawTarget.Length == 2 && rawTarget[1] == ':')
+                {
+                    rawTarget += Path.DirectorySeparatorChar;
+                }
+                if (!string.IsNullOrWhiteSpace(rawTarget))
+                {
+                    scanPath = rawTarget;
+                }
+                i++;
+                continue;
+            }
+
+            if (current.StartsWith("--scan-path=", StringComparison.OrdinalIgnoreCase))
+            {
+                string rawTarget = current["--scan-path=".Length..].Trim().Trim('"');
+                if (!string.IsNullOrWhiteSpace(rawTarget))
+                {
+                    scanPath = rawTarget;
+                }
+            }
+        }
+
+        return (scanPath, minimized);
+    }
+
     /// <summary>
     /// Scans a single file across all active engines while respecting KIRON exclusions and performance guards.
     /// </summary>

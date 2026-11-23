@@ -4,30 +4,33 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <!-- =================================================================== -->
-        <!-- LIGHT MINIMAL GLASS (WINDOWS 11 FLUENT) DEFAULT PALETTE             -->
-        <!-- Dynamically switchable at runtime between Light Glass & Obsidian    -->
+        <!-- ECO-MINIMAL LIGHT GLASS (BANGLADESH ECO-TECH & AI-ERA) PALETTE      -->
+        <!-- Default: Frosted Clean-Air Canvas (#F3F8F6), Pure Glass (#FFFFFF),  -->
+        <!-- Soft Eco Borders (#D1E7DD), Bengal Emerald (#006A4E),               -->
+        <!-- Oxygen Mint (#10B981), Crimson Sun Radar (#F42A41).                 -->
         <!-- =================================================================== -->
-        <SolidColorBrush x:Key="AppCanvasBrush" Color="#F4F7FB" />
-        <SolidColorBrush x:Key="TitleBarBackgroundBrush" Color="#EAF0F8" />
-        <SolidColorBrush x:Key="UtilityBarBackgroundBrush" Color="#EEF3F9" />
+        <SolidColorBrush x:Key="AppCanvasBrush" Color="#F3F8F6" />
+        <SolidColorBrush x:Key="TitleBarBackgroundBrush" Color="#E6F2EE" />
+        <SolidColorBrush x:Key="UtilityBarBackgroundBrush" Color="#E9F4F0" />
         <SolidColorBrush x:Key="GlassCardBrush" Color="#FFFFFF" />
-        <SolidColorBrush x:Key="GlassElevatedBrush" Color="#F8FAFC" />
-        <SolidColorBrush x:Key="GlassBorderBrush" Color="#E2E8F0" />
-        <SolidColorBrush x:Key="GlassHoverBorderBrush" Color="#38BDF8" />
+        <SolidColorBrush x:Key="GlassElevatedBrush" Color="#F7FBF9" />
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#D1E7DD" />
+        <SolidColorBrush x:Key="GlassHoverBorderBrush" Color="#10B981" />
         <SolidColorBrush x:Key="PrimaryTextBrush" Color="#0F172A" />
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#475569" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#334155" />
         <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B" />
-        <SolidColorBrush x:Key="AccentBlueBrush" Color="#0284C7" />
-        <SolidColorBrush x:Key="SafeEmeraldBrush" Color="#059669" />
+        <SolidColorBrush x:Key="AccentBlueBrush" Color="#006A4E" />
+        <SolidColorBrush x:Key="SafeEmeraldBrush" Color="#006A4E" />
+        <SolidColorBrush x:Key="OxygenMintBrush" Color="#10B981" />
         <SolidColorBrush x:Key="WarningAmberBrush" Color="#D97706" />
-        <SolidColorBrush x:Key="DangerRedBrush" Color="#DC2626" />
+        <SolidColorBrush x:Key="DangerRedBrush" Color="#F42A41" />
 
-        <!-- Soft Windows 11 Fluent Card Drop Shadow -->
+        <!-- Soft Windows 11 Fluent Eco-Glass Drop Shadow -->
         <DropShadowEffect x:Key="FluentGlassShadow"
                           BlurRadius="16"
                           ShadowDepth="3"
                           Direction="270"
-                          Color="#0F172A"
+                          Color="#004D38"
                           Opacity="0.06" />
 
         <!-- Clickable 4x2 Glass Dashboard Tile Button Style -->
@@ -38,6 +41,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="18,14" />
             <Setter Property="Margin" Value="6" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
@@ -55,7 +59,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TileBorder" Property="BorderBrush" Value="#0284C7" />
+                                <Setter TargetName="TileBorder" Property="BorderBrush" Value="#006A4E" />
                                 <Setter TargetName="TileBorder" Property="BorderThickness" Value="1.5" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -74,7 +78,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="14,7" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
@@ -92,7 +96,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="#0284C7" />
+                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="#006A4E" />
                                 <Setter TargetName="BtnBorder" Property="Opacity" Value="0.94" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -107,14 +111,37 @@
             </Setter>
         </Style>
 
-        <!-- Primary Emerald / Cyber-Blue CTA Button Style -->
+        <!-- Primary Bengal Emerald (#006A4E -> Hover #059669) CTA Button Style -->
         <Style x:Key="PrimaryFluentCtaButtonStyle" TargetType="Button" BasedOn="{StaticResource ModernActionButtonStyle}">
-            <Setter Property="Background" Value="#059669" />
+            <Setter Property="Background" Value="#006A4E" />
             <Setter Property="Foreground" Value="#FFFFFF" />
-            <Setter Property="BorderBrush" Value="#047857" />
+            <Setter Property="BorderBrush" Value="#00523C" />
             <Setter Property="Padding" Value="20,10" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="PrimaryBtnBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="PrimaryBtnBorder" Property="Background" Value="#059669" />
+                                <Setter TargetName="PrimaryBtnBorder" Property="BorderBrush" Value="#10B981" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="PrimaryBtnBorder" Property="Background" Value="#047857" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!-- Window Chrome Caption Button Style (Minimize —, Maximize/Restore □) -->
@@ -124,7 +151,7 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Width" Value="46" />
             <Setter Property="Height" Value="38" />
-            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
@@ -136,8 +163,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CapBorder" Property="Background" Value="#CBD5E1" />
-                                <Setter Property="Foreground" Value="#0F172A" />
+                                <Setter TargetName="CapBorder" Property="Background" Value="#D1E7DD" />
+                                <Setter Property="Foreground" Value="#006A4E" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -145,7 +172,7 @@
             </Setter>
         </Style>
 
-        <!-- Window Chrome Close Button Style (Danger Red hover) -->
+        <!-- Window Chrome Close Button Style (Crimson Sun #F42A41 hover) -->
         <Style x:Key="CaptionCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionControlButtonStyle}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -155,7 +182,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CloseBorder" Property="Background" Value="#DC2626" />
+                                <Setter TargetName="CloseBorder" Property="Background" Value="#F42A41" />
                                 <Setter Property="Foreground" Value="#FFFFFF" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -164,7 +191,7 @@
             </Setter>
         </Style>
 
-        <!-- Clean Fluent ListBoxItem Style -->
+        <!-- Clean Eco-Fluent ListBoxItem Style -->
         <Style TargetType="ListBoxItem">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -184,12 +211,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#E0F2FE" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#ECFDF5" />
                                 <Setter Property="Foreground" Value="#0F172A" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="#BAE6FD" />
-                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#0284C7" />
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#D1FAE5" />
+                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#006A4E" />
                                 <Setter Property="Foreground" Value="#0F172A" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>

@@ -90,6 +90,31 @@ Root: HKLM; Subkey: "Software\KironProhori\SecurityAgent"; ValueType: string; Va
 Root: HKLM; Subkey: "Software\KironProhori\SecurityAgent"; ValueType: string; ValueName: "Developer"; ValueData: "{#MyAppPublisher}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\KironProhori\SecurityAgent"; ValueType: string; ValueName: "TelemetryDefault"; ValueData: "DISABLED"; Flags: uninsdeletekey
 
+; Windows Explorer Right-Click Context Menu ("Scan with KIRON PROHORI") — Drives (This PC), Folders, and Files (HKCR + HKCU fallback, auto-removed on uninstall)
+Root: HKCR; Subkey: "Drive\shell\KironProhoriScan"; ValueType: string; ValueName: ""; ValueData: "Scan with KIRON PROHORI"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Drive\shell\KironProhoriScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\KironProhori.ico"""; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Drive\shell\KironProhoriScan\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --scan-path ""%1"""; Flags: uninsdeletekey
+
+Root: HKCR; Subkey: "Directory\shell\KironProhoriScan"; ValueType: string; ValueName: ""; ValueData: "Scan with KIRON PROHORI"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\KironProhoriScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\KironProhori.ico"""; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\KironProhoriScan\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --scan-path ""%1"""; Flags: uninsdeletekey
+
+Root: HKCR; Subkey: "*\shell\KironProhoriScan"; ValueType: string; ValueName: ""; ValueData: "Scan with KIRON PROHORI"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "*\shell\KironProhoriScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\KironProhori.ico"""; Flags: uninsdeletekey
+Root: HKCR; Subkey: "*\shell\KironProhoriScan\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --scan-path ""%1"""; Flags: uninsdeletekey
+
+Root: HKCU; Subkey: "Software\Classes\Drive\shell\KironProhoriScan"; ValueType: string; ValueName: ""; ValueData: "Scan with KIRON PROHORI"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Drive\shell\KironProhoriScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\KironProhori.ico"""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Drive\shell\KironProhoriScan\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --scan-path ""%1"""; Flags: uninsdeletekey
+
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\KironProhoriScan"; ValueType: string; ValueName: ""; ValueData: "Scan with KIRON PROHORI"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\KironProhoriScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\KironProhori.ico"""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\KironProhoriScan\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --scan-path ""%1"""; Flags: uninsdeletekey
+
+Root: HKCU; Subkey: "Software\Classes\*\shell\KironProhoriScan"; ValueType: string; ValueName: ""; ValueData: "Scan with KIRON PROHORI"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\*\shell\KironProhoriScan"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\KironProhori.ico"""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\*\shell\KironProhoriScan\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" --scan-path ""%1"""; Flags: uninsdeletekey
+
 [Run]
 ; Install and configure Windows Background Service with delayed-auto start and crash recovery
 Filename: "sc.exe"; Parameters: "create {#MyServiceName} binPath= ""\""{app}\service\{#MyServiceExeName}\"""" start= delayed-auto DisplayName= ""KIRON PROHORI Windows Security Service"""; Flags: runhidden waituntilterminated; Tasks: installservice

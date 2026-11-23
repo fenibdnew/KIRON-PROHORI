@@ -12,7 +12,7 @@
         ResizeMode="CanResize"
         Background="{DynamicResource AppCanvasBrush}"
         Foreground="{DynamicResource PrimaryTextBrush}"
-        FontFamily="Segoe UI"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
         WindowStartupLocation="CenterScreen">
 
     <shell:WindowChrome.WindowChrome>
@@ -77,22 +77,45 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    VerticalAlignment="Center" />
-                        <Border Background="#D1FAE5"
+                        <Border x:Name="EcoPowerModeHeaderBadge"
+                                Background="#D1FAE5"
                                 BorderBrush="#10B981"
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Padding="7,1.5"
                                 Margin="12,0,0,0"
                                 VerticalAlignment="Center">
-                            <TextBlock Text="ZERO TELEMETRY · $0 FREE"
+                            <TextBlock x:Name="EcoPowerModeHeaderText"
+                                       Text="🌿 Eco-Mode Active · Low Energy"
                                        FontSize="9.5"
                                        FontWeight="Bold"
-                                       Foreground="#065F46" />
+                                       Foreground="#006A4E" />
+                        </Border>
+                        <Border Background="#FEE2E2"
+                                BorderBrush="#F42A41"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="6,1.5"
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="● AI-ERA RADAR · $0 FREE"
+                                       FontSize="9.5"
+                                       FontWeight="Bold"
+                                       Foreground="#B91C1C" />
                         </Border>
                     </StackPanel>
 
-                    <!-- Right: Quick Language/Theme Pills + Minimize (—), Maximize/Restore (□), Close (✕) -->
+                    <!-- Right: Eco-Power Toggle + Language/Theme Pills + Minimize (—), Maximize/Restore (□), Close (✕) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="EcoModeQuickToggleBtn"
+                                Content="🌿 Eco: ON"
+                                ToolTip="Toggle Eco-Power Mode (Green Computing: auto-throttles when CPU &gt; 40% or on battery)"
+                                Click="OnToggleEcoPowerModeClick"
+                                Style="{StaticResource CaptionControlButtonStyle}"
+                                Width="78"
+                                FontSize="11"
+                                FontWeight="Bold"
+                                Foreground="#006A4E" />
                         <Button x:Name="LanguageToggleButton"
                                 Content="EN / বাংলা"
                                 ToolTip="Switch Interface Language (English / বাংলা)"
@@ -257,34 +280,44 @@
                                 </WrapPanel>
 
                                 <TextBlock x:Name="HeroHeadlineText"
-                                           Text="Your protection is live now"
+                                           Text="Your PC is Protected"
                                            FontSize="24"
                                            FontWeight="Bold"
                                            Foreground="#0F172A"
                                            Margin="0,4,0,3" />
 
                                 <TextBlock x:Name="HeroSubheadlineText"
-                                           Text="Multi-engine SHA-256 + Heuristic PE scanner, User-Mode Real-Time File Guard, and Chrome/Edge Manifest V3 Web Protection are active."
+                                           Text="Real-time file guard, USB auto-scan &amp; browser shield active."
                                            FontSize="12.5"
                                            Foreground="#334155"
                                            TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <!-- Primary Quick Scan & Details Buttons -->
+                            <!-- Primary Quick Scan, USB Scan & USB Folder Recovery Buttons -->
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button x:Name="HeroQuickScanCtaBtn"
-                                        Content="Quick Scan"
+                                        Content="⚡ Quick Scan"
                                         Click="OnQuickScanClick"
                                         Style="{StaticResource PrimaryFluentCtaButtonStyle}"
-                                        Margin="0,0,10,0" />
+                                        Margin="0,0,8,0" />
+                                <Button x:Name="HeroUsbScanBtn"
+                                        Content="🔌 USB Scan"
+                                        Click="OnUsbScanClick"
+                                        Style="{StaticResource ModernActionButtonStyle}"
+                                        Background="#FFFFFF"
+                                        Foreground="#006A4E"
+                                        BorderBrush="#10B981"
+                                        Padding="14,10"
+                                        Margin="0,0,8,0" />
                                 <Button x:Name="HeroDetailsBtn"
-                                        Content="Details"
-                                        Click="OnRefreshWindowsSecurityClick"
+                                        Content="📂 Recover USB"
+                                        ToolTip="Unhide folders hidden by USB shortcut viruses"
+                                        Click="OnRecoverUsbHiddenFoldersClick"
                                         Style="{StaticResource ModernActionButtonStyle}"
                                         Background="#FFFFFF"
                                         Foreground="#0F172A"
                                         BorderBrush="#CBD5E1"
-                                        Padding="16,10" />
+                                        Padding="14,10" />
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -292,7 +325,7 @@
                     <!-- MAIN 4x2 ACTION TILE GRID (8 CLICKABLE GLASS CARDS) -->
                     <UniformGrid Grid.Row="1" Columns="4" Rows="2">
 
-                        <!-- Tile 1: Scan (Quick / Full / Custom / USB) -->
+                        <!-- Tile 1: Malware Scan -->
                         <Button x:Name="NavQuickScanBtn"
                                 Click="OnOpenScanCenterTileClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
@@ -305,10 +338,10 @@
                                         <TextBlock x:Name="TileScanBadgeText" Text="4 MODES" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Open Scanner →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Scanner →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile1TitleText" Text="Scan" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="Quick, Full, Custom Folder &amp; Removable USB Drive malware scanning."
+                                    <TextBlock x:Name="Tile1TitleText" Text="Malware Scan" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Quick · Full · Folder · USB"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -317,7 +350,7 @@
                             </DockPanel>
                         </Button>
 
-                        <!-- Tile 2: Web & Download Guard (Chrome/Edge MV3 + Native Messaging) -->
+                        <!-- Tile 2: Web & Download Guard -->
                         <Button x:Name="NavWebProtectionBtn"
                                 Click="OnWebProtectionViewClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
@@ -330,10 +363,10 @@
                                         <TextBlock Text="MV3 READY" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Web &amp; Download Rules →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Browser Shield →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile2TitleText" Text="Web &amp; Download Guard" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="Chrome &amp; Edge phishing blocker + 4-state Native Messaging download guard."
+                                    <TextBlock x:Name="Tile2TitleText" Text="Web &amp; Download" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Phishing &amp; File Guard"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -342,7 +375,7 @@
                             </DockPanel>
                         </Button>
 
-                        <!-- Tile 3: Real-Time Protection -->
+                        <!-- Tile 3: Real-Time Guard -->
                         <Button x:Name="NavRealtimeBtn"
                                 Click="OnRealtimeGuardToggleClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
@@ -355,10 +388,10 @@
                                         <TextBlock x:Name="DashCardRealtimeBadge" Text="READY" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Configure Real-Time Guard →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Live Shield →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile3TitleText" Text="Real-Time Protection" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="Monitors Downloads, Temp &amp; Startup folders in user-mode without kernel drivers."
+                                    <TextBlock x:Name="Tile3TitleText" Text="Real-Time Guard" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Live Folder &amp; USB Monitor"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -380,10 +413,10 @@
                                         <TextBlock x:Name="DashCardQuarantineBadge" Text="0 ISOLATED" FontSize="9.5" FontWeight="Bold" Foreground="#D97706" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Open Quarantine Vault →" FontSize="11" FontWeight="SemiBold" Foreground="#D97706" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Vault →" FontSize="11" FontWeight="SemiBold" Foreground="#D97706" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
                                     <TextBlock x:Name="Tile4TitleText" Text="Quarantine Vault" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="XOR-isolated .kpq files with SHA-256 verification, Restore &amp; Permanent Delete."
+                                    <TextBlock Text="Restore or Delete Threats"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -392,7 +425,7 @@
                             </DockPanel>
                         </Button>
 
-                        <!-- Tile 5: Threat History & Logs -->
+                        <!-- Tile 5: Scan History -->
                         <Button x:Name="NavHistoryBtn"
                                 Click="OnThreatHistoryClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
@@ -405,10 +438,10 @@
                                         <TextBlock x:Name="DiagnosticsHealthText" Text="HEALTHY" FontSize="9.5" FontWeight="Bold" Foreground="#475569" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="View Scan &amp; Threat Logs →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="View Logs →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile5TitleText" Text="Threat History &amp; Logs" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="Local scan session ledger, EICAR self-test records, and self-repair diagnostics."
+                                    <TextBlock x:Name="Tile5TitleText" Text="Scan History" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Past Scans &amp; Activity"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -417,7 +450,7 @@
                             </DockPanel>
                         </Button>
 
-                        <!-- Tile 6: Security Intelligence -->
+                        <!-- Tile 6: Threat Engines -->
                         <Button x:Name="NavSecurityIntelBtn"
                                 Click="OnSecurityIntelligenceViewClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
@@ -427,13 +460,13 @@
                                         <TextBlock Text="🧠" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#E0F2FE" CornerRadius="5" Padding="7,2">
-                                        <TextBlock Text="MULTI-ENGINE" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
+                                        <TextBlock Text="AI · SHA256" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Engine Status &amp; Feeds →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Engine Status →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile6TitleText" Text="Security Intelligence" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="64 KB Incremental SHA-256, Heuristic PE/Script analyzer, YARA &amp; ClamAV adapters."
+                                    <TextBlock x:Name="Tile6TitleText" Text="Threat Engines" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="AI Risk · Heuristics · YARA"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -442,7 +475,7 @@
                             </DockPanel>
                         </Button>
 
-                        <!-- Tile 7: Database & App Updates -->
+                        <!-- Tile 7: Check Updates -->
                         <Button x:Name="NavUpdatesBtn"
                                 Click="OnCheckUpdatesClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
@@ -455,10 +488,10 @@
                                         <TextBlock Text="SIGNED HTTPS" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Check for Updates →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Check Now →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile7TitleText" Text="Database &amp; App Updates" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="Cryptographically verified SHA-256 + digital signature update checks &amp; rollback."
+                                    <TextBlock x:Name="Tile7TitleText" Text="Check Updates" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Signed Database &amp; App"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -467,23 +500,23 @@
                             </DockPanel>
                         </Button>
 
-                        <!-- Tile 8: Exclusions & Firewall -->
+                        <!-- Tile 8: Security Tools & Rootkit Scan -->
                         <Button x:Name="NavExclusionsBtn"
                                 Click="OnExclusionsViewClick"
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
                                     <Border Width="36" Height="36" CornerRadius="10" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1">
-                                        <TextBlock Text="⚙" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <TextBlock Text="🛠" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#F1F5F9" CornerRadius="5" Padding="7,2">
                                         <TextBlock x:Name="QuarantineCountText" Text="0 EXCLUDED" FontSize="9.5" FontWeight="Bold" Foreground="#475569" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Exclusions &amp; Firewall →" FontSize="11" FontWeight="SemiBold" Foreground="#0284C7" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Tools →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile8TitleText" Text="Exclusions &amp; Firewall" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
-                                    <TextBlock Text="Canonical path exclusions and Windows Defender / Firewall coexistence monitor."
+                                    <TextBlock x:Name="Tile8TitleText" Text="Security Tools" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock Text="Exclusions · USB · Rootkit"
                                                FontSize="11.5"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
@@ -627,28 +660,30 @@
                             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Scan Mode Selector Bar -->
                                 <StackPanel x:Name="ScanModesSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="Quick Scan" Click="OnQuickScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavFullScanBtn" Content="Full Scan" Click="OnFullScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavCustomScanBtn" Content="Custom Folder" Click="OnCustomScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavUsbScanBtn" Content="USB Drive Scan" Click="OnUsbScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                    <Button Content="⚡ Quick Scan" Click="OnQuickScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavFullScanBtn" Content="🖥 Full Scan" Click="OnFullScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavCustomScanBtn" Content="📁 Custom Folder" Click="OnCustomScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavUsbScanBtn" Content="🔌 USB Scan" Click="OnUsbScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="RecoverUsbFoldersBtn" Content="📂 Recover USB Folders" Click="OnRecoverUsbHiddenFoldersClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
                                 <!-- Web & Download Sub-Tab Switcher -->
                                 <StackPanel x:Name="WebAndDownloadSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="Web Protection Rules (MV3)" Click="OnWebProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavDownloadProtectionBtn" Content="Download Guard (Native Host)" Click="OnDownloadProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                    <Button Content="🌐 Web Guard" Click="OnWebProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavDownloadProtectionBtn" Content="⬇ Download Guard" Click="OnDownloadProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
-                                <!-- Exclusions, Defender & Firewall Sub-Tab Switcher -->
+                                <!-- Exclusions, Defender, Firewall & Deep Rootkit Offline Scan Sub-Tab Switcher -->
                                 <StackPanel x:Name="ExclusionsAndFirewallSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="Path Exclusions" Click="OnExclusionsViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavDefenderBtn" Content="Defender Coexistence" Click="OnRefreshWindowsSecurityClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavFirewallBtn" Content="Firewall Profiles" Click="OnFirewallViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                    <Button Content="⚙ Exclusions" Click="OnExclusionsViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavDefenderBtn" Content="🛡 Defender Status" Click="OnRefreshWindowsSecurityClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavFirewallBtn" Content="🔥 Firewall" Click="OnFirewallViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="LaunchDefenderOfflineRootkitBtn" Content="🧰 Defender Offline Scan" ToolTip="Launch Windows Defender Offline Scan for deep kernel/rootkit removal" Click="OnLaunchDefenderOfflineScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
                                 <!-- Real-Time Guard Live Toggle -->
                                 <Button x:Name="ToggleRealtimeMonitoringBtn"
-                                        Content="Enable Real-Time File Guard"
+                                        Content="Enable Real-Time Guard"
                                         Click="OnToggleRealtimeEngineClick"
                                         Style="{StaticResource PrimaryFluentCtaButtonStyle}"
                                         Padding="14,7"
@@ -852,22 +887,30 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <!-- Card 4: Scanner CPU Throttle & Gentle 280ms Chime -->
+                                    <!-- Card 4: Eco-Power Mode (Green Computing) & Gentle 280ms Chime -->
                                     <Border Background="{DynamicResource GlassElevatedBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="18" Margin="8,8,0,0">
                                         <StackPanel>
-                                            <TextBlock Text="CPU THROTTLE &amp; GENTLE AUDIO CHIME" FontSize="10.5" FontWeight="Bold" Foreground="#059669" />
-                                            <TextBlock x:Name="SettingsPerformanceProfileText" Text="Balanced Profile · BelowNormal CPU" FontSize="14.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,6,0,4" />
-                                            <TextBlock Text="Uses 64 KB IncrementalHash streaming, skips unchanged clean files, and plays a non-intrusive 280ms chime." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
-                                            <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="ECO-POWER MODE (GREEN COMPUTING) &amp; AUDIO" FontSize="10.5" FontWeight="Bold" Foreground="#006A4E" />
+                                            <TextBlock x:Name="SettingsPerformanceProfileText" Text="Eco-Mode Active · Low Energy (CPU Cap 35%)" FontSize="14.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,6,0,4" />
+                                            <TextBlock Text="Automatically throttles background scanning when CPU usage &gt; 40% or on laptop battery power, and uses 64 KB streaming." FontSize="11.5" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                            <WrapPanel Orientation="Horizontal">
+                                                <Button x:Name="ToggleEcoPowerSettingsBtn"
+                                                        Content="Toggle Eco-Power Mode"
+                                                        Click="OnToggleEcoPowerModeClick"
+                                                        Style="{StaticResource PrimaryFluentCtaButtonStyle}"
+                                                        Padding="12,6"
+                                                        FontSize="11.5"
+                                                        Margin="0,0,8,4" />
                                                 <Button x:Name="TestGentleChimeBtn"
                                                         Content="Play Gentle Chime"
                                                         Click="OnPlayGentleChimeClick"
                                                         Style="{StaticResource ModernActionButtonStyle}"
-                                                        Margin="0,0,8,0" />
-                                                <Button Content="Reset First-Run Welcome"
+                                                        Margin="0,0,8,4" />
+                                                <Button Content="Reset Welcome"
                                                         Click="OnShowWelcomeScreenClick"
-                                                        Style="{StaticResource ModernActionButtonStyle}" />
-                                            </StackPanel>
+                                                        Style="{StaticResource ModernActionButtonStyle}"
+                                                        Margin="0,0,0,4" />
+                                            </WrapPanel>
                                         </StackPanel>
                                     </Border>
                                 </UniformGrid>

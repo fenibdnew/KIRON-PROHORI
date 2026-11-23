@@ -9,13 +9,14 @@ using KironProhori.Agent.Core.Models;
 namespace KironProhori.Agent.Core.Performance;
 
 /// <summary>
-/// Lightweight Performance Protection &amp; Resource Throttle Guard.
+/// Lightweight Performance Protection, Eco-Power Mode (Green Computing) &amp; Resource Throttle Guard.
 /// Features:
+/// - Eco-Power Mode (Green Computing): Automatically throttles background scanning when CPU usage &gt; 40%
+///   or when running on laptop battery power, displaying an "Eco-Mode Active · Low Energy" badge.
 /// - Low CPU priority during background scans (ProcessPriorityClass.BelowNormal).
 /// - Configurable CPU usage limit &amp; adjustable scan speed (LowImpact, Balanced, HighSpeed).
 /// - Unchanged clean file cache (avoids repeatedly scanning unchanged files with identical path, size, and LastWriteTimeUtc).
 /// - Cooperative Pause / Resume / Stop support.
-/// - Respects laptop battery / power saver states by automatically increasing inter-file pacing.
 /// - Never promises zero performance impact; optimizes to avoid unnecessary disk and CPU spikes.
 /// </summary>
 public sealed class PerformanceProtectionGuard
@@ -32,10 +33,43 @@ public sealed class PerformanceProtectionGuard
     public bool EnableUnchangedFileCache { get; set; } = true;
     public bool IsOnBatteryPowerSimulated { get; set; } = false;
     public bool IsSystemUnderHeavyLoadSimulated { get; set; } = false;
-    public string CurrentSignatureEpoch { get; set; } = "v0.7.0-phase7a";
+    public string CurrentSignatureEpoch { get; set; } = "v1.0.0-ecotech";
+
+    /// <summary>
+    /// Eco-Power Mode (Green Computing): automatically throttles background scanning when CPU usage &gt; 40%
+    /// or when running on laptop battery power.
+    /// </summary>
+    public bool EcoPowerModeEnabled { get; set; } = true;
+    public int EcoCpuThresholdPercent { get; set; } = 40;
 
     public bool IsPaused => !_pauseGate.IsSet;
     public int CachedCleanFileCount => _cleanFileCache.Count;
+
+    public string EcoStatusBadgeLabel =>
+        EcoPowerModeEnabled
+            ? "Eco-Mode Active · Low Energy"
+            : "Standard Balanced Power";
+
+    /// <summary>
+    /// Toggles Eco-Power Mode (Green Computing) and adjusts scan throttle profile and CPU cap.
+    /// </summary>
+    public void SetEcoPowerMode(bool enabled)
+    {
+        EcoPowerModeEnabled = enabled;
+        if (enabled)
+        {
+            CurrentProfile = ScanThrottleProfile.LowImpactBackground;
+            MaxCpuLimitPercent = Math.Min(MaxCpuLimitPercent, EcoCpuThresholdPercent);
+            RespectBatteryPower = true;
+            TrySetBackgroundLowPriority(true);
+        }
+        else
+        {
+            CurrentProfile = ScanThrottleProfile.BalancedDefault;
+            MaxCpuLimitPercent = 40;
+            TrySetBackgroundLowPriority(false);
+        }
+    }
 
     /// <summary>
     /// Pauses an active scan without losing progress.
@@ -66,7 +100,7 @@ public sealed class PerformanceProtectionGuard
     }
 
     /// <summary>
-    /// Waits if the scan is paused by the user, and applies adaptive CPU/battery pacing between files.
+    /// Waits if the scan is paused by the user, and applies adaptive Eco-Power / CPU (>40%) / battery pacing between files.
     /// </summary>
     public async Task WaitForPauseAndThrottleAsync(CancellationToken cancellationToken)
     {
@@ -83,6 +117,11 @@ public sealed class PerformanceProtectionGuard
             ScanThrottleProfile.HighSpeedForeground => 0,
             _ => 2
         };
+
+        if (EcoPowerModeEnabled)
+        {
+            delayMs = Math.Max(delayMs, 6);
+        }
 
         if ((RespectBatteryPower && IsOnBatteryPowerSimulated) || IsSystemUnderHeavyLoadSimulated)
         {

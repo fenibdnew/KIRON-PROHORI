@@ -125,6 +125,61 @@ public sealed class WindowsSecurityMonitor
         return (true, proc.ExitCode, stdout.Trim());
     }
 
+    /// <summary>
+    /// Deep Rootkit Safety Bridge: Builds a command-injection-safe ProcessStartInfo to launch
+    /// Microsoft Defender Offline Scan (Start-MpWDOScan) for deep kernel/boot-sector rootkit remediation.
+    /// </summary>
+    public static ProcessStartInfo BuildDefenderOfflineScanStartInfo()
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        psi.ArgumentList.Add("-NoProfile");
+        psi.ArgumentList.Add("-NonInteractive");
+        psi.ArgumentList.Add("-Command");
+        psi.ArgumentList.Add("Start-MpWDOScan");
+        return psi;
+    }
+
+    /// <summary>
+    /// Launches Windows Defender Offline Scan when deep kernel-level rootkit remediation is requested by the user.
+    /// </summary>
+    public async Task<(bool Invoked, string StatusMessage)> TriggerWindowsDefenderOfflineScanAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return (false, "Windows Defender Offline Scan (Start-MpWDOScan) requires a Windows 10/11 host.");
+        }
+
+        try
+        {
+            var psi = BuildDefenderOfflineScanStartInfo();
+            using var proc = new Process { StartInfo = psi };
+            proc.Start();
+            string stdout = await proc.StandardOutput.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            string stderr = await proc.StandardError.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            await proc.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+            if (proc.ExitCode == 0)
+            {
+                return (true, "Windows Defender Offline Scan scheduled. Windows will restart into the pre-boot rootkit scanner.");
+            }
+
+            string detail = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+            return (false, $"Defender Offline Scan requires Administrator elevation ({detail.Trim()}).");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Unable to invoke Start-MpWDOScan: {ex.Message}");
+        }
+    }
+
     public WindowsSecurityTelemetry GetSecuritySnapshot()
     {
         bool is64Bit = Environment.Is64BitOperatingSystem;

@@ -175,7 +175,8 @@ public sealed record ScanFinding(
     string FalsePositiveGuidance,
     DateTimeOffset DetectedAtUtc,
     DetectionVerdict Verdict = DetectionVerdict.ConfirmedDetection,
-    RemediationAction RecommendedAction = RemediationAction.Quarantine
+    RemediationAction RecommendedAction = RemediationAction.Quarantine,
+    int LocalAiRiskScore0To100 = 0
 );
 
 public sealed record ScanProgressUpdate(
