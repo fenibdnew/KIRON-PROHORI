@@ -1,14 +1,19 @@
-# KIRON PROHORI (কিরণ প্রহরী) — Independent Cyber Threat Intelligence Platform
+# KIRON PROHORI (কিরণ প্রহরী) — Independent Cyber Threat Intelligence & Windows 10/11 (x64) Security Suite
 
-**Version:** `0.1.0`  
+**Version:** `1.0.0` (Windows Agent & Browser Protection V1.0) / `0.1.0` (Cyber Threat Intelligence Cloud)  
+**Developer:** **ARIFUZZAMAN KIRON**  
+**Official Download & Documentation Site (GitHub Pages):** [https://fenibdnew.github.io/KIRON-PROHORI/](https://fenibdnew.github.io/KIRON-PROHORI/)  
+**Official GitHub Repository:** [https://github.com/fenibdnew/KIRON-PROHORI](https://github.com/fenibdnew/KIRON-PROHORI)  
+**Official Windows x64 Releases:** [https://github.com/fenibdnew/KIRON-PROHORI/releases/latest](https://github.com/fenibdnew/KIRON-PROHORI/releases/latest)  
 **Budget Policy:** **Strict $0.00 Hard Cap** (No paid APIs, no paid cloud infrastructure, no runtime paid AI inference, no credit card required)  
+**Privacy Policy:** **No Telemetry by Default** · **Quarantine-First Remediation**  
 **Languages:** Bilingual English (`en`) & Bengali (`বাংলা` / `bn`)
 
 ---
 
 ## 1. Mission & Non-Affiliation Declaration
 
-**KIRON PROHORI** helps IT technicians, security researchers, small businesses, and ordinary users understand publicly documented cybersecurity threats, software vulnerabilities, malware distribution indicators, and online scams.
+**KIRON PROHORI** helps IT technicians, security researchers, small businesses, and ordinary users protect Windows 10/11 (x64) endpoints and understand publicly documented cybersecurity threats, software vulnerabilities, malware distribution indicators, and online scams.
 
 > **IMPORTANT PRODUCT IDENTITY & NON-AFFILIATION NOTICE:**  
 > KIRON PROHORI is an **independent defensive cybersecurity intelligence product**. It is **not** affiliated with, endorsed by, sponsored by, or operated by **CISA, NIST, MITRE/CVE, FIRST, abuse.ch, CIRCL, GitHub, Google**, or any government agency. All threat intelligence displayed is for defensive educational and informational triage only and does not constitute legal compliance certification or a guarantee of safety.
