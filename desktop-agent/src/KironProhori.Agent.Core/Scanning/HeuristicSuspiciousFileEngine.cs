@@ -280,41 +280,7 @@ public sealed class HeuristicSuspiciousFileEngine : IScanEngine
             ? Encoding.UTF8.GetString(sampleBuffer, 0, bytesRead)
             : string.Empty;
 
-        // 4. Infostealer / Fake AI App Guard
-        string lowerFileName = fileName.ToLowerInvariant();
-        bool isFakeAiLauncher = HighRiskExecutableExtensions.Contains(ext) &&
-                                FakeAiToolMasqueradeKeywords.Any(k => lowerFileName.Contains(k, StringComparison.OrdinalIgnoreCase));
-
-        bool hasInfostealerBrowserPattern = bytesRead > 0 &&
-            HighRiskExecutableExtensions.Contains(ext) &&
-            InfostealerBrowserTargetPatterns.Any(p => asciiSample.Contains(p, StringComparison.OrdinalIgnoreCase));
-
-        if (isFakeAiLauncher || hasInfostealerBrowserPattern)
-        {
-            int riskScore = ComputeLocalHeuristicAiRiskScore(filePath, fileName, entropy, hasPeHeader, false, false, true);
-            string ruleName = isFakeAiLauncher
-                ? "Heuristic.FakeAIApp.MasqueradeDropper"
-                : "Heuristic.Infostealer.BrowserCredentialAccess";
-
-            return new ScanFinding(
-                FindingId: $"HEUR-{Guid.NewGuid():N}"[..16].ToUpperInvariant(),
-                FilePath: filePath,
-                FileName: fileName,
-                FileSizeBytes: fileSizeBytes,
-                Sha256Hash: precomputedSha256Hex,
-                Severity: ThreatSeverity.High,
-                Confidence: DetectionConfidence.HeuristicSuspicious,
-                DetectionName: ruleName,
-                DetectionEngineId: EngineId,
-                DetectionSourceAttribution: $"KIRON PROHORI Infostealer & Fake AI App Guard (Local AI Risk Score: {riskScore}/100)",
-                Description: $"[Local AI Risk Score: {riskScore}/100 · Entropy: {entropy:F2}b] Fake AI tool lure or unauthorized browser credential store access detected.",
-                FalsePositiveGuidance: "Verify AI desktop apps are downloaded strictly from official vendor domains.",
-                DetectedAtUtc: DateTimeOffset.UtcNow,
-                LocalAiRiskScore0To100: riskScore
-            );
-        }
-
-        // 5. USB Shortcut Worm (.lnk / .vbs) & Autorun.inf Detection
+        // 4. USB Shortcut Worm (.lnk / .vbs) & Autorun.inf Detection
         if (fileName.Equals("autorun.inf", StringComparison.OrdinalIgnoreCase))
         {
             int riskScore = Math.Max(65, ComputeLocalHeuristicAiRiskScore(filePath, fileName, entropy, hasPeHeader, false, false, false));
@@ -359,7 +325,8 @@ public sealed class HeuristicSuspiciousFileEngine : IScanEngine
             );
         }
 
-        // 6. Script Malware (.ps1, .bat, .vbs, .js, .cmd, .hta) Obfuscated/Encoded Commands
+        // 5. Script Malware (.ps1, .bat, .vbs, .js, .cmd, .hta) Obfuscated/Encoded Commands
+        // Evaluated BEFORE Infostealer / BrowserCredentialAccess so obfuscated scripts deterministicly return Heuristic.ScriptMalware.ObfuscatedCommand
         if (ScriptMalwareExtensions.Contains(ext) &&
             bytesRead > 0 &&
             ObfuscatedScriptIndicators.Count(ind => asciiSample.Contains(ind, StringComparison.OrdinalIgnoreCase)) >= 2)
@@ -378,6 +345,40 @@ public sealed class HeuristicSuspiciousFileEngine : IScanEngine
                 DetectionSourceAttribution: $"KIRON PROHORI Script De-Obfuscation Guard (Local AI Risk Score: {riskScore}/100)",
                 Description: $"[Local AI Risk Score: {riskScore}/100] Script contains encoded or obfuscated execution commands.",
                 FalsePositiveGuidance: "Inspect script source code before allowing execution.",
+                DetectedAtUtc: DateTimeOffset.UtcNow,
+                LocalAiRiskScore0To100: riskScore
+            );
+        }
+
+        // 6. Infostealer / Fake AI App Guard (Triggers only on explicit Fake AI App lure naming or actual browser credential/cookie theft paths)
+        string lowerFileName = fileName.ToLowerInvariant();
+        bool isFakeAiLauncher = HighRiskExecutableExtensions.Contains(ext) &&
+                                FakeAiToolMasqueradeKeywords.Any(k => lowerFileName.Contains(k, StringComparison.OrdinalIgnoreCase));
+
+        bool hasInfostealerBrowserPattern = bytesRead > 0 &&
+            HighRiskExecutableExtensions.Contains(ext) &&
+            InfostealerBrowserTargetPatterns.Any(p => asciiSample.Contains(p, StringComparison.OrdinalIgnoreCase));
+
+        if (isFakeAiLauncher || hasInfostealerBrowserPattern)
+        {
+            int riskScore = ComputeLocalHeuristicAiRiskScore(filePath, fileName, entropy, hasPeHeader, false, false, true);
+            string ruleName = isFakeAiLauncher
+                ? "Heuristic.FakeAIApp.MasqueradeDropper"
+                : "Heuristic.Infostealer.BrowserCredentialAccess";
+
+            return new ScanFinding(
+                FindingId: $"HEUR-{Guid.NewGuid():N}"[..16].ToUpperInvariant(),
+                FilePath: filePath,
+                FileName: fileName,
+                FileSizeBytes: fileSizeBytes,
+                Sha256Hash: precomputedSha256Hex,
+                Severity: ThreatSeverity.High,
+                Confidence: DetectionConfidence.HeuristicSuspicious,
+                DetectionName: ruleName,
+                DetectionEngineId: EngineId,
+                DetectionSourceAttribution: $"KIRON PROHORI Infostealer & Fake AI App Guard (Local AI Risk Score: {riskScore}/100)",
+                Description: $"[Local AI Risk Score: {riskScore}/100 · Entropy: {entropy:F2}b] Fake AI tool lure or unauthorized browser credential store access detected.",
+                FalsePositiveGuidance: "Verify AI desktop apps are downloaded strictly from official vendor domains.",
                 DetectedAtUtc: DateTimeOffset.UtcNow,
                 LocalAiRiskScore0To100: riskScore
             );
