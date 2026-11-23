@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout KIRON PROHORI Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Verify Static Website Entry Point & No Hardcoded Fake Binaries
         run: |

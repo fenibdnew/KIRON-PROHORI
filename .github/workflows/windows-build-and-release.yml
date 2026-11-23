@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout KIRON PROHORI Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -84,10 +84,10 @@ jobs:
     needs: verify-web-platform
     steps:
       - name: Checkout KIRON PROHORI Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup .NET 8.0 SDK (win-x64)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -190,7 +190,7 @@ jobs:
           Get-Content "release-assets/SHA256SUMS.txt"
 
       - name: Upload Windows Build Artifacts & Logs to GitHub Actions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: kiron-prohori-win-x64-${{ steps.channel_gate.outputs.channel }}-${{ github.sha }}
           path: |
