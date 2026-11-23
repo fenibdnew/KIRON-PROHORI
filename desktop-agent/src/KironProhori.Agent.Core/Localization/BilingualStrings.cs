@@ -1,16 +1,18 @@
+using System;
 using System.Collections.Generic;
 using KironProhori.Agent.Core.Models;
 
 namespace KironProhori.Agent.Core.Localization;
 
 /// <summary>
-/// Bilingual (English &amp; Bengali / বাংলা) UI string catalog for all 15 desktop navigation views and Developer About metadata.
+/// Bilingual (English &amp; Bengali / বাংলা) UI string catalog for all desktop navigation views and Developer About metadata.
 /// </summary>
 public static class BilingualStrings
 {
     public static readonly IReadOnlyDictionary<string, (string En, string Bn)> Catalog =
-        new Dictionary<string, (string En, string Bn)>
+        new Dictionary<string, (string En, string Bn)>(StringComparer.OrdinalIgnoreCase)
         {
+            // Canonical Phase 7A catalog keys
             ["BrandTitle"] = ("KIRON PROHORI — Windows Security & Antivirus", "কিরণ প্রহরী — উইন্ডোজ সিকিউরিটি ও অ্যান্টিভাইরাস"),
             ["DeveloperCredit"] = ("Developer: ARIFUZZAMAN", "ডেভেলপার: ARIFUZZAMAN"),
             ["PhaseBadge"] = ("PHASE 7A · PRIVACY-FIRST (NO TELEMETRY) · $0 BUDGET", "ফেজ ৭এ · প্রাইভেসি-ফার্স্ট (নো টেলিমেট্রি) · $০ বাজেট"),
@@ -40,6 +42,32 @@ public static class BilingualStrings
             ["CoexistenceBanner"] = (
                 "Privacy-First Companion Mode: No Telemetry by Default. Never disables Microsoft Defender or Windows Firewall. Not registered as a primary WSC Antivirus replacement.",
                 "প্রাইভেসি-ফার্স্ট কম্প্যানিয়ন মোড: ডিফল্টভাবে কোনো টেলিমেট্রি নেই। কখনোই Microsoft Defender বা Windows Firewall বন্ধ করে না।"
+            ),
+
+            // V1.0 Desktop UI navigation & header keys
+            ["app.title"] = ("KIRON PROHORI", "কিরণ প্রহরী"),
+            ["app.subtitle"] = ("Windows Security & Antivirus V1.0", "উইন্ডোজ সিকিউরিটি ও অ্যান্টিভাইরাস V1.0"),
+            ["nav.overview"] = ("Security Overview", "সিকিউরিটি ওভারভিউ"),
+            ["nav.quick_scan"] = ("Quick Scan", "কুইক স্ক্যান"),
+            ["nav.full_scan"] = ("Full Scan", "ফুল স্ক্যান"),
+            ["nav.custom_scan"] = ("Custom Scan", "কাস্টম ফোল্ডার স্ক্যান"),
+            ["nav.usb_scan"] = ("USB Scan", "ইউএসবি ড্রাইভ স্ক্যান"),
+            ["nav.web_protection"] = ("Web Protection (Chrome/Edge)", "ওয়েব সুরক্ষা (Chrome/Edge)"),
+            ["nav.download_protection"] = ("Download Protection", "ডাউনলোড সুরক্ষা"),
+            ["nav.realtime"] = ("Real-Time Protection", "রিয়েল-টাইম সুরক্ষা"),
+            ["nav.history"] = ("Threat History", "থ্রেট ইতিহাস"),
+            ["nav.quarantine"] = ("Quarantine", "কোয়ারেন্টাইন ভল্ট"),
+            ["nav.exclusions"] = ("Exclusions", "এক্সক্লুশন ম্যানেজার"),
+            ["nav.security_intel"] = ("Security Intelligence", "সিকিউরিটি ইন্টেলিজেন্স"),
+            ["nav.defender"] = ("Microsoft Defender Status", "মাইক্রোসফট ডিফেন্ডার স্ট্যাটাস"),
+            ["nav.firewall"] = ("Firewall Status", "ফায়ারওয়াল অবস্থা"),
+            ["nav.updates"] = ("Updates", "সিকিউরিটি আপডেট"),
+            ["nav.notifications"] = ("Notifications", "স্মার্ট নোটিফিকেশন"),
+            ["nav.settings"] = ("Settings", "সেটিংস ও পারফরম্যান্স"),
+            ["nav.about"] = ("About", "পরিচিতি (About)"),
+            ["status.honest_disclosure"] = (
+                "User-Mode Windows Companion · Coexists with Microsoft Defender · No Automatic File Upload · No Telemetry by Default",
+                "ইউজার-মোড উইন্ডোজ কম্প্যানিয়ন · Microsoft Defender-এর সাথে সহাবস্থান করে · স্বয়ংক্রিয় ফাইল আপলোড নেই · ডিফল্টভাবে কোনো টেলিমেট্রি নেই"
             )
         };
 

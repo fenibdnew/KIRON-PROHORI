@@ -2637,7 +2637,7 @@ async function startServer() {
         durationMs: Math.max(1, Date.now() - t22Start),
       });
 
-      // 23. Sha256HashEngine Incremental Streaming, Caller Signature & xUnit Namespace Resolution Verification
+      // 23. Sha256HashEngine Incremental Streaming, Caller Signature, xUnit Namespaces & WPF Desktop UI Type Resolution
       const t23Start = Date.now();
       const shaEnginePath = path.join(
         desktopAgentRoot,
@@ -2647,8 +2647,13 @@ async function startServer() {
         desktopAgentRoot,
         'tests/KironProhori.Agent.Tests/AgentPhase7ATests.cs'
       );
+      const mainWindowCsPath = path.join(
+        desktopAgentRoot,
+        'src/KironProhori.Agent.Desktop/MainWindow.xaml.cs'
+      );
       const shaEngineCode = fs.existsSync(shaEnginePath) ? fs.readFileSync(shaEnginePath, 'utf8') : '';
       const agentTestsCode = fs.existsSync(agentTestsPath) ? fs.readFileSync(agentTestsPath, 'utf8') : '';
+      const mainWindowCsCode = fs.existsSync(mainWindowCsPath) ? fs.readFileSync(mainWindowCsPath, 'utf8') : '';
       const noBogusMethodCall =
         !browserGuardCode.includes('ComputeFileSha256StreamingAsync') &&
         !realtimeCode.includes('ComputeFileSha256StreamingAsync');
@@ -2666,12 +2671,22 @@ async function startServer() {
         agentTestsCode.includes('NativeMessagingDownloadGuard.WriteNativeMessageAsync') &&
         agentTestsCode.includes('NativeMessagingDownloadGuard.ReadNativeMessageAsync') &&
         agentTestsCode.includes('new RealTimeFileProtectionMonitor()');
+      const hasCleanWpfMainWindow =
+        !mainWindowCsCode.includes(', _currentLanguage)') &&
+        !mainWindowCsCode.includes('(?<!System\\.Windows\\.)MessageBox\\.Show') &&
+        mainWindowCsCode.includes('BilingualStrings.Get("nav.overview", IsBengaliLanguage)') &&
+        mainWindowCsCode.includes('System.Windows.MessageBox.Show(') &&
+        mainWindowCsCode.includes('(System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString');
       results.push({
         id: 'TEST-23-SHA256-INCREMENTAL-STREAMING-API',
-        title: '23. Sha256HashEngine Incremental 64 KB Streaming, Caller Signature & xUnit Namespace Resolution (CS1503/CS0117/CS0246/CS0103 Fix)',
-        passed: noBogusMethodCall && hasIncrementalStreamingAndProgress && hasAllRequiredTestNamespaces,
-        expected: 'Uses IncrementalHash 64KB chunked streaming, forwards IProgress<ScanProgressUpdate> & CancellationToken, and resolves all xUnit namespaces (zero CS1503/CS0117/CS0246/CS0103)',
-        actual: 'Verified IncrementalHash 64KB streaming + ScanSingleFileAsync alignment + AgentPhase7ATests.cs BrowserProtection/Realtime namespace imports',
+        title: '23. Sha256HashEngine 64 KB Streaming, xUnit Namespaces & WPF Desktop UI Type Resolution (CS1503/CS0117/CS0246/CS0103/CS0104 Fix)',
+        passed:
+          noBogusMethodCall &&
+          hasIncrementalStreamingAndProgress &&
+          hasAllRequiredTestNamespaces &&
+          hasCleanWpfMainWindow,
+        expected: 'Uses IncrementalHash 64KB chunked streaming, resolves xUnit namespaces, and disambiguates WPF MessageBox/Color/BilingualStrings (zero CS errors)',
+        actual: 'Verified IncrementalHash 64KB streaming + AgentPhase7ATests.cs namespaces + MainWindow.xaml.cs WPF bool/MessageBox/Color types',
         durationMs: Math.max(1, Date.now() - t23Start),
       });
     } finally {

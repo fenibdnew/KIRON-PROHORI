@@ -43,6 +43,8 @@ public partial class MainWindow : Window
     private string _currentLanguage = "en";
     private bool _isDarkTheme = true;
 
+    private bool IsBengaliLanguage => string.Equals(_currentLanguage, "bn", StringComparison.OrdinalIgnoreCase);
+
     public MainWindow()
     {
         InitializeComponent();
@@ -136,34 +138,34 @@ public partial class MainWindow : Window
 
     private void OnNavigateOverviewClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = $"{BilingualStrings.Get("nav.overview", _currentLanguage)} — Privacy-First Windows Companion";
+        CurrentSectionTitle.Text = $"{BilingualStrings.Get("nav.overview", IsBengaliLanguage)} — Privacy-First Windows Companion";
         StatusFooterText.Text = "Overview ready. All scans and exclusions are stored locally without telemetry.";
     }
 
     private async void OnQuickScanClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.quick_scan", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.quick_scan", IsBengaliLanguage);
         var quickTargets = ModularScanPipeline.GetQuickScanDirectories();
         await RunScanWorkflowAsync(ScanType.QuickScan, quickTargets.Take(1));
     }
 
     private async void OnFullScanClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.full_scan", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.full_scan", IsBengaliLanguage);
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         await RunScanWorkflowAsync(ScanType.FullScan, new[] { userProfile });
     }
 
     private async void OnCustomScanClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.custom_scan", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.custom_scan", IsBengaliLanguage);
         var docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         await RunScanWorkflowAsync(ScanType.CustomFolderScan, new[] { docsPath });
     }
 
     private async void OnUsbScanClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.usb_scan", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.usb_scan", IsBengaliLanguage);
         var removableDrives = ModularScanPipeline.GetRemovableUsbDrives()
             .Select(d => d.RootDirectory.FullName)
             .ToList();
@@ -240,7 +242,7 @@ public partial class MainWindow : Window
 
     private void OnRealtimeGuardToggleClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.realtime", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.realtime", IsBengaliLanguage);
         RightPanelHeaderText.Text = $"USER-MODE REAL-TIME FILE PROTECTION ({(_realTimeMonitor.IsMonitoringActive ? "ACTIVE" : "READY")})";
         QuarantineListBox.Items.Clear();
         foreach (var evt in _realTimeMonitor.GetEventHistory())
@@ -268,7 +270,7 @@ public partial class MainWindow : Window
 
     private void OnThreatHistoryClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.history", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.history", IsBengaliLanguage);
         RightPanelHeaderText.Text = $"LOCAL SCAN HISTORY ({_scanHistory.Count} SESSIONS)";
         QuarantineListBox.Items.Clear();
         foreach (var session in _scanHistory)
@@ -281,13 +283,13 @@ public partial class MainWindow : Window
 
     private async void OnRefreshQuarantineClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.quarantine", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.quarantine", IsBengaliLanguage);
         await RefreshQuarantineVaultAsync();
     }
 
     private void OnExclusionsViewClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.exclusions", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.exclusions", IsBengaliLanguage);
         RightPanelHeaderText.Text = "KIRON PROHORI EXCLUSIONS (DOES NOT MODIFY DEFENDER)";
         QuarantineListBox.Items.Clear();
 
@@ -303,21 +305,21 @@ public partial class MainWindow : Window
 
     private async void OnRefreshWindowsSecurityClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.defender", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.defender", IsBengaliLanguage);
         await RefreshWindowsSecurityPostureAsync();
         StatusFooterText.Text = "Refreshed Microsoft Defender Antivirus status & signature version via WMI.";
     }
 
     private async void OnFirewallViewClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.firewall", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.firewall", IsBengaliLanguage);
         await RefreshWindowsSecurityPostureAsync();
         StatusFooterText.Text = "Refreshed Windows Firewall Domain, Private, and Public profile status.";
     }
 
     private void OnCheckUpdatesClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.updates", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.updates", IsBengaliLanguage);
         RightPanelHeaderText.Text = "SIGNED HTTPS UPDATE HISTORY & ROLLBACK";
         QuarantineListBox.Items.Clear();
         foreach (var rec in _updateManager.GetUpdateHistory())
@@ -331,7 +333,7 @@ public partial class MainWindow : Window
 
     private void OnNotificationsViewClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.notifications", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.notifications", IsBengaliLanguage);
         RightPanelHeaderText.Text = "SMART NOTIFICATIONS (ANTI-SPAM + GENTLE CHIME)";
         QuarantineListBox.Items.Clear();
         foreach (var evt in _notificationManager.GetNotificationHistory())
@@ -345,14 +347,14 @@ public partial class MainWindow : Window
 
     private void OnSettingsViewClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.settings", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.settings", IsBengaliLanguage);
         StatusFooterText.Text =
             $"Performance Profile: {_performanceGuard.CurrentProfile} · Max CPU: {_performanceGuard.MaxCpuLimitPercent}% · Skip Unchanged Clean Files: {_performanceGuard.EnableUnchangedFileCache}";
     }
 
     private void OnAboutViewClick(object sender, RoutedEventArgs e)
     {
-        CurrentSectionTitle.Text = BilingualStrings.Get("nav.about", _currentLanguage);
+        CurrentSectionTitle.Text = BilingualStrings.Get("nav.about", IsBengaliLanguage);
         RightPanelHeaderText.Text = $"{AboutBrandMetadata.ProductName} — {AboutBrandMetadata.Subtitle}";
         QuarantineListBox.Items.Clear();
         QuarantineListBox.Items.Add($"Product: {AboutBrandMetadata.ProductName}");
@@ -486,7 +488,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var confirm = MessageBox.Show(
+        var confirm = System.Windows.MessageBox.Show(
             $"Quarantine '{finding.DetectionName}'?\n\nLocation: {finding.FilePath}\nSource: {finding.DetectionSourceAttribution}\nSeverity: {finding.Severity}\n\nFile will be isolated in the local vault and can be restored anytime.",
             "KIRON PROHORI — Confirm Quarantine (Recommended)",
             MessageBoxButton.YesNo,
@@ -529,7 +531,7 @@ public partial class MainWindow : Window
         }
 
         var finding = _currentFindings[idx];
-        var confirm = MessageBox.Show(
+        var confirm = System.Windows.MessageBox.Show(
             $"{ExclusionManager.SecurityRiskExplanation}\n\nExclude path:\n{finding.FilePath}",
             "KIRON PROHORI — Confirm Exclusion",
             MessageBoxButton.YesNo,
@@ -579,7 +581,7 @@ public partial class MainWindow : Window
         }
 
         var item = _currentQuarantineItems[idx];
-        var confirm = MessageBox.Show(
+        var confirm = System.Windows.MessageBox.Show(
             $"Permanently delete quarantined payload '{item.DetectionName}'?\n\nOriginal Path: {item.OriginalFilePath}\n\nThis action cannot be undone.",
             "KIRON PROHORI — Confirm Permanent Delete",
             MessageBoxButton.YesNo,
@@ -599,30 +601,34 @@ public partial class MainWindow : Window
     private void OnToggleLanguageClick(object sender, RoutedEventArgs e)
     {
         _currentLanguage = _currentLanguage == "en" ? "bn" : "en";
-        AppTitleBlock.Text = BilingualStrings.Get("app.title", _currentLanguage);
-        AppSubtitleBlock.Text = BilingualStrings.Get("app.subtitle", _currentLanguage);
-        NavOverviewBtn.Content = "01. " + BilingualStrings.Get("nav.overview", _currentLanguage);
-        NavQuickScanBtn.Content = "02. " + BilingualStrings.Get("nav.quick_scan", _currentLanguage);
-        NavFullScanBtn.Content = "03. " + BilingualStrings.Get("nav.full_scan", _currentLanguage);
-        NavCustomScanBtn.Content = "04. " + BilingualStrings.Get("nav.custom_scan", _currentLanguage);
-        NavUsbScanBtn.Content = "05. " + BilingualStrings.Get("nav.usb_scan", _currentLanguage);
-        NavRealtimeBtn.Content = "06. " + BilingualStrings.Get("nav.realtime", _currentLanguage);
-        NavHistoryBtn.Content = "07. " + BilingualStrings.Get("nav.history", _currentLanguage);
-        NavQuarantineBtn.Content = "08. " + BilingualStrings.Get("nav.quarantine", _currentLanguage);
-        NavExclusionsBtn.Content = "09. " + BilingualStrings.Get("nav.exclusions", _currentLanguage);
-        NavDefenderBtn.Content = "10. " + BilingualStrings.Get("nav.defender", _currentLanguage);
-        NavFirewallBtn.Content = "11. " + BilingualStrings.Get("nav.firewall", _currentLanguage);
-        NavUpdatesBtn.Content = "12. " + BilingualStrings.Get("nav.updates", _currentLanguage);
-        NavNotificationsBtn.Content = "13. " + BilingualStrings.Get("nav.notifications", _currentLanguage);
-        NavSettingsBtn.Content = "14. " + BilingualStrings.Get("nav.settings", _currentLanguage);
-        NavAboutBtn.Content = "15. " + BilingualStrings.Get("nav.about", _currentLanguage);
-        DisclosureBannerText.Text = BilingualStrings.Get("status.honest_disclosure", _currentLanguage);
+        var isBn = IsBengaliLanguage;
+        AppTitleBlock.Text = BilingualStrings.Get("app.title", isBn);
+        AppSubtitleBlock.Text = BilingualStrings.Get("app.subtitle", isBn);
+        NavOverviewBtn.Content = "01. " + BilingualStrings.Get("nav.overview", isBn);
+        NavQuickScanBtn.Content = "02. " + BilingualStrings.Get("nav.quick_scan", isBn);
+        NavFullScanBtn.Content = "03. " + BilingualStrings.Get("nav.full_scan", isBn);
+        NavCustomScanBtn.Content = "04. " + BilingualStrings.Get("nav.custom_scan", isBn);
+        NavUsbScanBtn.Content = "05. " + BilingualStrings.Get("nav.usb_scan", isBn);
+        NavWebProtectionBtn.Content = "06. " + BilingualStrings.Get("nav.web_protection", isBn);
+        NavDownloadProtectionBtn.Content = "07. " + BilingualStrings.Get("nav.download_protection", isBn);
+        NavRealtimeBtn.Content = "08. " + BilingualStrings.Get("nav.realtime", isBn);
+        NavHistoryBtn.Content = "09. " + BilingualStrings.Get("nav.history", isBn);
+        NavQuarantineBtn.Content = "10. " + BilingualStrings.Get("nav.quarantine", isBn);
+        NavExclusionsBtn.Content = "11. " + BilingualStrings.Get("nav.exclusions", isBn);
+        NavSecurityIntelBtn.Content = "12. " + BilingualStrings.Get("nav.security_intel", isBn);
+        NavDefenderBtn.Content = "13. " + BilingualStrings.Get("nav.defender", isBn);
+        NavFirewallBtn.Content = "14. " + BilingualStrings.Get("nav.firewall", isBn);
+        NavUpdatesBtn.Content = "15. " + BilingualStrings.Get("nav.updates", isBn);
+        NavNotificationsBtn.Content = "16. " + BilingualStrings.Get("nav.notifications", isBn);
+        NavSettingsBtn.Content = "17. " + BilingualStrings.Get("nav.settings", isBn);
+        NavAboutBtn.Content = "18. " + BilingualStrings.Get("nav.about", isBn);
+        DisclosureBannerText.Text = BilingualStrings.Get("status.honest_disclosure", isBn);
     }
 
     private void OnToggleThemeClick(object sender, RoutedEventArgs e)
     {
         _isDarkTheme = !_isDarkTheme;
-        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_isDarkTheme ? "#0B0F17" : "#F8FAFC"));
-        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_isDarkTheme ? "#F3F4F6" : "#0F172A"));
+        Background = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(_isDarkTheme ? "#0B0F17" : "#F8FAFC"));
+        Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(_isDarkTheme ? "#F3F4F6" : "#0F172A"));
     }
 }
