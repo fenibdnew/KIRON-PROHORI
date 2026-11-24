@@ -181,8 +181,10 @@ public sealed class QuarantineManager
         }
 
         string fullCandidate = Path.GetFullPath(candidatePath);
+        string fullQuarantineRoot = Path.GetFullPath(_quarantineRootDir);
         string fullVault = Path.GetFullPath(_vaultPayloadsDir);
-        if (fullCandidate.StartsWith(fullVault, StringComparison.OrdinalIgnoreCase))
+        if (fullCandidate.StartsWith(fullQuarantineRoot, StringComparison.OrdinalIgnoreCase) ||
+            fullCandidate.StartsWith(fullVault, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("UNAUTHORIZED_QUARANTINE_MODIFICATION: Direct modification of internal Quarantine Vault payloads is prohibited.");
         }
