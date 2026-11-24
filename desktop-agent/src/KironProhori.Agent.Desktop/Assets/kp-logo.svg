@@ -1,35 +1,35 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none" role="img" aria-label="KIRON PROHORI Emerald Shield Logo">
   <defs>
-    <linearGradient id="kpEcoRimGrad" x1="24" y1="16" x2="232" y2="240" gradientUnits="userSpaceOnUse">
+    <linearGradient id="kpEmeraldShieldGrad" x1="14" y1="8" x2="106" y2="112" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#10B981" />
-      <stop offset="52%" stop-color="#059669" />
-      <stop offset="100%" stop-color="#006A4E" />
+      <stop offset="55%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
     </linearGradient>
-    <linearGradient id="kpEcoInnerGrad" x1="44" y1="32" x2="212" y2="226" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#073B2C" />
-      <stop offset="55%" stop-color="#04261D" />
-      <stop offset="100%" stop-color="#021711" />
+    <linearGradient id="kpMintRimGrad" x1="18" y1="8" x2="102" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="50%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
     </linearGradient>
-    <linearGradient id="kpMonogramGrad" x1="70" y1="78" x2="190" y2="176" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="70%" stop-color="#ECFDF5" />
-      <stop offset="100%" stop-color="#6EE7B7" />
-    </linearGradient>
-    <radialGradient id="crimsonSunGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FF5A6E" />
-      <stop offset="55%" stop-color="#F42A41" />
-      <stop offset="100%" stop-color="#B91C1C" />
-    </radialGradient>
   </defs>
-  <path d="M128 14 C164 14 202 27 220 42 C222 108 206 184 128 242 C50 184 34 108 36 42 C54 27 92 14 128 14 Z" fill="url(#kpEcoRimGrad)" />
-  <path d="M128 22 C160 22 194 33 210 47 C211 106 196 175 128 228 C60 175 45 106 46 47 C62 33 96 22 128 22 Z" fill="url(#kpEcoInnerGrad)" />
-  <path d="M128 22 L128 228 C60 175 45 106 46 47 C62 33 96 22 128 22 Z" fill="#10B981" fill-opacity="0.09" />
-  <path d="M128 186 L128 216 M128 196 L104 178 M128 196 L152 178" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-opacity="0.55" />
-  <path d="M68 78 H86 V117 L116 78 H137 L104 120 L138 170 H117 L91 131 L86 137 V170 H68 V78 Z" fill="url(#kpMonogramGrad)" />
-  <path d="M144 78 H174 C191 78 202 89 202 106 C202 123 191 134 174 134 H162 V170 H144 V78 Z M162 94 V118 H173 C181 118 185 113 185 106 C185 99 181 94 173 94 H162 Z" fill="url(#kpMonogramGrad)" />
-  <path d="M64 148 L112 118 L196 118" stroke="#04261D" stroke-width="3" stroke-linecap="round" />
-  <path d="M64 148 L112 118 L196 118" stroke="#34D399" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.85" />
-  <circle cx="182" cy="58" r="17" fill="#F42A41" fill-opacity="0.24" />
-  <circle cx="182" cy="58" r="11.5" fill="url(#crimsonSunGlow)" stroke="#FFFFFF" stroke-width="2" />
+
+  <!-- Outer Emerald Shield (#10B981) -->
+  <path d="M60 8 L104 24 V56 C104 84.5 85.2 104.8 60 112 C34.8 104.8 16 84.5 16 56 V24 L60 8 Z"
+        fill="url(#kpEmeraldShieldGrad)"
+        stroke="url(#kpMintRimGrad)"
+        stroke-width="3.5"
+        stroke-linejoin="round" />
+
+  <!-- Subtle Inner Shield Contour -->
+  <path d="M60 16.5 L95.5 29.5 V55.5 C95.5 79.2 80.2 96.4 60 102.8 C39.8 96.4 24.5 79.2 24.5 55.5 V29.5 L60 16.5 Z"
+        stroke="#A7F3D0"
+        stroke-opacity="0.32"
+        stroke-width="1.5"
+        stroke-linejoin="round" />
+
+  <!-- Crisp Centered White "K" Monogram -->
+  <path d="M44 36 V84 M44 61 L74 36 M52 54 L76 84"
+        stroke="#FFFFFF"
+        stroke-width="10.5"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
 </svg>

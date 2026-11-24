@@ -12,7 +12,7 @@
         ResizeMode="CanResize"
         Background="{DynamicResource AppCanvasBrush}"
         Foreground="{DynamicResource PrimaryTextBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="Inter, Segoe UI Variable Text, Segoe UI"
         WindowStartupLocation="CenterScreen">
 
     <shell:WindowChrome.WindowChrome>
@@ -53,13 +53,31 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: Transparent Shield + K Icon & App Title -->
+                    <!-- Left: Unified Crisp Vector Emerald Shield + White 'K' Logo & Decluttered Low-Opacity Status Indicators -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                        <Image Source="pack://application:,,,/Assets/KironProhori.ico"
-                               Width="22"
-                               Height="22"
-                               Margin="0,0,10,0"
-                               VerticalAlignment="Center" />
+                        <Viewbox Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <Canvas Width="100" Height="100">
+                                <!-- Emerald-Green Shield (#10B981) -->
+                                <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
+                                      Stroke="#34D399"
+                                      StrokeThickness="4.5"
+                                      StrokeLineJoin="Round">
+                                    <Path.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#10B981" Offset="0.0" />
+                                            <GradientStop Color="#059669" Offset="1.0" />
+                                        </LinearGradientBrush>
+                                    </Path.Fill>
+                                </Path>
+                                <!-- Clean Centered White 'K' Monogram -->
+                                <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
+                                      Stroke="#FFFFFF"
+                                      StrokeThickness="10"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      StrokeLineJoin="Round" />
+                            </Canvas>
+                        </Viewbox>
                         <TextBlock x:Name="AppTitleBlock"
                                    Text="KIRON PROHORI"
                                    FontSize="13"
@@ -77,45 +95,46 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    VerticalAlignment="Center" />
+                        <!-- Subtle Low-Opacity Titlebar Status Indicators (No Glaring Solid Pills) -->
                         <Border x:Name="EcoPowerModeHeaderBadge"
-                                Background="#D1FAE5"
-                                BorderBrush="#10B981"
+                                Background="#1410B981"
+                                BorderBrush="#2610B981"
                                 BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="7,1.5"
-                                Margin="12,0,0,0"
+                                CornerRadius="5"
+                                Padding="8,2"
+                                Margin="14,0,0,0"
                                 VerticalAlignment="Center">
                             <TextBlock x:Name="EcoPowerModeHeaderText"
-                                       Text="🌿 Eco-Mode Active · Low Energy"
+                                       Text="● Eco-Mode Active · Low Energy"
                                        FontSize="9.5"
-                                       FontWeight="Bold"
-                                       Foreground="#006A4E" />
+                                       FontWeight="SemiBold"
+                                       Foreground="#34D399" />
                         </Border>
-                        <Border Background="#FEE2E2"
-                                BorderBrush="#F42A41"
+                        <Border Background="#10FFFFFF"
+                                BorderBrush="#1E293B"
                                 BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="6,1.5"
+                                CornerRadius="5"
+                                Padding="8,2"
                                 Margin="6,0,0,0"
                                 VerticalAlignment="Center">
                             <TextBlock Text="● AI-ERA RADAR · $0 FREE"
                                        FontSize="9.5"
-                                       FontWeight="Bold"
-                                       Foreground="#B91C1C" />
+                                       FontWeight="SemiBold"
+                                       Foreground="#94A3B8" />
                         </Border>
                     </StackPanel>
 
                     <!-- Right: Eco-Power Toggle + Language/Theme Pills + Minimize (—), Maximize/Restore (□), Close (✕) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="EcoModeQuickToggleBtn"
-                                Content="🌿 Eco: ON"
+                                Content="Eco: ON"
                                 ToolTip="Toggle Eco-Power Mode (Green Computing: auto-throttles when CPU &gt; 40% or on battery)"
                                 Click="OnToggleEcoPowerModeClick"
                                 Style="{StaticResource CaptionControlButtonStyle}"
-                                Width="78"
+                                Width="72"
                                 FontSize="11"
-                                FontWeight="Bold"
-                                Foreground="#006A4E" />
+                                FontWeight="SemiBold"
+                                Foreground="#34D399" />
                         <Button x:Name="LanguageToggleButton"
                                 Content="EN / বাংলা"
                                 ToolTip="Switch Interface Language (English / বাংলা)"
@@ -170,15 +189,15 @@
                     <Border x:Name="HeroProtectionBannerBorder"
                             Grid.Row="0"
                             CornerRadius="16"
-                            BorderBrush="#A7F3D0"
+                            BorderBrush="#1E293B"
                             BorderThickness="1.5"
                             Padding="26,22"
                             Margin="6,0,6,14"
                             Effect="{StaticResource FluentGlassShadow}">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop x:Name="HeroGradStop1" Color="#ECFDF5" Offset="0.0" />
-                                <GradientStop x:Name="HeroGradStop2" Color="#E0F2FE" Offset="1.0" />
+                                <GradientStop x:Name="HeroGradStop1" Color="#0D192B" Offset="0.0" />
+                                <GradientStop x:Name="HeroGradStop2" Color="#111827" Offset="1.0" />
                             </LinearGradientBrush>
                         </Border.Background>
 
@@ -189,111 +208,123 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Glowing Shield + K Emblem -->
+                            <!-- Unified Crisp Vector Emerald Shield + White 'K' Emblem -->
                             <Border x:Name="HeroShieldIconBadge"
                                     Grid.Column="0"
                                     Width="72"
                                     Height="72"
                                     CornerRadius="18"
-                                    Background="#FFFFFF"
-                                    BorderBrush="#10B981"
-                                    BorderThickness="2"
+                                    Background="#1F10B981"
+                                    BorderBrush="#4010B981"
+                                    BorderThickness="1"
                                     Margin="0,0,22,0"
-                                    VerticalAlignment="Center"
-                                    Effect="{StaticResource FluentGlassShadow}">
+                                    VerticalAlignment="Center">
                                 <Grid>
-                                    <Image Source="pack://application:,,,/Assets/KironProhori.ico"
-                                           Width="46"
-                                           Height="46"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" />
-                                    <Border x:Name="HeroShieldCornerCheck"
-                                            Width="22"
-                                            Height="22"
-                                            CornerRadius="11"
-                                            Background="#059669"
-                                            BorderBrush="#FFFFFF"
-                                            BorderThickness="2"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Bottom"
-                                            Margin="0,0,-4,-4">
-                                        <TextBlock x:Name="HeroShieldGlyphText"
-                                                   Text="✓"
-                                                   FontSize="11"
-                                                   FontWeight="ExtraBold"
-                                                   Foreground="#FFFFFF"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" />
+                                    <Viewbox Width="52" Height="52" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Canvas Width="100" Height="100">
+                                            <!-- Outer Geometric Emerald-Green Shield (#10B981) -->
+                                            <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
+                                                  Stroke="#34D399"
+                                                  StrokeThickness="4"
+                                                  StrokeLineJoin="Round">
+                                                <Path.Fill>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#10B981" Offset="0.0" />
+                                                        <GradientStop Color="#059669" Offset="0.65" />
+                                                        <GradientStop Color="#047857" Offset="1.0" />
+                                                    </LinearGradientBrush>
+                                                </Path.Fill>
+                                            </Path>
+                                            <!-- Subtle Inner Shield Contour -->
+                                            <Path Data="M 50,13 L 80,24 L 80,47 C 80,67 66,82 50,87 C 34,82 20,67 20,47 L 20,24 Z"
+                                                  Stroke="#A7F3D0"
+                                                  StrokeThickness="1.3"
+                                                  Opacity="0.35" />
+                                            <!-- Crisp Centered White 'K' Monogram -->
+                                            <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
+                                                  Stroke="#FFFFFF"
+                                                  StrokeThickness="9.5"
+                                                  StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round"
+                                                  StrokeLineJoin="Round" />
+                                        </Canvas>
+                                    </Viewbox>
+                                    <!-- Hidden compatibility element for code-behind state updates -->
+                                    <Border x:Name="HeroShieldCornerCheck" Visibility="Collapsed">
+                                        <TextBlock x:Name="HeroShieldGlyphText" Text="K" Visibility="Collapsed" />
                                     </Border>
                                 </Grid>
                             </Border>
 
-                            <!-- Headline, Live Coexistence Badges & Subtext -->
+                            <!-- Headline, Sleek Dark-Mode Coexistence Badges & Subtext -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,20,0">
                                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border x:Name="HeroStatusPillBorder"
-                                            Background="#059669"
-                                            CornerRadius="5"
-                                            Padding="9,3"
+                                            Background="#1F10B981"
+                                            BorderBrush="#4010B981"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10,3"
                                             Margin="0,0,8,4">
                                         <TextBlock x:Name="HeroStatusPillText"
-                                                   Text="PROTECTION LIVE"
+                                                   Text="PROTECTION LIVE · ECO-AI"
                                                    FontSize="10"
                                                    FontWeight="Bold"
-                                                   Foreground="#FFFFFF" />
+                                                   Foreground="#34D399" />
                                     </Border>
-                                    <Border Background="#FFFFFF"
-                                            BorderBrush="#CBD5E1"
+                                    <Border Background="{DynamicResource DarkPillBackgroundBrush}"
+                                            BorderBrush="{DynamicResource DarkPillBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="5"
-                                            Padding="8,3"
+                                            CornerRadius="6"
+                                            Padding="9,3"
                                             Margin="0,0,8,4">
                                         <TextBlock x:Name="DefenderStatusText"
                                                    Text="Defender: Coexisting"
                                                    FontSize="10.5"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#0F172A" />
+                                                   Foreground="{DynamicResource DarkPillTextBrush}" />
                                     </Border>
-                                    <Border Background="#FFFFFF"
-                                            BorderBrush="#CBD5E1"
+                                    <Border Background="{DynamicResource DarkPillBackgroundBrush}"
+                                            BorderBrush="{DynamicResource DarkPillBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="5"
-                                            Padding="8,3"
+                                            CornerRadius="6"
+                                            Padding="9,3"
                                             Margin="0,0,8,4">
                                         <TextBlock x:Name="FirewallStatusText"
                                                    Text="Firewall: Active"
                                                    FontSize="10.5"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#0284C7" />
+                                                   Foreground="{DynamicResource DarkPillAccentTextBrush}" />
                                     </Border>
-                                    <Border Background="#FFFFFF"
-                                            BorderBrush="#CBD5E1"
+                                    <Border Background="{DynamicResource DarkPillBackgroundBrush}"
+                                            BorderBrush="{DynamicResource DarkPillBorderBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="5"
-                                            Padding="8,3"
+                                            CornerRadius="6"
+                                            Padding="9,3"
                                             Margin="0,0,0,4">
                                         <TextBlock x:Name="SignatureVersionText"
                                                    Text="Signature: Ready"
                                                    FontSize="10.5"
-                                                   Foreground="#475569" />
+                                                   FontWeight="Medium"
+                                                   Foreground="{DynamicResource DarkPillTextBrush}" />
                                     </Border>
                                 </WrapPanel>
 
                                 <TextBlock x:Name="HeroHeadlineText"
-                                           Text="Your PC is Protected"
+                                           Text="Your protection is live now"
                                            FontSize="24"
                                            FontWeight="Bold"
-                                           Foreground="#0F172A"
-                                           Margin="0,4,0,3" />
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           Margin="0,5,0,3" />
 
                                 <TextBlock x:Name="HeroSubheadlineText"
-                                           Text="Real-time file guard, USB auto-scan &amp; browser shield active."
+                                           Text="Eco-Power Green Computing Mode, Local Heuristic AI Risk Score (0–100), Infostealer &amp; Fake AI App Guard, and Chrome/Edge MV3 Web Protection are active."
                                            FontSize="12.5"
-                                           Foreground="#334155"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
                                            TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <!-- Primary Quick Scan, USB Scan & USB Folder Recovery Buttons -->
+                            <!-- Primary Quick Scan, USB Scan & USB Folder Recovery Buttons (No Glaring White Backgrounds) -->
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button x:Name="HeroQuickScanCtaBtn"
                                         Content="⚡ Quick Scan"
@@ -304,9 +335,9 @@
                                         Content="🔌 USB Scan"
                                         Click="OnUsbScanClick"
                                         Style="{StaticResource ModernActionButtonStyle}"
-                                        Background="#FFFFFF"
-                                        Foreground="#006A4E"
-                                        BorderBrush="#10B981"
+                                        Background="#1F10B981"
+                                        Foreground="#34D399"
+                                        BorderBrush="#4010B981"
                                         Padding="14,10"
                                         Margin="0,0,8,0" />
                                 <Button x:Name="HeroDetailsBtn"
@@ -314,15 +345,15 @@
                                         ToolTip="Unhide folders hidden by USB shortcut viruses"
                                         Click="OnRecoverUsbHiddenFoldersClick"
                                         Style="{StaticResource ModernActionButtonStyle}"
-                                        Background="#FFFFFF"
-                                        Foreground="#0F172A"
-                                        BorderBrush="#CBD5E1"
+                                        Background="{DynamicResource DarkPillBackgroundBrush}"
+                                        Foreground="{DynamicResource DarkPillTextBrush}"
+                                        BorderBrush="{DynamicResource GlassBorderBrush}"
                                         Padding="14,10" />
                             </StackPanel>
                         </Grid>
                     </Border>
 
-                    <!-- MAIN 4x2 ACTION TILE GRID (8 CLICKABLE GLASS CARDS) -->
+                    <!-- MAIN 4x2 ACTION TILE GRID (8 CARDS WITH TRANSLUCENT EMERALD CONTAINERS, LUCIDE ICONS & DARK PILLS) -->
                     <UniformGrid Grid.Row="1" Columns="4" Rows="2">
 
                         <!-- Tile 1: Malware Scan -->
@@ -331,18 +362,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#E0F2FE" BorderBrush="#BAE6FD" BorderThickness="1">
-                                        <TextBlock Text="🔍" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Search / Scan Radar Outline Icon (#34D399) -->
+                                                <Path Data="M 11,4 A 7,7 0 1 1 10.99,4 Z M 16.2,16.2 L 21,21 M 8,11 L 14,11 M 11,8 L 11,14"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#E0F2FE" CornerRadius="5" Padding="7,2">
-                                        <TextBlock x:Name="TileScanBadgeText" Text="4 MODES" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock x:Name="TileScanBadgeText" Text="4 MODES" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Open Scanner →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Scanner →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile1TitleText" Text="Malware Scan" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile1TitleText" Text="Malware Scan" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Quick · Full · Folder · USB"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -356,18 +397,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1">
-                                        <TextBlock Text="🌐" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Globe Outline Icon (#34D399) -->
+                                                <Path Data="M 12,2 A 10,10 0 1 1 11.99,2 Z M 2.5,9 L 21.5,9 M 2.5,15 L 21.5,15 M 12,2 C 9,6.5 9,17.5 12,22 C 15,17.5 15,6.5 12,2 Z"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#D1FAE5" CornerRadius="5" Padding="7,2">
-                                        <TextBlock Text="MV3 READY" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock Text="MV3 READY" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillAccentTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Browser Shield →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Browser Shield →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile2TitleText" Text="Web &amp; Download" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile2TitleText" Text="Web &amp; Download" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Phishing &amp; File Guard"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -381,18 +432,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1">
-                                        <TextBlock Text="🛡" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Shield-Activity Outline Icon (#34D399) -->
+                                                <Path Data="M 12,2.5 L 4.5,5.8 L 4.5,11.5 C 4.5,16.6 7.7,21 12,22.5 C 16.3,21 19.5,16.6 19.5,11.5 L 19.5,5.8 Z M 7.5,12.5 L 10,12.5 L 11.4,9.2 L 12.8,15.2 L 14.2,12.5 L 16.5,12.5"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#D1FAE5" CornerRadius="5" Padding="7,2">
-                                        <TextBlock x:Name="DashCardRealtimeBadge" Text="READY" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock x:Name="DashCardRealtimeBadge" Text="READY" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillAccentTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Live Shield →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Live Shield →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile3TitleText" Text="Real-Time Guard" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile3TitleText" Text="Real-Time Guard" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Live Folder &amp; USB Monitor"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -406,18 +467,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1">
-                                        <TextBlock Text="🔒" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Lock Vault Outline Icon (#34D399) -->
+                                                <Path Data="M 7,11 L 17,11 C 18.1,11 19,11.9 19,13 L 19,20 C 19,21.1 18.1,22 17,22 L 7,22 C 5.9,22 5,21.1 5,20 L 5,13 C 5,11.9 5.9,11 7,11 Z M 8,11 L 8,7.5 C 8,5.3 9.8,3.5 12,3.5 C 14.2,3.5 16,5.3 16,7.5 L 16,11 M 12,15 L 12,18"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#FEF3C7" CornerRadius="5" Padding="7,2">
-                                        <TextBlock x:Name="DashCardQuarantineBadge" Text="0 ISOLATED" FontSize="9.5" FontWeight="Bold" Foreground="#D97706" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock x:Name="DashCardQuarantineBadge" Text="0 ISOLATED" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Open Vault →" FontSize="11" FontWeight="SemiBold" Foreground="#D97706" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Vault →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile4TitleText" Text="Quarantine Vault" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile4TitleText" Text="Quarantine Vault" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Restore or Delete Threats"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -431,18 +502,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1">
-                                        <TextBlock Text="📋" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide File-Text / History Log Outline Icon (#34D399) -->
+                                                <Path Data="M 6,3 L 14.5,3 L 19,7.5 L 19,21 L 6,21 Z M 14.5,3 L 14.5,7.5 L 19,7.5 M 9,12 L 16,12 M 9,16 L 14,16"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#F1F5F9" CornerRadius="5" Padding="7,2">
-                                        <TextBlock x:Name="DiagnosticsHealthText" Text="HEALTHY" FontSize="9.5" FontWeight="Bold" Foreground="#475569" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock x:Name="DiagnosticsHealthText" Text="HEALTHY" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillAccentTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="View Logs →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="View Logs →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile5TitleText" Text="Scan History" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile5TitleText" Text="Scan History" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Past Scans &amp; Activity"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -456,18 +537,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#E0F2FE" BorderBrush="#BAE6FD" BorderThickness="1">
-                                        <TextBlock Text="🧠" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Cpu / AI Engine Outline Icon (#34D399) -->
+                                                <Path Data="M 7,7 L 17,7 L 17,17 L 7,17 Z M 10,10 L 14,10 L 14,14 L 10,14 Z M 9,3 L 9,7 M 15,3 L 15,7 M 9,17 L 9,21 M 15,17 L 15,21 M 3,9 L 7,9 M 3,15 L 7,15 M 17,9 L 21,9 M 17,15 L 21,15"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#E0F2FE" CornerRadius="5" Padding="7,2">
-                                        <TextBlock Text="AI · SHA256" FontSize="9.5" FontWeight="Bold" Foreground="#0284C7" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock Text="AI · SHA256" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Engine Status →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Engine Status →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile6TitleText" Text="Threat Engines" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile6TitleText" Text="Threat Engines" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="AI Risk · Heuristics · YARA"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -481,18 +572,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#ECFDF5" BorderBrush="#A7F3D0" BorderThickness="1">
-                                        <TextBlock Text="🔄" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Refresh-Cw Outline Icon (#34D399) -->
+                                                <Path Data="M 20,11 A 8,8 0 0 0 5.3,6.6 L 3,9 M 3,4 L 3,9 L 8,9 M 4,13 A 8,8 0 0 0 18.7,17.4 L 21,15 M 21,20 L 21,15 L 16,15"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#D1FAE5" CornerRadius="5" Padding="7,2">
-                                        <TextBlock Text="SIGNED HTTPS" FontSize="9.5" FontWeight="Bold" Foreground="#059669" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock Text="SIGNED HTTPS" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillAccentTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Check Now →" FontSize="11" FontWeight="SemiBold" Foreground="#059669" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Check Now →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile7TitleText" Text="Check Updates" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile7TitleText" Text="Check Updates" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Signed Database &amp; App"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -506,18 +607,28 @@
                                 Style="{StaticResource FluentGlassTileButtonStyle}">
                             <DockPanel LastChildFill="True">
                                 <DockPanel DockPanel.Dock="Top">
-                                    <Border Width="36" Height="36" CornerRadius="10" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1">
-                                        <TextBlock Text="🛠" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource TileIconBoxBrush}" BorderBrush="{DynamicResource TileIconBorderBrush}" BorderThickness="1">
+                                        <Viewbox Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <!-- Lucide Wrench / Security Tools Outline Icon (#34D399) -->
+                                                <Path Data="M 14.7,6.3 A 4,4 0 0 0 9.4,11.6 L 4,17 L 7,20 L 12.4,14.6 A 4,4 0 0 0 17.7,9.3 L 15.2,11.8 L 12.2,8.8 Z"
+                                                      Stroke="{DynamicResource TileIconGlyphBrush}"
+                                                      StrokeThickness="2"
+                                                      StrokeStartLineCap="Round"
+                                                      StrokeEndLineCap="Round"
+                                                      StrokeLineJoin="Round" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="#F1F5F9" CornerRadius="5" Padding="7,2">
-                                        <TextBlock x:Name="QuarantineCountText" Text="0 EXCLUDED" FontSize="9.5" FontWeight="Bold" Foreground="#475569" />
+                                    <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource DarkPillBackgroundBrush}" BorderBrush="{DynamicResource DarkPillBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2.5">
+                                        <TextBlock x:Name="QuarantineCountText" Text="0 EXCLUDED" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DarkPillTextBrush}" />
                                     </Border>
                                 </DockPanel>
-                                <TextBlock DockPanel.Dock="Bottom" Text="Open Tools →" FontSize="11" FontWeight="SemiBold" Foreground="#006A4E" Margin="0,8,0,0" />
+                                <TextBlock DockPanel.Dock="Bottom" Text="Open Tools →" Style="{StaticResource TileActionLinkTextStyle}" />
                                 <StackPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock x:Name="Tile8TitleText" Text="Security Tools" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                    <TextBlock x:Name="Tile8TitleText" Text="Security Tools" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                                     <TextBlock Text="Exclusions · USB · Rootkit"
-                                               FontSize="11.5"
+                                               FontSize="12"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"
                                                Margin="0,4,0,0" />
@@ -664,20 +775,25 @@
                                     <Button x:Name="NavFullScanBtn" Content="🖥 Full Scan" Click="OnFullScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavCustomScanBtn" Content="📁 Custom Folder" Click="OnCustomScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavUsbScanBtn" Content="🔌 USB Scan" Click="OnUsbScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="RecoverUsbFoldersBtn" Content="📂 Recover USB Folders" Click="OnRecoverUsbHiddenFoldersClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                    <Button x:Name="RecoverUsbFoldersBtn" Content="📂 Recover USB Folders" Click="OnRecoverUsbHiddenFoldersClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavEmailAttachmentScanBtn" Content="📧 Email Attachment" ToolTip="Scan downloaded email attachments locally (Direct mailbox access: Planned)" Click="OnEmailAttachmentScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
                                 <!-- Web & Download Sub-Tab Switcher -->
                                 <StackPanel x:Name="WebAndDownloadSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
                                     <Button Content="🌐 Web Guard" Click="OnWebProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="NavDownloadProtectionBtn" Content="⬇ Download Guard" Click="OnDownloadProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                    <Button x:Name="NavDownloadProtectionBtn" Content="⬇ Download Guard" Click="OnDownloadProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavSafeBankingBtn" Content="🏦 Safe Banking (HTTPS)" ToolTip="Verify HTTPS financial domains &amp; phishing redirects (Hardened Browser: Planned)" Click="OnSafeBankingViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
-                                <!-- Exclusions, Defender, Firewall & Deep Rootkit Offline Scan Sub-Tab Switcher -->
+                                <!-- Exclusions, Defender, Firewall, Ransomware Shield, Privacy & Deep Rootkit Offline Scan Sub-Tab Switcher -->
                                 <StackPanel x:Name="ExclusionsAndFirewallSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
                                     <Button Content="⚙ Exclusions" Click="OnExclusionsViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavDefenderBtn" Content="🛡 Defender Status" Click="OnRefreshWindowsSecurityClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavFirewallBtn" Content="🔥 Firewall" Click="OnFirewallViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavRansomwareShieldBtn" Content="🔒 Ransomware Shield" Click="OnRansomwareShieldViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="RunHarmlessRansomSimBtn" Content="🧪 Ransom Sim" ToolTip="Run harmless sandbox ransomware simulation without touching user files" Click="OnRunHarmlessRansomwareSimulationClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button x:Name="NavPrivacyProtectionBtn" Content="📷 Privacy (Cam/Mic)" Click="OnPrivacyProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="LaunchDefenderOfflineRootkitBtn" Content="🧰 Defender Offline Scan" ToolTip="Launch Windows Defender Offline Scan for deep kernel/rootkit removal" Click="OnLaunchDefenderOfflineScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
@@ -957,16 +1073,32 @@
                                         Width="84"
                                         Height="84"
                                         CornerRadius="20"
-                                        Background="{DynamicResource GlassElevatedBrush}"
-                                        BorderBrush="#0284C7"
-                                        BorderThickness="1.5"
+                                        Background="#1F10B981"
+                                        BorderBrush="#4010B981"
+                                        BorderThickness="1"
                                         VerticalAlignment="Top"
                                         Margin="0,0,22,0">
-                                    <Image Source="pack://application:,,,/Assets/KironProhori.ico"
-                                           Width="56"
-                                           Height="56"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" />
+                                    <Viewbox Width="58" Height="58" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Canvas Width="100" Height="100">
+                                            <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
+                                                  Stroke="#34D399"
+                                                  StrokeThickness="4"
+                                                  StrokeLineJoin="Round">
+                                                <Path.Fill>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#10B981" Offset="0.0" />
+                                                        <GradientStop Color="#059669" Offset="1.0" />
+                                                    </LinearGradientBrush>
+                                                </Path.Fill>
+                                            </Path>
+                                            <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
+                                                  Stroke="#FFFFFF"
+                                                  StrokeThickness="9.5"
+                                                  StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round"
+                                                  StrokeLineJoin="Round" />
+                                        </Canvas>
+                                    </Viewbox>
                                 </Border>
 
                                 <StackPanel Grid.Column="1">
@@ -1026,16 +1158,32 @@
                             <Border Width="78"
                                     Height="78"
                                     CornerRadius="20"
-                                    Background="#ECFDF5"
-                                    BorderBrush="#10B981"
-                                    BorderThickness="2"
+                                    Background="#1F10B981"
+                                    BorderBrush="#4010B981"
+                                    BorderThickness="1"
                                     HorizontalAlignment="Center"
                                     Margin="0,0,0,16">
-                                <Image Source="pack://application:,,,/Assets/KironProhori.ico"
-                                       Width="52"
-                                       Height="52"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                                <Viewbox Width="54" Height="54" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Canvas Width="100" Height="100">
+                                        <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
+                                              Stroke="#34D399"
+                                              StrokeThickness="4"
+                                              StrokeLineJoin="Round">
+                                            <Path.Fill>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#10B981" Offset="0.0" />
+                                                    <GradientStop Color="#059669" Offset="1.0" />
+                                                </LinearGradientBrush>
+                                            </Path.Fill>
+                                        </Path>
+                                        <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
+                                              Stroke="#FFFFFF"
+                                              StrokeThickness="9.5"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"
+                                              StrokeLineJoin="Round" />
+                                    </Canvas>
+                                </Viewbox>
                             </Border>
 
                             <TextBlock Text="Welcome to KIRON PROHORI"

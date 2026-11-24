@@ -48,6 +48,7 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 SetupIconFile=..\assets\KironProhori.ico
+ChangesAssociations=yes
 UninstallDisplayName={#MyAppName} {#MyAppSubtitle} V{#MyAppVersion}
 UninstallDisplayIcon={app}\KironProhori.ico
 VersionInfoVersion=1.0.0.0

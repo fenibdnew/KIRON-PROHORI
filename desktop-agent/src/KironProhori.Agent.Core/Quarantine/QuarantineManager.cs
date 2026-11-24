@@ -94,7 +94,14 @@ public sealed class QuarantineManager
                 $"EXCLUSION_POLICY_GUARD: Cannot quarantine '{finding.FilePath}' because it is protected by an active KIRON exclusion.");
         }
 
-        if (string.IsNullOrWhiteSpace(finding.FilePath) || !File.Exists(finding.FilePath))
+        if (string.IsNullOrWhiteSpace(finding.FilePath))
+        {
+            throw new ArgumentException("Target file path for quarantine cannot be empty.", nameof(finding));
+        }
+
+        ValidateSafePathNoTraversal(finding.FilePath);
+
+        if (!File.Exists(finding.FilePath))
         {
             throw new FileNotFoundException("Target file for quarantine does not exist.", finding.FilePath);
         }
@@ -156,6 +163,32 @@ public sealed class QuarantineManager
     }
 
     /// <summary>
+    /// Validates that a file path does not contain relative path-traversal segments ("..") or null characters,
+    /// and is not attempting to overwrite files inside the Quarantine Vault directory itself.
+    /// </summary>
+    public void ValidateSafePathNoTraversal(string candidatePath)
+    {
+        if (string.IsNullOrWhiteSpace(candidatePath) || candidatePath.IndexOf('\0') >= 0)
+        {
+            throw new InvalidOperationException("PATH_SECURITY_VIOLATION: File path is empty or contains invalid null characters.");
+        }
+
+        string normalized = candidatePath.Replace('\\', '/');
+        string[] segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(s => s == ".."))
+        {
+            throw new InvalidOperationException($"PATH_TRAVERSAL_BLOCKED: Relative path traversal ('..') is not permitted in quarantine path '{candidatePath}'.");
+        }
+
+        string fullCandidate = Path.GetFullPath(candidatePath);
+        string fullVault = Path.GetFullPath(_vaultPayloadsDir);
+        if (fullCandidate.StartsWith(fullVault, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("UNAUTHORIZED_QUARANTINE_MODIFICATION: Direct modification of internal Quarantine Vault payloads is prohibited.");
+        }
+    }
+
+    /// <summary>
     /// Logs an "Ignore Once" user decision without touching the file on disk.
     /// </summary>
     public async Task IgnoreFindingOnceAsync(
@@ -194,12 +227,23 @@ public sealed class QuarantineManager
                 "SECURITY_POLICY_VIOLATION: Explicit user confirmation (userConfirmed: true) is required before restoring a quarantined file.");
         }
 
+        if (!string.IsNullOrWhiteSpace(customRestorePath))
+        {
+            ValidateSafePathNoTraversal(customRestorePath);
+        }
+
         await _mutex.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var entries = await LoadManifestInternalAsync(cancellationToken).ConfigureAwait(false);
             var existing = entries.FirstOrDefault(e => e.QuarantineId.Equals(quarantineId, StringComparison.OrdinalIgnoreCase))
                 ?? throw new KeyNotFoundException($"Quarantine entry '{quarantineId}' was not found in the vault manifest.");
+
+            ValidateSafePathNoTraversal(existing.VaultPayloadFileName.Contains("..") ? existing.VaultPayloadFileName : existing.OriginalFilePath);
+            if (existing.VaultPayloadFileName.Contains("..") || existing.VaultPayloadFileName.Contains('/') || existing.VaultPayloadFileName.Contains('\\'))
+            {
+                throw new InvalidOperationException("PATH_TRAVERSAL_BLOCKED: Invalid vault payload file name.");
+            }
 
             string vaultPayloadPath = Path.Combine(_vaultPayloadsDir, existing.VaultPayloadFileName);
             if (!File.Exists(vaultPayloadPath))
@@ -210,6 +254,11 @@ public sealed class QuarantineManager
             string targetRestorePath = !string.IsNullOrWhiteSpace(customRestorePath)
                 ? Path.GetFullPath(customRestorePath)
                 : existing.OriginalFilePath;
+
+            if (IsProtectedWindowsSystemFile(targetRestorePath))
+            {
+                throw new InvalidOperationException($"CRITICAL_OS_FILE_GUARD: Refusing to restore file into protected Windows system directory ('{targetRestorePath}').");
+            }
 
             string? parentDir = Path.GetDirectoryName(targetRestorePath);
             if (!string.IsNullOrWhiteSpace(parentDir))

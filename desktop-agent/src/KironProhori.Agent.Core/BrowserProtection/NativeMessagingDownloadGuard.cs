@@ -283,6 +283,30 @@ public sealed class NativeMessagingDownloadGuard
             );
         }
 
+        // Check for suspicious open-redirect parameters (?redirect=http, ?url=http, ?next=http) or userinfo '@' hostname spoofing
+        bool hasSuspiciousRedirectOrSpoof =
+            rawUrl.Contains("@", StringComparison.Ordinal) ||
+            rawUrl.Contains("redirect=http", StringComparison.OrdinalIgnoreCase) ||
+            rawUrl.Contains("redirect_uri=http", StringComparison.OrdinalIgnoreCase) ||
+            rawUrl.Contains("url=http://", StringComparison.OrdinalIgnoreCase) ||
+            rawUrl.Contains("next=http://", StringComparison.OrdinalIgnoreCase);
+
+        if (hasSuspiciousRedirectOrSpoof)
+        {
+            return new BrowserUrlEvaluationResult(
+                RawUrl: rawUrl,
+                NormalizedHost: host,
+                ShouldBlock: false,
+                ShouldWarnBeforeNavigation: true,
+                IsTemporarilyAllowlisted: false,
+                Category: "SUSPICIOUS_REDIRECT_OR_SPOOF",
+                BlockReason: "Suspicious external redirect parameter or '@' credential-in-URL spoofing indicator detected. Distinguished as Suspicious (not a confirmed block).",
+                ThreatSourceAttribution: "KIRON PROHORI Anti-Phishing Redirect Guard",
+                MatchedRuleId: null,
+                EvaluatedAtUtc: now
+            );
+        }
+
         return new BrowserUrlEvaluationResult(
             RawUrl: rawUrl,
             NormalizedHost: host,

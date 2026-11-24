@@ -39,6 +39,11 @@ public partial class MainWindow : Window
     private readonly WindowsSecurityMonitor _windowsSecurityMonitor;
     private readonly RealTimeFileProtectionMonitor _realTimeMonitor;
     private readonly NativeMessagingDownloadGuard _browserDownloadGuard;
+    private readonly RansomwareShieldMonitor _ransomwareShield;
+    private readonly PrivacyProtectionMonitor _privacyMonitor;
+    private readonly SafeBankingProtectionModule _safeBankingModule;
+    private readonly EmailAttachmentSecurityScanner _emailAttachmentScanner;
+    private readonly PrivacyFirstCloudThreatIntelligenceService _cloudIntelService;
 
     private readonly string _localAppDataDir;
     private readonly string _uiPreferencesFilePath;
@@ -55,8 +60,8 @@ public partial class MainWindow : Window
     private const int DbtDeviceArrival = 0x8000;
     private const int DbtDevNodesChanged = 0x0007;
 
-    // Default Theme: Light Minimal Glass (Windows 11 Fluent)
-    private bool _isDarkTheme;
+    // Default Theme: Deep Slate (#0B1120) with Emerald (#10B981 / #34D399) Accents
+    private bool _isDarkTheme = true;
     private string _currentLanguage = "en";
     private bool _minimizeToTrayOnClose = true;
     private bool _hasCompletedFirstRunWelcome;
@@ -110,6 +115,14 @@ public partial class MainWindow : Window
             _quarantineManager,
             _notificationManager
         );
+        _ransomwareShield = new RansomwareShieldMonitor(
+            _exclusionManager,
+            _notificationManager
+        );
+        _privacyMonitor = new PrivacyProtectionMonitor();
+        _safeBankingModule = new SafeBankingProtectionModule();
+        _emailAttachmentScanner = new EmailAttachmentSecurityScanner(_scanPipeline);
+        _cloudIntelService = new PrivacyFirstCloudThreatIntelligenceService();
 
         LoadLocalUiPreferences();
         ApplyThemePalette();
@@ -153,7 +166,8 @@ public partial class MainWindow : Window
 
     private sealed class LocalUiPreferences
     {
-        public bool IsDarkTheme { get; set; }
+        public int ThemeSchemaVersion { get; set; } = 3;
+        public bool IsDarkTheme { get; set; } = true;
         public string Language { get; set; } = "en";
         public bool MinimizeToTrayOnClose { get; set; } = true;
         public bool EcoPowerModeEnabled { get; set; } = true;
@@ -162,6 +176,9 @@ public partial class MainWindow : Window
 
     private void LoadLocalUiPreferences()
     {
+        // Default to Deep Slate (#0B1120) Cyber-Defense Theme on startup
+        _isDarkTheme = true;
+
         try
         {
             if (!File.Exists(_uiPreferencesFilePath))
@@ -176,7 +193,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            _isDarkTheme = prefs.IsDarkTheme;
+            // Apply saved theme if written by V3+ schema; otherwise default to Deep Slate (#0B1120)
+            _isDarkTheme = prefs.ThemeSchemaVersion >= 3 ? prefs.IsDarkTheme : true;
             _currentLanguage = string.Equals(prefs.Language, "bn", StringComparison.OrdinalIgnoreCase) ? "bn" : "en";
             _minimizeToTrayOnClose = prefs.MinimizeToTrayOnClose;
             _performanceGuard.SetEcoPowerMode(prefs.EcoPowerModeEnabled);
@@ -184,7 +202,8 @@ public partial class MainWindow : Window
         }
         catch
         {
-            // Safe default: Eco-Minimal Light Glass, English, Eco-Power Mode enabled
+            // Safe default: Deep Slate (#0B1120), English, Eco-Power Mode enabled
+            _isDarkTheme = true;
         }
     }
 
@@ -194,6 +213,7 @@ public partial class MainWindow : Window
         {
             var prefs = new LocalUiPreferences
             {
+                ThemeSchemaVersion = 3,
                 IsDarkTheme = _isDarkTheme,
                 Language = _currentLanguage,
                 MinimizeToTrayOnClose = _minimizeToTrayOnClose,
@@ -418,6 +438,7 @@ public partial class MainWindow : Window
         _appShutdownCts.Cancel();
         _activeScanCts?.Cancel();
         _realTimeMonitor.Dispose();
+        _ransomwareShield.Dispose();
         if (_systemTrayNotifyIcon != null)
         {
             _systemTrayNotifyIcon.Visible = false;
@@ -752,33 +773,37 @@ public partial class MainWindow : Window
         {
             HeroProtectionBannerBorder.BorderBrush = CreateBrush("#F42A41");
             HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#2B1218" : "#FFF1F2");
-            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#1E293B" : "#FFE4E6");
-            HeroShieldIconBadge.BorderBrush = CreateBrush("#F42A41");
+            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#111827" : "#FFE4E6");
+            HeroShieldIconBadge.Background = CreateBrush("#26F42A41");
+            HeroShieldIconBadge.BorderBrush = CreateBrush("#66F42A41");
             HeroShieldCornerCheck.Background = CreateBrush("#F42A41");
             HeroShieldGlyphText.Text = "!";
-            HeroStatusPillBorder.Background = CreateBrush("#F42A41");
+            HeroStatusPillBorder.Background = CreateBrush("#26F42A41");
+            HeroStatusPillText.Foreground = CreateBrush("#FCA5A5");
             HeroStatusPillText.Text = IsBengaliLanguage ? "পদক্ষেপ প্রয়োজন" : "ACTION NEEDED";
             HeroHeadlineText.Text = IsBengaliLanguage
                 ? $"{activeThreats}টি থ্রেট কোয়ারেন্টাইন রিভিউয়ের অপেক্ষায়"
                 : $"Action Needed — {activeThreats} Detection(s) Pending Review";
             HeroHeadlineText.Foreground = CreateBrush(_isDarkTheme ? "#F8FAFC" : "#0F172A");
             HeroSubheadlineText.Text = "KIRON PROHORI follows a Quarantine-First policy with Local Heuristic AI Risk Scoring (0–100). Open Scan Results to Quarantine, Ignore Once, or Add Exclusion.";
-            HeroSubheadlineText.Foreground = CreateBrush(_isDarkTheme ? "#CBD5E1" : "#334155");
+            HeroSubheadlineText.Foreground = CreateBrush(_isDarkTheme ? "#94A3B8" : "#334155");
         }
         else
         {
-            HeroProtectionBannerBorder.BorderBrush = CreateBrush(_isDarkTheme ? "#059669" : "#A7F3D0");
-            HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#061C15" : "#E8F6F1");
-            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#0A1B16" : "#F3F8F6");
-            HeroShieldIconBadge.BorderBrush = CreateBrush("#10B981");
-            HeroShieldCornerCheck.Background = CreateBrush("#006A4E");
-            HeroShieldGlyphText.Text = "KP";
-            HeroStatusPillBorder.Background = CreateBrush("#006A4E");
+            HeroProtectionBannerBorder.BorderBrush = CreateBrush(_isDarkTheme ? "#1E293B" : "#A7F3D0");
+            HeroGradStop1.Color = ParseWpfColor(_isDarkTheme ? "#0D192B" : "#E8F6F1");
+            HeroGradStop2.Color = ParseWpfColor(_isDarkTheme ? "#111827" : "#F3F8F6");
+            HeroShieldIconBadge.Background = CreateBrush(_isDarkTheme ? "#1F10B981" : "#E6F4EF");
+            HeroShieldIconBadge.BorderBrush = CreateBrush(_isDarkTheme ? "#4010B981" : "#10B981");
+            HeroShieldCornerCheck.Background = CreateBrush("#10B981");
+            HeroShieldGlyphText.Text = "K";
+            HeroStatusPillBorder.Background = CreateBrush(_isDarkTheme ? "#1F10B981" : "#006A4E");
+            HeroStatusPillText.Foreground = CreateBrush(_isDarkTheme ? "#34D399" : "#FFFFFF");
             HeroStatusPillText.Text = IsBengaliLanguage ? "সুরক্ষা সক্রিয় · ইকো-মোড" : "PROTECTION LIVE · ECO-AI";
             HeroHeadlineText.Text = IsBengaliLanguage ? "আপনার সুরক্ষা এখন সক্রিয় রয়েছে" : "Your protection is live now";
             HeroHeadlineText.Foreground = CreateBrush(_isDarkTheme ? "#F8FAFC" : "#0F172A");
             HeroSubheadlineText.Text = "Eco-Power Green Computing Mode, Local Heuristic AI Risk Score (0–100), Infostealer & Fake AI App Guard, and Chrome/Edge MV3 Web Protection are active.";
-            HeroSubheadlineText.Foreground = CreateBrush(_isDarkTheme ? "#CBD5E1" : "#334155");
+            HeroSubheadlineText.Foreground = CreateBrush(_isDarkTheme ? "#94A3B8" : "#334155");
         }
 
         if (DashCardRealtimeBadge != null)
@@ -1116,6 +1141,9 @@ public partial class MainWindow : Window
         ActiveScanLivePathText.Text = "64 KB IncrementalHash SHA-256 · Heuristic PE · YARA · ClamAV";
         RightPanelHeaderText.Text = "LOCAL & PUBLIC THREAT INTELLIGENCE ENGINES ($0)";
         QuarantineListBox.Items.Clear();
+        QuarantineListBox.Items.Add(
+            $"[Local Definitions: {_cloudIntelService.OfflineLocalDefinitionsState}] [Live Cloud Reputation: {_cloudIntelService.LiveCloudReputationState}] {PrivacyFirstCloudThreatIntelligenceService.PrivacyGuaranteeDisclosure}"
+        );
         foreach (var eng in _scanPipeline.GetEngineStatuses())
         {
             QuarantineListBox.Items.Add(
@@ -1202,16 +1230,146 @@ public partial class MainWindow : Window
     {
         ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.firewall", IsBengaliLanguage);
-        ActiveScanBannerTitle.Text = "WINDOWS FIREWALL PROFILE MONITOR (DOMAIN / PRIVATE / PUBLIC)";
+        ActiveScanBannerTitle.Text = "SMART FIREWALL INTEGRATION (PROFILES & READ-ONLY TCP SESSIONS)";
         await RefreshWindowsSecurityPostureAsync();
         var posture = _windowsSecurityMonitor.GetSecuritySnapshot();
-        RightPanelHeaderText.Text = "WINDOWS FIREWALL PROFILES (READ-ONLY)";
+        var connections = _windowsSecurityMonitor.InspectActiveNetworkConnections();
+        RightPanelHeaderText.Text = $"WINDOWS FIREWALL PROFILES & ACTIVE TCP CONNECTIONS ({connections.Count})";
         QuarantineListBox.Items.Clear();
         foreach (var profile in posture.FirewallProfiles)
         {
-            QuarantineListBox.Items.Add($"Profile: {profile.ProfileName} | Status: {OnOff(profile.IsEnabled)}");
+            QuarantineListBox.Items.Add($"[FIREWALL PROFILE] {profile.ProfileName} | Status: {OnOff(profile.IsEnabled)}");
         }
-        StatusFooterText.Text = "Refreshed Windows Firewall Domain, Private, and Public profile status.";
+        foreach (var conn in connections.Take(15))
+        {
+            var flag = conn.IsSuspiciousPortOrEndpoint ? "SUSPICIOUS PORT/ENDPOINT" : "NORMAL";
+            QuarantineListBox.Items.Add(
+                $"[{flag}] {conn.Protocol} {conn.LocalAddress}:{conn.LocalPort} -> {conn.RemoteAddress}:{conn.RemotePort} ({conn.State}) | {conn.RiskExplanation}"
+            );
+        }
+        StatusFooterText.Text = "Smart Firewall Integration: Read-only Domain/Private/Public status & active TCP endpoint inspection (Never modifies firewall rules silently).";
+    }
+
+    private async void OnEmailAttachmentScanClick(object sender, RoutedEventArgs e)
+    {
+        ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
+        CurrentSectionTitle.Text = "Email & Attachment Security (Local Attachment Scanner)";
+        ActiveScanBannerTitle.Text = "EMAIL ATTACHMENT SECURITY — EXECUTABLES, SCRIPTS, MACROS & ARCHIVES";
+        ActiveScanLivePathText.Text = $"Local Attachment Scanner: {_emailAttachmentScanner.LocalAttachmentScannerState} · Direct Mailbox Integration: {_emailAttachmentScanner.DirectMailboxAccessState}";
+        RightPanelHeaderText.Text = "EMAIL ATTACHMENT SECURITY SCANNER";
+        QuarantineListBox.Items.Clear();
+        QuarantineListBox.Items.Add(
+            $"[Local Attachment Scan: {_emailAttachmentScanner.LocalAttachmentScannerState}] [Direct Mailbox Access: {_emailAttachmentScanner.DirectMailboxAccessState}]"
+        );
+        QuarantineListBox.Items.Add($"[DISCLOSURE] {EmailAttachmentSecurityScanner.ScopeDisclosure}");
+
+        var downloadsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        if (Directory.Exists(downloadsDir))
+        {
+            var candidateFiles = Directory.EnumerateFiles(downloadsDir)
+                .Take(8)
+                .ToList();
+            foreach (var file in candidateFiles)
+            {
+                var res = await _emailAttachmentScanner.ScanDownloadedAttachmentAsync(file);
+                QuarantineListBox.Items.Add(
+                    $"[{res.Verdict}] [{res.AttachmentCategory}] {res.FileName} | {res.VerdictSummary}"
+                );
+            }
+            if (candidateFiles.Count == 0)
+            {
+                QuarantineListBox.Items.Add("Downloads folder has 0 attachment files to inspect.");
+            }
+        }
+        StatusFooterText.Text = EmailAttachmentSecurityScanner.ScopeDisclosure;
+    }
+
+    private void OnSafeBankingViewClick(object sender, RoutedEventArgs e)
+    {
+        ShowActiveWorkspaceView(showScannerInspector: true, isWebDownloadTab: true);
+        CurrentSectionTitle.Text = "Safe Banking Protection (HTTPS & Anti-Phishing Verification)";
+        ActiveScanBannerTitle.Text = "SAFE BANKING & FINANCIAL DOMAIN VERIFICATION";
+        ActiveScanLivePathText.Text = $"HTTPS & Phishing Check: {_safeBankingModule.UrlVerificationState} · Hardened Isolated Browser: {_safeBankingModule.HardenedBrowserIsolationState}";
+        RightPanelHeaderText.Text = "SAFE BANKING VERIFICATION & FEATURE STATUS";
+        QuarantineListBox.Items.Clear();
+        QuarantineListBox.Items.Add(
+            $"[HTTPS & Phishing Verification: {_safeBankingModule.UrlVerificationState}] [Hardened Browser Isolation: {_safeBankingModule.HardenedBrowserIsolationState}]"
+        );
+        QuarantineListBox.Items.Add($"[DISCLOSURE] {SafeBankingProtectionModule.ScopeDisclosure}");
+
+        string[] sampleUrls =
+        {
+            "https://www.bb.org.bd",
+            "https://www.sonalibank.com.bd",
+            "https://www.dutchbanglabank.com",
+            "https://www.bracbank.com",
+            "http://insecure-banking-login.example.com"
+        };
+        foreach (var url in sampleUrls)
+        {
+            var check = _safeBankingModule.VerifyBankingUrl(url);
+            var statusTag = check.IsSafeForBanking ? "VERIFIED HTTPS" : "WARNING";
+            QuarantineListBox.Items.Add($"[{statusTag}] {check.Url} | {check.StatusMessage}");
+        }
+        StatusFooterText.Text = SafeBankingProtectionModule.ScopeDisclosure;
+    }
+
+    private void OnRansomwareShieldViewClick(object sender, RoutedEventArgs e)
+    {
+        ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
+        CurrentSectionTitle.Text = "Ransomware Shield (User-Mode Protected Folders & Burst Guard)";
+        ActiveScanBannerTitle.Text = $"RANSOMWARE SHIELD — [{_ransomwareShield.FeatureState}]";
+        ActiveScanLivePathText.Text = RansomwareShieldMonitor.HonestLimitationDisclosure;
+        RightPanelHeaderText.Text = "PROTECTED USER FOLDERS & RANSOMWARE EVENTS";
+        QuarantineListBox.Items.Clear();
+        QuarantineListBox.Items.Add($"[DISCLOSURE] {RansomwareShieldMonitor.HonestLimitationDisclosure}");
+        foreach (var folder in _ransomwareShield.GetProtectedFolders())
+        {
+            QuarantineListBox.Items.Add($"[PROTECTED FOLDER] {folder}");
+        }
+        foreach (var evt in _ransomwareShield.GetEventHistory())
+        {
+            QuarantineListBox.Items.Add(
+                $"{evt.ObservedAtUtc:HH:mm:ss} | [{evt.EventCategory}] [{evt.Verdict}] {evt.AlertSummary} | Action: {evt.RecommendedAction}"
+            );
+        }
+        StatusFooterText.Text = "Ransomware Shield monitors Documents, Pictures, and Desktop for mass file modifications, encryption extensions, and ransom notes.";
+    }
+
+    private async void OnRunHarmlessRansomwareSimulationClick(object sender, RoutedEventArgs e)
+    {
+        ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
+        CurrentSectionTitle.Text = "Harmless Ransomware Simulation (Isolated Temp Sandbox)";
+        ActiveScanBannerTitle.Text = "HARMLESS RANSOMWARE SIMULATION — ZERO USER FILES TOUCHED";
+        var evt = await _ransomwareShield.RunHarmlessRansomwareSimulationAsync();
+        OnRansomwareShieldViewClick(sender, e);
+        StatusFooterText.Text = $"Harmless simulation complete: {evt.AlertSummary}";
+    }
+
+    private void OnPrivacyProtectionViewClick(object sender, RoutedEventArgs e)
+    {
+        ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
+        CurrentSectionTitle.Text = "Webcam & Microphone Privacy Protection (Read-Only Monitor)";
+        ActiveScanBannerTitle.Text = "CAMERA & MICROPHONE CONSENT STORE MONITOR";
+        var snapshot = _privacyMonitor.GetPrivacySnapshot();
+        ActiveScanLivePathText.Text = $"Feature State: {snapshot.FeatureState} · Camera Allowed: {snapshot.CameraGlobalAccessAllowed} · Mic Allowed: {snapshot.MicrophoneGlobalAccessAllowed}";
+        RightPanelHeaderText.Text = "WINDOWS CAMERA & MICROPHONE PERMISSIONS (READ-ONLY)";
+        QuarantineListBox.Items.Clear();
+        QuarantineListBox.Items.Add(
+            $"[GLOBAL PRIVACY] Camera Global Consent: {OnOff(snapshot.CameraGlobalAccessAllowed)} | Microphone Global Consent: {OnOff(snapshot.MicrophoneGlobalAccessAllowed)}"
+        );
+        QuarantineListBox.Items.Add($"[DISCLOSURE] {snapshot.LimitationDisclosure}");
+        foreach (var app in snapshot.CameraApps.Concat(snapshot.MicrophoneApps).Take(20))
+        {
+            QuarantineListBox.Items.Add(
+                $"[{app.DeviceCategory}] {app.AppIdentifier} | Consent: {app.ConsentValue} | Currently In Use: {app.IsCurrentlyInUse}"
+            );
+        }
+        if (snapshot.CameraApps.Count == 0 && snapshot.MicrophoneApps.Count == 0)
+        {
+            QuarantineListBox.Items.Add("No individual desktop/packaged app camera or microphone consent entries recorded in current user profile.");
+        }
+        StatusFooterText.Text = snapshot.LimitationDisclosure;
     }
 
     private void OnCheckUpdatesClick(object sender, RoutedEventArgs e)
@@ -1283,12 +1441,12 @@ public partial class MainWindow : Window
         if (EcoPowerModeHeaderText != null)
         {
             EcoPowerModeHeaderText.Text = ecoActive
-                ? $"🌿 {_performanceGuard.EcoStatusBadgeLabel}"
-                : "⚡ Standard Mode · Balanced CPU";
+                ? $"● {_performanceGuard.EcoStatusBadgeLabel}"
+                : "● Standard Mode · Balanced CPU";
         }
         if (EcoModeQuickToggleBtn != null)
         {
-            EcoModeQuickToggleBtn.Content = ecoActive ? "🌿 Eco-Power: ON" : "⚡ Eco-Power: OFF";
+            EcoModeQuickToggleBtn.Content = ecoActive ? "Eco: ON" : "Eco: OFF";
         }
         if (ToggleEcoPowerSettingsBtn != null)
         {
@@ -1306,7 +1464,7 @@ public partial class MainWindow : Window
         }
         if (SettingsThemeStatusText != null)
         {
-            SettingsThemeStatusText.Text = _isDarkTheme ? "Obsidian Dark (#0B1120)" : "Eco-Minimal Light Glass (Default)";
+            SettingsThemeStatusText.Text = _isDarkTheme ? "Deep Slate (#0B1120) — Default" : "Eco-Minimal Light Glass";
         }
         if (SettingsCloseBehaviorText != null)
         {
@@ -1642,20 +1800,29 @@ public partial class MainWindow : Window
         var res = System.Windows.Application.Current?.Resources ?? Resources;
         if (_isDarkTheme)
         {
-            // Optional Obsidian Dark Mode
+            // Default Deep Slate (#0B1120) with #1E293B Card Borders, Translucent Emerald Icon Boxes (#1F10B981 / #4010B981), #34D399 Lucide Icons & Sleek Dark Pills (#14FFFFFF)
             res["AppCanvasBrush"] = CreateBrush("#0B1120");
-            res["TitleBarBackgroundBrush"] = CreateBrush("#070B14");
+            res["TitleBarBackgroundBrush"] = CreateBrush("#080D1A");
             res["UtilityBarBackgroundBrush"] = CreateBrush("#080D1A");
             res["GlassCardBrush"] = CreateBrush("#111827");
-            res["GlassElevatedBrush"] = CreateBrush("#172033");
-            res["GlassBorderBrush"] = CreateBrush("#1F2937");
+            res["GlassElevatedBrush"] = CreateBrush("#162032");
+            res["GlassBorderBrush"] = CreateBrush("#1E293B");
             res["PrimaryTextBrush"] = CreateBrush("#F8FAFC");
             res["SecondaryTextBrush"] = CreateBrush("#94A3B8");
             res["MutedTextBrush"] = CreateBrush("#64748B");
+            res["TileActionLinkBrush"] = CreateBrush("#34D399");
+            res["TileActionLinkHoverBrush"] = CreateBrush("#6EE7B7");
+            res["TileIconBoxBrush"] = CreateBrush("#1F10B981");
+            res["TileIconBorderBrush"] = CreateBrush("#4010B981");
+            res["TileIconGlyphBrush"] = CreateBrush("#34D399");
+            res["DarkPillBackgroundBrush"] = CreateBrush("#14FFFFFF");
+            res["DarkPillBorderBrush"] = CreateBrush("#24FFFFFF");
+            res["DarkPillTextBrush"] = CreateBrush("#E2E8F0");
+            res["DarkPillAccentTextBrush"] = CreateBrush("#34D399");
         }
         else
         {
-            // Default Eco-Minimal Light Glass (Bangladesh Eco-Tech & AI-Era Theme)
+            // Optional Light Minimal Glass Theme
             res["AppCanvasBrush"] = CreateBrush("#F3F8F6");
             res["TitleBarBackgroundBrush"] = CreateBrush("#E6F2EE");
             res["UtilityBarBackgroundBrush"] = CreateBrush("#E9F4F0");
@@ -1665,6 +1832,15 @@ public partial class MainWindow : Window
             res["PrimaryTextBrush"] = CreateBrush("#0F172A");
             res["SecondaryTextBrush"] = CreateBrush("#475569");
             res["MutedTextBrush"] = CreateBrush("#64748B");
+            res["TileActionLinkBrush"] = CreateBrush("#047857");
+            res["TileActionLinkHoverBrush"] = CreateBrush("#059669");
+            res["TileIconBoxBrush"] = CreateBrush("#1F10B981");
+            res["TileIconBorderBrush"] = CreateBrush("#4010B981");
+            res["TileIconGlyphBrush"] = CreateBrush("#059669");
+            res["DarkPillBackgroundBrush"] = CreateBrush("#E6F4EF");
+            res["DarkPillBorderBrush"] = CreateBrush("#A7F3D0");
+            res["DarkPillTextBrush"] = CreateBrush("#0F172A");
+            res["DarkPillAccentTextBrush"] = CreateBrush("#047857");
         }
 
         var bgBrush = (SolidColorBrush)res["AppCanvasBrush"];

@@ -2732,13 +2732,20 @@ async function startServer() {
         mainWindowCsCode.includes('OnRecoverUsbHiddenFoldersClick') &&
         mainWindowCsCode.includes('OnLaunchDefenderOfflineScanClick') &&
         mainWindowCsCode.includes('Pause/Resume Real-Time Guard') &&
-        mainWindowCsCode.includes('#F3F8F6') &&
+        mainWindowCsCode.includes('#0B1120') &&
+        mainWindowCsCode.includes('#1E293B') &&
+        mainWindowCsCode.includes('#1F10B981') &&
+        mainWindowCsCode.includes('#4010B981') &&
+        mainWindowCsCode.includes('#14FFFFFF') &&
+        mainWindowCsCode.includes('TileActionLinkBrush') &&
+        mainWindowCsCode.includes('#34D399') &&
         scanPipelineCode.includes('RecoverHiddenUsbFolders') &&
         scanPipelineCode.includes('ParseCliScanPathArguments') &&
         innoIssCode.includes('Drive\\shell\\KironProhoriScan') &&
         innoIssCode.includes('Directory\\shell\\KironProhoriScan') &&
         innoIssCode.includes('*\\shell\\KironProhoriScan') &&
         innoIssCode.includes('--scan-path') &&
+        innoIssCode.includes('ChangesAssociations=yes') &&
         heuristicEngineCode.includes('ComputeLocalHeuristicAiRiskScore') &&
         heuristicEngineCode.includes('Heuristic.FakeAIApp.MasqueradeDropper') &&
         heuristicEngineCode.includes('Heuristic.UsbWorm.ShortcutVirus') &&
@@ -2746,17 +2753,30 @@ async function startServer() {
         mainWindowXamlCode.includes('WindowChrome') &&
         mainWindowXamlCode.includes('DashboardHeroViewPanel') &&
         mainWindowXamlCode.includes('FirstRunWelcomeOverlayPanel') &&
-        mainWindowXamlCode.includes('QuarantineActionButtonsPanel');
+        mainWindowXamlCode.includes('QuarantineActionButtonsPanel') &&
+        mainWindowXamlCode.includes('TileActionLinkTextStyle') &&
+        mainWindowXamlCode.includes('DarkPillBackgroundBrush') &&
+        mainWindowXamlCode.includes('TileIconGlyphBrush') &&
+        mainWindowXamlCode.includes('M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72') &&
+        !mainWindowXamlCode.includes('<Image Source="pack://application:,,,/Assets/KironProhori.ico"') &&
+        fs.existsSync(path.join(desktopAgentRoot, 'src/KironProhori.Agent.Core/Realtime/RansomwareShieldMonitor.cs')) &&
+        fs.existsSync(path.join(desktopAgentRoot, 'src/KironProhori.Agent.Core/WindowsSecurity/PrivacyProtectionMonitor.cs')) &&
+        fs.existsSync(path.join(desktopAgentRoot, 'src/KironProhori.Agent.Core/WindowsSecurity/AdvancedSuiteModules.cs')) &&
+        mainWindowCsCode.includes('RansomwareShieldMonitor') &&
+        mainWindowCsCode.includes('PrivacyProtectionMonitor') &&
+        mainWindowCsCode.includes('SafeBankingProtectionModule') &&
+        mainWindowCsCode.includes('EmailAttachmentSecurityScanner') &&
+        mainWindowCsCode.includes('PrivacyFirstCloudThreatIntelligenceService');
       results.push({
         id: 'TEST-23-SHA256-INCREMENTAL-STREAMING-API',
-        title: '23. Sha256HashEngine 64 KB Streaming, Explorer Context Menu (--scan-path), USB Auto-Scan & Multi-Threat Heuristic Verification',
+        title: '23. Sha256HashEngine 64 KB Streaming, Explorer Context Menu (--scan-path), USB Auto-Scan, Ransomware Shield & Advanced Suite Modules Verification',
         passed:
           noBogusMethodCall &&
           hasIncrementalStreamingAndProgress &&
           hasAllRequiredTestNamespaces &&
           hasCleanWpfMainWindow,
-        expected: 'Verifies IncrementalHash 64KB streaming, Explorer Right-Click (--scan-path), USB Auto-Scan + Hidden Folder Recovery, and Multi-Threat Heuristics',
-        actual: 'Verified Explorer Right-Click Context Menu (--scan-path) + USB Auto-Scan + Hidden Folder Recovery + Multi-Threat Heuristics + Decluttered WPF UI',
+        expected: 'Verifies IncrementalHash 64KB streaming, Explorer Right-Click (--scan-path), USB Auto-Scan, Ransomware Shield, Privacy Monitor, Safe Banking, Email Attachment Scanner & Offline Cloud Intel',
+        actual: 'Verified Explorer Right-Click (--scan-path) + USB Auto-Scan + Ransomware Shield + Privacy Monitor + Safe Banking + Email Attachment Scanner + Offline Cloud Intel + Decluttered WPF UI',
         durationMs: Math.max(1, Date.now() - t23Start),
       });
     } finally {

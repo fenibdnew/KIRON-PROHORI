@@ -409,4 +409,119 @@ public sealed class WindowsSecurityMonitor
             return "UNKNOWN (Read-Only Check)";
         }
     }
+
+    // ========================================================================
+    // MODULE 4 — SMART FIREWALL INTEGRATION (READ-ONLY TCP MONITOR & USER-APPROVED RULE BUILDER)
+    // ========================================================================
+
+    private static readonly HashSet<int> HighRiskSuspiciousRemotePorts = new()
+    {
+        4444,  // Metasploit / generic reverse shell default
+        1337,  // Common backdoor port
+        6667,  // IRC botnet C2
+        31337, // Back Orifice / legacy trojan port
+        5555   // Exposed ADB / worm port
+    };
+
+    /// <summary>
+    /// Inspects active TCP connections read-only using documented .NET IPGlobalProperties APIs.
+    /// Flags connections to known C2 IPs or high-risk backdoor ports as Suspicious.
+    /// Never claims to block hackers merely by displaying connection status.
+    /// </summary>
+    public IReadOnlyList<NetworkConnectionSecurityEntry> InspectActiveNetworkConnections(
+        IReadOnlyCollection<string>? knownC2IpAddresses = null)
+    {
+        var results = new List<NetworkConnectionSecurityEntry>();
+        var c2Set = knownC2IpAddresses != null
+            ? new HashSet<string>(knownC2IpAddresses, StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var props = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+            var connections = props.GetActiveTcpConnections();
+            foreach (var conn in connections)
+            {
+                string remoteIp = conn.RemoteEndPoint.Address.ToString();
+                int remotePort = conn.RemoteEndPoint.Port;
+                bool isC2Match = c2Set.Contains(remoteIp);
+                bool isHighRiskPort = HighRiskSuspiciousRemotePorts.Contains(remotePort);
+                bool suspicious = isC2Match || isHighRiskPort;
+
+                string note = isC2Match
+                    ? $"SUSPICIOUS: Remote IP {remoteIp} matches verified botnet C2 blocklist."
+                    : isHighRiskPort
+                    ? $"SUSPICIOUS PORT: Remote port {remotePort} is associated with uncommon backdoor/C2 traffic."
+                    : "Normal established/active TCP session (Read-only observation).";
+
+                results.Add(new NetworkConnectionSecurityEntry(
+                    LocalEndpoint: conn.LocalEndPoint.ToString(),
+                    RemoteEndpoint: conn.RemoteEndPoint.ToString(),
+                    RemoteAddress: remoteIp,
+                    RemotePort: remotePort,
+                    TcpState: conn.State.ToString(),
+                    IsSuspiciousPortOrHost: suspicious,
+                    AssessmentNote: note
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            results.Add(new NetworkConnectionSecurityEntry(
+                LocalEndpoint: "N/A",
+                RemoteEndpoint: "N/A",
+                RemoteAddress: "0.0.0.0",
+                RemotePort: 0,
+                TcpState: "Unavailable",
+                IsSuspiciousPortOrHost: false,
+                AssessmentNote: $"Active TCP connection enumeration restricted on this host ({ex.GetType().Name})."
+            ));
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Builds a command-injection-safe ProcessStartInfo to add an outbound application block rule in Windows Firewall
+    /// ONLY when explicit user approval (userConfirmed == true) is provided.
+    /// NEVER disables Windows Firewall and NEVER silently modifies firewall policies.
+    /// </summary>
+    public static ProcessStartInfo BuildUserApprovedOutboundBlockRuleCommand(
+        string ruleDisplayName,
+        string targetExecutablePath,
+        bool userConfirmed)
+    {
+        if (!userConfirmed)
+        {
+            throw new InvalidOperationException(
+                "FIREWALL_POLICY_VIOLATION: Explicit user approval (userConfirmed: true) is mandatory before creating a Windows Firewall rule.");
+        }
+
+        if (string.IsNullOrWhiteSpace(ruleDisplayName) || string.IsNullOrWhiteSpace(targetExecutablePath))
+        {
+            throw new ArgumentException("Rule display name and target executable path are required.");
+        }
+
+        string safeFullExePath = Path.GetFullPath(targetExecutablePath);
+        var psi = new ProcessStartInfo
+        {
+            FileName = "netsh.exe",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        psi.ArgumentList.Add("advfirewall");
+        psi.ArgumentList.Add("firewall");
+        psi.ArgumentList.Add("add");
+        psi.ArgumentList.Add("rule");
+        psi.ArgumentList.Add($"name=KIRON PROHORI - {ruleDisplayName.Trim()}");
+        psi.ArgumentList.Add("dir=out");
+        psi.ArgumentList.Add("action=block");
+        psi.ArgumentList.Add($"program={safeFullExePath}");
+        psi.ArgumentList.Add("enable=yes");
+
+        return psi;
+    }
 }

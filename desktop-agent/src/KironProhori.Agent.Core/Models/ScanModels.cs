@@ -437,3 +437,87 @@ public sealed record FalsePositiveReportEntry(
     bool StoredLocallyOnly // Always true by default (Privacy-first)
 );
 
+/// <summary>
+/// Explicit UI &amp; architectural state for every security module: Enabled, Disabled, Unavailable, or Planned.
+/// Never claims 100% protection or marks an unimplemented hardened browser / unconfigured cloud endpoint as Enabled.
+/// </summary>
+public enum SuiteFeatureState
+{
+    Enabled,
+    Disabled,
+    Unavailable,
+    Planned
+}
+
+public sealed record RansomwareProtectionEvent(
+    string EventId,
+    string ProtectedFolderPath,
+    string TriggerFilePath,
+    string AnomalyCategory, // "SUSPICIOUS_ENCRYPTION_EXTENSION", "RANSOM_NOTE_PATTERN", "MASS_FILE_MODIFICATION_BURST"
+    int ModificationCountInWindow,
+    ThreatSeverity Severity,
+    string Explanation,
+    bool WasHarmlessSimulation,
+    DateTimeOffset DetectedAtUtc
+);
+
+public sealed record NetworkConnectionSecurityEntry(
+    string LocalEndpoint,
+    string RemoteEndpoint,
+    string RemoteAddress,
+    int RemotePort,
+    string TcpState,
+    bool IsSuspiciousPortOrHost,
+    string AssessmentNote
+);
+
+public sealed record DevicePermissionAppEntry(
+    string DeviceCategory, // "Webcam" or "Microphone"
+    string ApplicationId,
+    string ConsentValue, // "Allow", "Deny", "Prompt"
+    bool IsCurrentlyActive,
+    string SourceRegistryPath
+);
+
+public sealed record CameraMicPrivacySnapshot(
+    SuiteFeatureState CameraMonitoringState,
+    SuiteFeatureState MicrophoneMonitoringState,
+    string GlobalCameraConsent,
+    string GlobalMicrophoneConsent,
+    IReadOnlyList<DevicePermissionAppEntry> ApplicationPermissions,
+    string LimitationDisclosure,
+    DateTimeOffset CapturedAtUtc
+);
+
+public sealed record SafeBankingVerificationResult(
+    string InputUrl,
+    string NormalizedHost,
+    bool IsHttpsEncrypted,
+    bool IsRecognizedTrustedFinancialDomain,
+    bool HasPhishingOrRedirectRisk,
+    SuiteFeatureState UrlVerificationState, // Enabled
+    SuiteFeatureState HardenedBrowserIsolationState, // Planned
+    string VerdictSummary,
+    string HonestLimitationNotice
+);
+
+public sealed record EmailAttachmentScanResult(
+    string AttachmentFilePath,
+    string FileName,
+    string FormatCategory, // "EXECUTABLE_ATTACHMENT", "SCRIPT_ATTACHMENT", "MACRO_DOCUMENT", "ARCHIVE_CONTAINER", "STANDARD_DOCUMENT"
+    DownloadScanStatus ScanStatus,
+    string Sha256Hash,
+    string DetectionSummary,
+    SuiteFeatureState DirectMailboxAccessState, // Planned (Never accesses private email accounts without authorization)
+    DateTimeOffset ScannedAtUtc
+);
+
+public sealed record CloudReputationLookupResult(
+    string Sha256Hash,
+    SuiteFeatureState CloudProviderState, // Unavailable until verified HTTPS endpoint is configured; Enabled when offline local corpus matched
+    bool MatchedLocalVerifiedCorpus,
+    string ThreatLabel,
+    string PrivacyAndNetworkDisclosure,
+    DateTimeOffset EvaluatedAtUtc
+);
+

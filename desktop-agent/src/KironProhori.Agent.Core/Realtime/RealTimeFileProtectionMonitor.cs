@@ -40,8 +40,41 @@ public sealed class RealTimeFileProtectionMonitor : IDisposable
     private readonly object _lock = new();
 
     public bool IsMonitoringActive { get; private set; }
+    public bool IsPaused { get; private set; }
     public bool IsKernelDriverInstalled => false; // Explicit V1.0 architectural boundary: User-Mode only
     public string ProtectionArchitecture => "User-Mode FileSystemWatcher + Modular Scan Pipeline (Coexists with Microsoft Defender)";
+
+    public void PauseMonitoring()
+    {
+        IsPaused = true;
+        foreach (var watcher in _activeWatchers)
+        {
+            watcher.EnableRaisingEvents = false;
+        }
+    }
+
+    public void ResumeMonitoring()
+    {
+        IsPaused = false;
+        foreach (var watcher in _activeWatchers)
+        {
+            watcher.EnableRaisingEvents = true;
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a file event on the same path was already evaluated within the specified debounce window (default 400ms)
+    /// to prevent duplicate scan events from rapid FileSystemWatcher notifications.
+    /// </summary>
+    public bool IsDuplicateEventWithinDebounceWindow(string filePath, TimeSpan? debounceWindow = null)
+    {
+        var window = debounceWindow ?? TimeSpan.FromMilliseconds(400);
+        if (_debounceMap.TryGetValue(filePath, out var lastSeen))
+        {
+            return (DateTimeOffset.UtcNow - lastSeen) < window;
+        }
+        return false;
+    }
 
     public RealTimeFileProtectionMonitor(
         ModularScanPipeline? scanPipeline = null,
