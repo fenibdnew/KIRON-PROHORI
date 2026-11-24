@@ -94,7 +94,7 @@
                                 Effect="{StaticResource FluentGlassShadow}"
                                 RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform>
-                                <TranslateTransform x:Name="TileHoverTransform" Y="0" />
+                                <TranslateTransform Y="0" />
                             </Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                         </Border>
@@ -104,11 +104,19 @@
                                 <Setter TargetName="TileBorder" Property="BorderBrush" Value="#10B981" />
                                 <Setter TargetName="TileBorder" Property="BorderThickness" Value="1.5" />
                                 <Setter TargetName="TileBorder" Property="Effect" Value="{StaticResource FluentGlassHoverShadow}" />
-                                <Setter TargetName="TileHoverTransform" Property="Y" Value="-2" />
+                                <Setter TargetName="TileBorder" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <TranslateTransform Y="-2" />
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="TileBorder" Property="Opacity" Value="0.92" />
-                                <Setter TargetName="TileHoverTransform" Property="Y" Value="0" />
+                                <Setter TargetName="TileBorder" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <TranslateTransform Y="0" />
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
