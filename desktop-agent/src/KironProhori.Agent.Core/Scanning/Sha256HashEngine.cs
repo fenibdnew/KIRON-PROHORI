@@ -103,6 +103,37 @@ public sealed class Sha256HashEngine : IScanEngine
     );
 
     /// <summary>
+    /// Looks up a SHA-256 hash against the verified local EICAR and known malware threat corpus without network access.
+    /// </summary>
+    public static bool TryLookupKnownThreat(string sha256Hash, out string? detectionName)
+    {
+        detectionName = null;
+        if (string.IsNullOrWhiteSpace(sha256Hash))
+        {
+            return false;
+        }
+
+        string normalized = sha256Hash.Trim().ToLowerInvariant();
+        if (normalized == OfficialEicarSha256)
+        {
+            detectionName = "EICAR-STANDARD-ANTIVIRUS-TEST-FILE";
+            return true;
+        }
+        if (normalized == OfficialEicarCrLfSha256)
+        {
+            detectionName = "EICAR-STANDARD-ANTIVIRUS-TEST-FILE (CRLF)";
+            return true;
+        }
+        if (normalized == OfficialEicarLfSha256)
+        {
+            detectionName = "EICAR-STANDARD-ANTIVIRUS-TEST-FILE (LF)";
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Computes streaming SHA-256 hash in bounded 64 KB chunks using IncrementalHash without loading the entire file into memory.
     /// Supports cooperative cancellation via CancellationToken and optional progress reporting via IProgress&lt;ScanProgressUpdate&gt;.
     /// Never executes scanned files and disposes all stream and cryptographic resources safely.

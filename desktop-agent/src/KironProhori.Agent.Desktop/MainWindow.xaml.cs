@@ -115,14 +115,11 @@ public partial class MainWindow : Window
             _quarantineManager,
             _notificationManager
         );
-        _ransomwareShield = new RansomwareShieldMonitor(
-            _exclusionManager,
-            _notificationManager
-        );
+        _ransomwareShield = new RansomwareShieldMonitor(_notificationManager);
         _privacyMonitor = new PrivacyProtectionMonitor();
-        _safeBankingModule = new SafeBankingProtectionModule();
+        _safeBankingModule = new SafeBankingProtectionModule(_browserDownloadGuard);
         _emailAttachmentScanner = new EmailAttachmentSecurityScanner(_scanPipeline);
-        _cloudIntelService = new PrivacyFirstCloudThreatIntelligenceService();
+        _cloudIntelService = new PrivacyFirstCloudThreatIntelligenceService(null, _updateManager);
 
         LoadLocalUiPreferences();
         ApplyThemePalette();
@@ -1142,7 +1139,7 @@ public partial class MainWindow : Window
         RightPanelHeaderText.Text = "LOCAL & PUBLIC THREAT INTELLIGENCE ENGINES ($0)";
         QuarantineListBox.Items.Clear();
         QuarantineListBox.Items.Add(
-            $"[Local Definitions: {_cloudIntelService.OfflineLocalDefinitionsState}] [Live Cloud Reputation: {_cloudIntelService.LiveCloudReputationState}] {PrivacyFirstCloudThreatIntelligenceService.PrivacyGuaranteeDisclosure}"
+            $"[Local Definitions: {_cloudIntelService.OfflineLocalDefinitionsState}] [Live Cloud Reputation: {_cloudIntelService.LiveCloudReputationState}] {PrivacyFirstCloudThreatIntelligenceService.PrivacyAndMetadataDisclosure}"
         );
         foreach (var eng in _scanPipeline.GetEngineStatuses())
         {
@@ -1242,9 +1239,9 @@ public partial class MainWindow : Window
         }
         foreach (var conn in connections.Take(15))
         {
-            var flag = conn.IsSuspiciousPortOrEndpoint ? "SUSPICIOUS PORT/ENDPOINT" : "NORMAL";
+            var flag = conn.IsSuspiciousPortOrHost ? "SUSPICIOUS PORT/HOST" : "NORMAL";
             QuarantineListBox.Items.Add(
-                $"[{flag}] {conn.Protocol} {conn.LocalAddress}:{conn.LocalPort} -> {conn.RemoteAddress}:{conn.RemotePort} ({conn.State}) | {conn.RiskExplanation}"
+                $"[{flag}] TCP {conn.LocalEndpoint} -> {conn.RemoteEndpoint} ({conn.TcpState}) | {conn.AssessmentNote}"
             );
         }
         StatusFooterText.Text = "Smart Firewall Integration: Read-only Domain/Private/Public status & active TCP endpoint inspection (Never modifies firewall rules silently).";
@@ -1261,7 +1258,7 @@ public partial class MainWindow : Window
         QuarantineListBox.Items.Add(
             $"[Local Attachment Scan: {_emailAttachmentScanner.LocalAttachmentScannerState}] [Direct Mailbox Access: {_emailAttachmentScanner.DirectMailboxAccessState}]"
         );
-        QuarantineListBox.Items.Add($"[DISCLOSURE] {EmailAttachmentSecurityScanner.ScopeDisclosure}");
+        QuarantineListBox.Items.Add("[DISCLOSURE] Local Email Attachment Scanner inspects downloaded attachments read-only. Direct mailbox/inbox integration is marked as PLANNED.");
 
         var downloadsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
         if (Directory.Exists(downloadsDir))
@@ -1273,7 +1270,7 @@ public partial class MainWindow : Window
             {
                 var res = await _emailAttachmentScanner.ScanDownloadedAttachmentAsync(file);
                 QuarantineListBox.Items.Add(
-                    $"[{res.Verdict}] [{res.AttachmentCategory}] {res.FileName} | {res.VerdictSummary}"
+                    $"[{res.ScanStatus}] [{res.FormatCategory}] {res.FileName} | {res.DetectionSummary}"
                 );
             }
             if (candidateFiles.Count == 0)
@@ -1281,7 +1278,7 @@ public partial class MainWindow : Window
                 QuarantineListBox.Items.Add("Downloads folder has 0 attachment files to inspect.");
             }
         }
-        StatusFooterText.Text = EmailAttachmentSecurityScanner.ScopeDisclosure;
+        StatusFooterText.Text = "Email Attachment Scanner inspects downloaded attachments locally · Direct Mailbox Access: PLANNED.";
     }
 
     private void OnSafeBankingViewClick(object sender, RoutedEventArgs e)
@@ -1295,7 +1292,7 @@ public partial class MainWindow : Window
         QuarantineListBox.Items.Add(
             $"[HTTPS & Phishing Verification: {_safeBankingModule.UrlVerificationState}] [Hardened Browser Isolation: {_safeBankingModule.HardenedBrowserIsolationState}]"
         );
-        QuarantineListBox.Items.Add($"[DISCLOSURE] {SafeBankingProtectionModule.ScopeDisclosure}");
+        QuarantineListBox.Items.Add($"[DISCLOSURE] {SafeBankingProtectionModule.HonestBankingLimitationNotice}");
 
         string[] sampleUrls =
         {
@@ -1308,10 +1305,10 @@ public partial class MainWindow : Window
         foreach (var url in sampleUrls)
         {
             var check = _safeBankingModule.VerifyBankingUrl(url);
-            var statusTag = check.IsSafeForBanking ? "VERIFIED HTTPS" : "WARNING";
-            QuarantineListBox.Items.Add($"[{statusTag}] {check.Url} | {check.StatusMessage}");
+            var statusTag = (check.IsHttpsEncrypted && !check.HasPhishingOrRedirectRisk) ? "VERIFIED HTTPS" : "WARNING";
+            QuarantineListBox.Items.Add($"[{statusTag}] {check.InputUrl} | {check.VerdictSummary}");
         }
-        StatusFooterText.Text = SafeBankingProtectionModule.ScopeDisclosure;
+        StatusFooterText.Text = SafeBankingProtectionModule.HonestBankingLimitationNotice;
     }
 
     private void OnRansomwareShieldViewClick(object sender, RoutedEventArgs e)
@@ -1330,7 +1327,7 @@ public partial class MainWindow : Window
         foreach (var evt in _ransomwareShield.GetEventHistory())
         {
             QuarantineListBox.Items.Add(
-                $"{evt.ObservedAtUtc:HH:mm:ss} | [{evt.EventCategory}] [{evt.Verdict}] {evt.AlertSummary} | Action: {evt.RecommendedAction}"
+                $"{evt.DetectedAtUtc:HH:mm:ss} | [{evt.AnomalyCategory}] [{evt.Severity}] {evt.Explanation}"
             );
         }
         StatusFooterText.Text = "Ransomware Shield monitors Documents, Pictures, and Desktop for mass file modifications, encryption extensions, and ransom notes.";
@@ -1341,9 +1338,9 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
         CurrentSectionTitle.Text = "Harmless Ransomware Simulation (Isolated Temp Sandbox)";
         ActiveScanBannerTitle.Text = "HARMLESS RANSOMWARE SIMULATION — ZERO USER FILES TOUCHED";
-        var evt = await _ransomwareShield.RunHarmlessRansomwareSimulationAsync();
+        var events = await _ransomwareShield.RunHarmlessRansomwareSimulationAsync();
         OnRansomwareShieldViewClick(sender, e);
-        StatusFooterText.Text = $"Harmless simulation complete: {evt.AlertSummary}";
+        StatusFooterText.Text = $"Harmless simulation complete ({events.Count} behavioral event(s) detected in isolated sandbox).";
     }
 
     private void OnPrivacyProtectionViewClick(object sender, RoutedEventArgs e)
@@ -1352,20 +1349,20 @@ public partial class MainWindow : Window
         CurrentSectionTitle.Text = "Webcam & Microphone Privacy Protection (Read-Only Monitor)";
         ActiveScanBannerTitle.Text = "CAMERA & MICROPHONE CONSENT STORE MONITOR";
         var snapshot = _privacyMonitor.GetPrivacySnapshot();
-        ActiveScanLivePathText.Text = $"Feature State: {snapshot.FeatureState} · Camera Allowed: {snapshot.CameraGlobalAccessAllowed} · Mic Allowed: {snapshot.MicrophoneGlobalAccessAllowed}";
+        ActiveScanLivePathText.Text = $"Camera State: {snapshot.CameraMonitoringState} ({snapshot.GlobalCameraConsent}) · Mic State: {snapshot.MicrophoneMonitoringState} ({snapshot.GlobalMicrophoneConsent})";
         RightPanelHeaderText.Text = "WINDOWS CAMERA & MICROPHONE PERMISSIONS (READ-ONLY)";
         QuarantineListBox.Items.Clear();
         QuarantineListBox.Items.Add(
-            $"[GLOBAL PRIVACY] Camera Global Consent: {OnOff(snapshot.CameraGlobalAccessAllowed)} | Microphone Global Consent: {OnOff(snapshot.MicrophoneGlobalAccessAllowed)}"
+            $"[GLOBAL PRIVACY] Camera Global Consent: {snapshot.GlobalCameraConsent} | Microphone Global Consent: {snapshot.GlobalMicrophoneConsent}"
         );
         QuarantineListBox.Items.Add($"[DISCLOSURE] {snapshot.LimitationDisclosure}");
-        foreach (var app in snapshot.CameraApps.Concat(snapshot.MicrophoneApps).Take(20))
+        foreach (var app in snapshot.ApplicationPermissions.Take(20))
         {
             QuarantineListBox.Items.Add(
-                $"[{app.DeviceCategory}] {app.AppIdentifier} | Consent: {app.ConsentValue} | Currently In Use: {app.IsCurrentlyInUse}"
+                $"[{app.DeviceCategory}] {app.ApplicationId} | Consent: {app.ConsentValue} | Currently Active: {app.IsCurrentlyActive}"
             );
         }
-        if (snapshot.CameraApps.Count == 0 && snapshot.MicrophoneApps.Count == 0)
+        if (snapshot.ApplicationPermissions.Count == 0)
         {
             QuarantineListBox.Items.Add("No individual desktop/packaged app camera or microphone consent entries recorded in current user profile.");
         }

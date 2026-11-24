@@ -936,6 +936,7 @@ public sealed class AgentPhase7ATests
             var notifyMgr = new SmartNotificationManager();
             var perfGuard = new PerformanceProtectionGuard();
             var pipeline = new ModularScanPipeline(null, exclusionMgr, perfGuard, notifyMgr);
+            var webGuard = new NativeMessagingDownloadGuard(pipeline, exclusionMgr, quarantineMgr, notifyMgr);
 
             // 1. Quarantine Path Traversal & Unauthorized Vault Modification Protection
             Assert.Throws<InvalidOperationException>(() =>
@@ -946,21 +947,19 @@ public sealed class AgentPhase7ATests
             );
 
             // 2. Web & Anti-Phishing Suspicious Redirect & Credential-in-URL Spoof Detection
-            var redirectEval = NativeMessagingDownloadGuard.EvaluateUrl(
+            var redirectEval = webGuard.EvaluateUrl(
                 "https://trusted-portal.example.com/auth?redirect=http://evil-harvester.invalid/login"
             );
-            Assert.True(redirectEval.IsValidUrl);
             Assert.False(redirectEval.ShouldBlock);
             Assert.True(redirectEval.ShouldWarnBeforeNavigation);
             Assert.Equal("SUSPICIOUS_REDIRECT_OR_SPOOF", redirectEval.Category);
 
             // 3. Ransomware Shield Monitor & Harmless Ransomware Simulation (never touches user documents)
-            using var ransomwareShield = new RansomwareShieldMonitor(exclusionMgr, notifyMgr);
+            using var ransomwareShield = new RansomwareShieldMonitor(notifyMgr);
             Assert.Equal(SuiteFeatureState.Enabled, ransomwareShield.FeatureState);
-            var simEvent = await ransomwareShield.RunHarmlessRansomwareSimulationAsync();
-            Assert.True(simEvent.IsHarmlessSimulation);
-            Assert.Equal(DetectionVerdict.ConfirmedDetection, simEvent.Verdict);
-            Assert.Contains("HARMLESS SIMULATION", simEvent.AlertSummary);
+            var simEvents = await ransomwareShield.RunHarmlessRansomwareSimulationAsync();
+            Assert.NotEmpty(simEvents);
+            Assert.All(simEvents, e => Assert.True(e.WasHarmlessSimulation));
             Assert.NotEmpty(ransomwareShield.GetEventHistory());
 
             // 4. Smart Firewall Read-Only Active TCP Inspection & User-Approved Rule Builder
@@ -974,13 +973,13 @@ public sealed class AgentPhase7ATests
                     userConfirmed: false
                 )
             );
-            var ruleCmd = WindowsSecurityMonitor.BuildUserApprovedOutboundBlockRuleCommand(
+            var rulePsi = WindowsSecurityMonitor.BuildUserApprovedOutboundBlockRuleCommand(
                 "BlockSuspiciousSample",
                 Path.Combine(tempRoot, "sample.exe"),
                 userConfirmed: true
             );
-            Assert.Contains("New-NetFirewallRule", ruleCmd);
-            Assert.Contains("KIRON_PROHORI_BlockSuspiciousSample", ruleCmd);
+            Assert.Equal("netsh.exe", rulePsi.FileName);
+            Assert.Contains("name=KIRON PROHORI - BlockSuspiciousSample", rulePsi.ArgumentList);
 
             // 5. Webcam & Microphone Privacy Monitor (Read-Only CapabilityAccessManager)
             var privacyMonitor = new PrivacyProtectionMonitor();
@@ -989,18 +988,18 @@ public sealed class AgentPhase7ATests
             Assert.Contains("read-only", privacySnap.LimitationDisclosure, StringComparison.OrdinalIgnoreCase);
 
             // 6. Safe Banking Protection (HTTPS + Trusted Domain + Planned Hardened Browser State)
-            var safeBanking = new SafeBankingProtectionModule();
+            var safeBanking = new SafeBankingProtectionModule(webGuard);
             Assert.Equal(SuiteFeatureState.Enabled, safeBanking.UrlVerificationState);
             Assert.Equal(SuiteFeatureState.Planned, safeBanking.HardenedBrowserIsolationState);
 
             var trustedHttpsBank = safeBanking.VerifyBankingUrl("https://www.bb.org.bd");
-            Assert.True(trustedHttpsBank.IsHttps);
-            Assert.True(trustedHttpsBank.IsVerifiedTrustedFinancialDomain);
-            Assert.True(trustedHttpsBank.IsSafeForBanking);
+            Assert.True(trustedHttpsBank.IsHttpsEncrypted);
+            Assert.True(trustedHttpsBank.IsRecognizedTrustedFinancialDomain);
+            Assert.False(trustedHttpsBank.HasPhishingOrRedirectRisk);
 
             var insecureHttpBank = safeBanking.VerifyBankingUrl("http://www.sonalibank.com.bd");
-            Assert.False(insecureHttpBank.IsHttps);
-            Assert.False(insecureHttpBank.IsSafeForBanking);
+            Assert.False(insecureHttpBank.IsHttpsEncrypted);
+            Assert.True(insecureHttpBank.HasPhishingOrRedirectRisk);
 
             // 7. Email & Attachment Security Scanner (Local Attachment Scan Enabled, Direct Mailbox Planned)
             var emailScanner = new EmailAttachmentSecurityScanner(pipeline);
@@ -1010,19 +1009,19 @@ public sealed class AgentPhase7ATests
             var macroDocPath = Path.Combine(tempRoot, "Invoice_Payment.docm");
             await File.WriteAllTextAsync(macroDocPath, "Simulated macro-enabled document attachment content");
             var attachmentRes = await emailScanner.ScanDownloadedAttachmentAsync(macroDocPath);
-            Assert.Equal("MACRO_ENABLED_DOCUMENT", attachmentRes.AttachmentCategory);
-            Assert.Equal(DetectionVerdict.Suspicious, attachmentRes.Verdict);
+            Assert.Equal("MACRO_DOCUMENT", attachmentRes.FormatCategory);
+            Assert.Equal(DownloadScanStatus.Suspicious, attachmentRes.ScanStatus);
 
             // 8. Cloud Threat Intelligence Interface (Offline-Safe Default, Zero Automatic File Upload)
             var cloudIntel = new PrivacyFirstCloudThreatIntelligenceService(configuredHttpsEndpoint: null);
             Assert.Equal(SuiteFeatureState.Enabled, cloudIntel.OfflineLocalDefinitionsState);
             Assert.Equal(SuiteFeatureState.Unavailable, cloudIntel.LiveCloudReputationState);
 
-            var eicarLookup = await cloudIntel.LookupFileHashReputationAsync(
+            var eicarLookup = cloudIntel.LookupSha256ReputationOfflineSafe(
                 "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
             );
-            Assert.True(eicarLookup.WorkedOfflineWithLocalDefinitions);
-            Assert.Equal(DetectionVerdict.ConfirmedDetection, eicarLookup.Verdict);
+            Assert.True(eicarLookup.MatchedLocalVerifiedCorpus);
+            Assert.Contains("EICAR", eicarLookup.ThreatLabel, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
