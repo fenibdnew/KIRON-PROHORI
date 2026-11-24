@@ -53,31 +53,16 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: Unified Crisp Vector Emerald Shield + White 'K' Logo & Decluttered Low-Opacity Status Indicators -->
+                    <!-- Left: Official Transparent 'KP' Eco-Digital Shield Emblem (High-DPI Anti-Aliased PNG, Vector Geometry: M 23,31 L 23,69 M 23,51 L 45,31 M 30,45 L 46,69 M 56,31 L 56,69) -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                        <Viewbox Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
-                            <Canvas Width="100" Height="100">
-                                <!-- Emerald-Green Shield (#10B981) -->
-                                <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
-                                      Stroke="#34D399"
-                                      StrokeThickness="4.5"
-                                      StrokeLineJoin="Round">
-                                    <Path.Fill>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                            <GradientStop Color="#10B981" Offset="0.0" />
-                                            <GradientStop Color="#059669" Offset="1.0" />
-                                        </LinearGradientBrush>
-                                    </Path.Fill>
-                                </Path>
-                                <!-- Clean Centered White 'K' Monogram -->
-                                <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
-                                      Stroke="#FFFFFF"
-                                      StrokeThickness="10"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      StrokeLineJoin="Round" />
-                            </Canvas>
-                        </Viewbox>
+                        <Image Source="pack://application:,,,/Assets/kp-logo.png"
+                               Width="22"
+                               Height="22"
+                               Margin="0,0,10,0"
+                               VerticalAlignment="Center"
+                               RenderOptions.BitmapScalingMode="HighQuality"
+                               SnapsToDevicePixels="True"
+                               UseLayoutRounding="True" />
                         <TextBlock x:Name="AppTitleBlock"
                                    Text="KIRON PROHORI"
                                    FontSize="13"
@@ -208,50 +193,30 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Unified Crisp Vector Emerald Shield + White 'K' Emblem -->
+                            <!-- Official Transparent 'KP' Eco-Digital Shield Emblem with Soft Glass Frame & Ambient Emerald Glow -->
                             <Border x:Name="HeroShieldIconBadge"
                                     Grid.Column="0"
                                     Width="72"
                                     Height="72"
                                     CornerRadius="18"
-                                    Background="#1F10B981"
+                                    Background="#E6F4EF"
                                     BorderBrush="#4010B981"
                                     BorderThickness="1"
                                     Margin="0,0,22,0"
-                                    VerticalAlignment="Center">
+                                    VerticalAlignment="Center"
+                                    Effect="{StaticResource FluentGlassShadow}">
                                 <Grid>
-                                    <Viewbox Width="52" Height="52" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <Canvas Width="100" Height="100">
-                                            <!-- Outer Geometric Emerald-Green Shield (#10B981) -->
-                                            <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
-                                                  Stroke="#34D399"
-                                                  StrokeThickness="4"
-                                                  StrokeLineJoin="Round">
-                                                <Path.Fill>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                        <GradientStop Color="#10B981" Offset="0.0" />
-                                                        <GradientStop Color="#059669" Offset="0.65" />
-                                                        <GradientStop Color="#047857" Offset="1.0" />
-                                                    </LinearGradientBrush>
-                                                </Path.Fill>
-                                            </Path>
-                                            <!-- Subtle Inner Shield Contour -->
-                                            <Path Data="M 50,13 L 80,24 L 80,47 C 80,67 66,82 50,87 C 34,82 20,67 20,47 L 20,24 Z"
-                                                  Stroke="#A7F3D0"
-                                                  StrokeThickness="1.3"
-                                                  Opacity="0.35" />
-                                            <!-- Crisp Centered White 'K' Monogram -->
-                                            <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
-                                                  Stroke="#FFFFFF"
-                                                  StrokeThickness="9.5"
-                                                  StrokeStartLineCap="Round"
-                                                  StrokeEndLineCap="Round"
-                                                  StrokeLineJoin="Round" />
-                                        </Canvas>
-                                    </Viewbox>
+                                    <Image Source="pack://application:,,,/Assets/kp-logo.png"
+                                           Width="56"
+                                           Height="56"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           RenderOptions.BitmapScalingMode="HighQuality"
+                                           SnapsToDevicePixels="True"
+                                           UseLayoutRounding="True" />
                                     <!-- Hidden compatibility element for code-behind state updates -->
                                     <Border x:Name="HeroShieldCornerCheck" Visibility="Collapsed">
-                                        <TextBlock x:Name="HeroShieldGlyphText" Text="K" Visibility="Collapsed" />
+                                        <TextBlock x:Name="HeroShieldGlyphText" Text="KP" Visibility="Collapsed" />
                                     </Border>
                                 </Grid>
                             </Border>
@@ -691,8 +656,12 @@
                                            TextTrimming="CharacterEllipsis" />
                             </StackPanel>
 
-                            <!-- Global Scan Control Buttons -->
-                            <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Global Scan Control Buttons (Strictly Visible ONLY on Scan Pages) -->
+                            <WrapPanel x:Name="GlobalScanControlsToolbar"
+                                       Grid.Column="2"
+                                       Orientation="Horizontal"
+                                       VerticalAlignment="Center"
+                                       Visibility="Collapsed">
                                 <Button x:Name="PauseResumeScanBtn"
                                         Content="Pause Scan"
                                         Click="OnPauseResumeScanClick"
@@ -716,7 +685,7 @@
                         </Grid>
                     </Border>
 
-                    <!-- Contextual Sub-Navigation & Progress Strip -->
+                    <!-- Contextual Feature Header & Action Bar -->
                     <Border Grid.Row="1"
                             Background="{DynamicResource GlassCardBrush}"
                             BorderBrush="{DynamicResource GlassBorderBrush}"
@@ -732,25 +701,35 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
-                                <DockPanel>
-                                    <TextBlock x:Name="ActiveScanBannerTitle"
-                                               Text="MODULAR MULTI-ENGINE SCANNER PIPELINE"
-                                               FontSize="12"
-                                               FontWeight="Bold"
-                                               Foreground="#0284C7" />
-                                    <TextBlock x:Name="ScanStateText"
-                                               Text=" · IDLE"
-                                               FontSize="12"
-                                               FontWeight="Bold"
-                                               Foreground="#059669" />
+                                <!-- Proper Grid Columns (* and Auto) with TextTrimming so title/state never overlaps metrics -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                                        <TextBlock x:Name="ActiveScanBannerTitle"
+                                                   Text="MODULAR MULTI-ENGINE SCANNER PIPELINE"
+                                                   FontSize="12"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0284C7"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Name="ScanStateText"
+                                                   Text=" · IDLE"
+                                                   FontSize="12"
+                                                   FontWeight="Bold"
+                                                   Foreground="#059669"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
                                     <TextBlock x:Name="ScanMetricsText"
-                                               DockPanel.Dock="Right"
+                                               Grid.Column="1"
                                                Text="0 scanned · 0 detections · 0 skipped"
                                                FontSize="11.5"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
-                                               HorizontalAlignment="Right" />
-                                </DockPanel>
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center" />
+                                </Grid>
                                 <ProgressBar x:Name="ScanProgressBar"
                                              Height="7"
                                              Minimum="0"
@@ -767,9 +746,9 @@
                                            TextTrimming="CharacterEllipsis" />
                             </StackPanel>
 
-                            <!-- Contextual Mode Switcher Buttons (Scan modes, Web/Download, Real-Time Toggle, Exclusions/Firewall) -->
+                            <!-- Contextual Feature Action Buttons (Only the toolbar matching the active view is shown) -->
                             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <!-- Scan Mode Selector Bar -->
+                                <!-- Scan Mode Selector Bar (ONLY on Scan View) -->
                                 <StackPanel x:Name="ScanModesSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
                                     <Button Content="⚡ Quick Scan" Click="OnQuickScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavFullScanBtn" Content="🖥 Full Scan" Click="OnFullScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
@@ -781,20 +760,31 @@
 
                                 <!-- Web & Download Sub-Tab Switcher -->
                                 <StackPanel x:Name="WebAndDownloadSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="🌐 Web Guard" Click="OnWebProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
+                                    <Button Content="🌐 Web Guard (ON)" Click="OnWebProtectionViewClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavDownloadProtectionBtn" Content="⬇ Download Guard" Click="OnDownloadProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavSafeBankingBtn" Content="🏦 Safe Banking (HTTPS)" ToolTip="Verify HTTPS financial domains &amp; phishing redirects (Hardened Browser: Planned)" Click="OnSafeBankingViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
                                 </StackPanel>
 
                                 <!-- Exclusions, Defender, Firewall, Ransomware Shield, Privacy & Deep Rootkit Offline Scan Sub-Tab Switcher -->
                                 <StackPanel x:Name="ExclusionsAndFirewallSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
+                                    <Button x:Name="AddCustomExclusionBtn" Content="➕ Add Exclusion" ToolTip="Add a trusted folder or file to KIRON PROHORI Exclusions" Click="OnAddCustomExclusionClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button Content="⚙ Exclusions" Click="OnExclusionsViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavDefenderBtn" Content="🛡 Defender Status" Click="OnRefreshWindowsSecurityClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavFirewallBtn" Content="🔥 Firewall" Click="OnFirewallViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavRansomwareShieldBtn" Content="🔒 Ransomware Shield" Click="OnRansomwareShieldViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="RunHarmlessRansomSimBtn" Content="🧪 Ransom Sim" ToolTip="Run harmless sandbox ransomware simulation without touching user files" Click="OnRunHarmlessRansomwareSimulationClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
                                     <Button x:Name="NavPrivacyProtectionBtn" Content="📷 Privacy (Cam/Mic)" Click="OnPrivacyProtectionViewClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" Margin="0,0,6,0" />
-                                    <Button x:Name="LaunchDefenderOfflineRootkitBtn" Content="🧰 Defender Offline Scan" ToolTip="Launch Windows Defender Offline Scan for deep kernel/rootkit removal" Click="OnLaunchDefenderOfflineScanClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                    <Button x:Name="LaunchDefenderOfflineRootkitBtn" Content="🧰 Defender Offline Scan" ToolTip="Launch Windows Defender Offline Scan for deep kernel/rootkit removal" Click="OnLaunchDefenderOfflineScanClick" Style="{StaticResource ModernActionButtonStyle}" Padding="12,6" FontSize="11.5" />
+                                </StackPanel>
+
+                                <!-- Dedicated Updates Action Bar -->
+                                <StackPanel x:Name="UpdatesSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
+                                    <Button x:Name="CheckForUpdatesNowBtn" Content="🔄 Check for Updates Now" Click="OnCheckUpdatesClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="16,8" FontSize="12" />
+                                </StackPanel>
+
+                                <!-- Dedicated Notifications Action Bar -->
+                                <StackPanel x:Name="NotificationsSubToolbar" Orientation="Horizontal" Visibility="Collapsed">
+                                    <Button Content="🔊 Test Gentle 280ms Chime" Click="OnPlayGentleChimeClick" Style="{StaticResource PrimaryFluentCtaButtonStyle}" Padding="14,7" FontSize="11.5" />
                                 </StackPanel>
 
                                 <!-- Real-Time Guard Live Toggle -->
@@ -809,15 +799,16 @@
                         </Grid>
                     </Border>
 
-                    <!-- Split Detections Table & Contextual Module Inspector -->
+                    <!-- Split Detections Table (Scan Pages Only) & Full-Width Dedicated Feature Card (Non-Scan Pages) -->
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.25*" />
-                            <ColumnDefinition Width="1.15*" />
+                            <ColumnDefinition x:Name="LeftDetectionsGridColumn" Width="1.25*" />
+                            <ColumnDefinition x:Name="RightInspectorGridColumn" Width="1.15*" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- Left Card: Detection Findings (Quarantine-First Remediation) -->
-                        <Border Grid.Column="0"
+                        <!-- Left Card: Detection Findings (Strictly Visible ONLY on Scan Pages) -->
+                        <Border x:Name="LeftScanDetectionsCardBorder"
+                                Grid.Column="0"
                                 Background="{DynamicResource GlassCardBrush}"
                                 BorderBrush="{DynamicResource GlassBorderBrush}"
                                 BorderThickness="1"
@@ -872,8 +863,9 @@
                             </DockPanel>
                         </Border>
 
-                        <!-- Right Card: Contextual Inspector / Quarantine Vault -->
-                        <Border Grid.Column="1"
+                        <!-- Right Card: Dedicated Full-Width Feature Inspector (or Right Column on Scan Pages) -->
+                        <Border x:Name="RightInspectorCardBorder"
+                                Grid.Column="1"
                                 Background="{DynamicResource GlassCardBrush}"
                                 BorderBrush="{DynamicResource GlassBorderBrush}"
                                 BorderThickness="1"
@@ -1077,28 +1069,16 @@
                                         BorderBrush="#4010B981"
                                         BorderThickness="1"
                                         VerticalAlignment="Top"
-                                        Margin="0,0,22,0">
-                                    <Viewbox Width="58" Height="58" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <Canvas Width="100" Height="100">
-                                            <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
-                                                  Stroke="#34D399"
-                                                  StrokeThickness="4"
-                                                  StrokeLineJoin="Round">
-                                                <Path.Fill>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                        <GradientStop Color="#10B981" Offset="0.0" />
-                                                        <GradientStop Color="#059669" Offset="1.0" />
-                                                    </LinearGradientBrush>
-                                                </Path.Fill>
-                                            </Path>
-                                            <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
-                                                  Stroke="#FFFFFF"
-                                                  StrokeThickness="9.5"
-                                                  StrokeStartLineCap="Round"
-                                                  StrokeEndLineCap="Round"
-                                                  StrokeLineJoin="Round" />
-                                        </Canvas>
-                                    </Viewbox>
+                                        Margin="0,0,22,0"
+                                        Effect="{StaticResource FluentGlassShadow}">
+                                    <Image Source="pack://application:,,,/Assets/kp-logo.png"
+                                           Width="64"
+                                           Height="64"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           RenderOptions.BitmapScalingMode="HighQuality"
+                                           SnapsToDevicePixels="True"
+                                           UseLayoutRounding="True" />
                                 </Border>
 
                                 <StackPanel Grid.Column="1">
@@ -1162,28 +1142,16 @@
                                     BorderBrush="#4010B981"
                                     BorderThickness="1"
                                     HorizontalAlignment="Center"
-                                    Margin="0,0,0,16">
-                                <Viewbox Width="54" Height="54" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Canvas Width="100" Height="100">
-                                        <Path Data="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
-                                              Stroke="#34D399"
-                                              StrokeThickness="4"
-                                              StrokeLineJoin="Round">
-                                            <Path.Fill>
-                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                    <GradientStop Color="#10B981" Offset="0.0" />
-                                                    <GradientStop Color="#059669" Offset="1.0" />
-                                                </LinearGradientBrush>
-                                            </Path.Fill>
-                                        </Path>
-                                        <Path Data="M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72"
-                                              Stroke="#FFFFFF"
-                                              StrokeThickness="9.5"
-                                              StrokeStartLineCap="Round"
-                                              StrokeEndLineCap="Round"
-                                              StrokeLineJoin="Round" />
-                                    </Canvas>
-                                </Viewbox>
+                                    Margin="0,0,0,16"
+                                    Effect="{StaticResource FluentGlassShadow}">
+                                <Image Source="pack://application:,,,/Assets/kp-logo.png"
+                                       Width="58"
+                                       Height="58"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       SnapsToDevicePixels="True"
+                                       UseLayoutRounding="True" />
                             </Border>
 
                             <TextBlock Text="Welcome to KIRON PROHORI"

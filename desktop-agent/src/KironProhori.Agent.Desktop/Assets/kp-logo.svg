@@ -1,35 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none" role="img" aria-label="KIRON PROHORI Emerald Shield Logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
   <defs>
-    <linearGradient id="kpEmeraldShieldGrad" x1="14" y1="8" x2="106" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#10B981" />
+    <linearGradient id="kpShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006A4E" />
       <stop offset="55%" stop-color="#059669" />
-      <stop offset="100%" stop-color="#047857" />
-    </linearGradient>
-    <linearGradient id="kpMintRimGrad" x1="18" y1="8" x2="102" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#34D399" />
-      <stop offset="50%" stop-color="#10B981" />
-      <stop offset="100%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#10B981" />
     </linearGradient>
   </defs>
-
-  <!-- Outer Emerald Shield (#10B981) -->
-  <path d="M60 8 L104 24 V56 C104 84.5 85.2 104.8 60 112 C34.8 104.8 16 84.5 16 56 V24 L60 8 Z"
-        fill="url(#kpEmeraldShieldGrad)"
-        stroke="url(#kpMintRimGrad)"
-        stroke-width="3.5"
+  <!-- Bengal Emerald & Oxygen Mint Geometric Shield -->
+  <path d="M 50,5 L 88,19 L 88,48 C 88,73 71,90 50,96 C 29,90 12,73 12,48 L 12,19 Z"
+        fill="url(#kpShieldGrad)"
+        stroke="#34D399"
+        stroke-width="4"
         stroke-linejoin="round" />
-
-  <!-- Subtle Inner Shield Contour -->
-  <path d="M60 16.5 L95.5 29.5 V55.5 C95.5 79.2 80.2 96.4 60 102.8 C39.8 96.4 24.5 79.2 24.5 55.5 V29.5 L60 16.5 Z"
+  <!-- Subtle Inner Prism Contour -->
+  <path d="M 50,13 L 80,24 L 80,47 C 80,67 66,82 50,87 C 34,82 20,67 20,47 L 20,24 Z"
+        fill="none"
         stroke="#A7F3D0"
-        stroke-opacity="0.32"
-        stroke-width="1.5"
-        stroke-linejoin="round" />
-
-  <!-- Crisp Centered White "K" Monogram -->
-  <path d="M44 36 V84 M44 61 L74 36 M52 54 L76 84"
+        stroke-width="1.3"
+        opacity="0.4" />
+  <!-- Crimson Sun Radar Dot (#F42A41) -->
+  <circle cx="50" cy="21" r="4.5" fill="#F42A41" stroke="#FFFFFF" stroke-width="1.2" />
+  <!-- Bold White "KP" Monogram -->
+  <path d="M 23,31 L 23,69 M 23,51 L 45,31 M 30,45 L 46,69 M 56,31 L 56,69 M 56,31 L 69,31 C 76,31 79,35 79,41 C 79,47 76,51 69,51 L 56,51"
+        fill="none"
         stroke="#FFFFFF"
-        stroke-width="10.5"
+        stroke-width="8"
         stroke-linecap="round"
         stroke-linejoin="round" />
 </svg>

@@ -4,22 +4,22 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <!-- =================================================================== -->
-        <!-- KIRON PROHORI — DEEP SLATE & EMERALD CYBER-DEFENSE VISUAL SYSTEM    -->
-        <!-- Deep Slate Canvas (#0B1120), Elevated Slate Cards (#111827),        -->
-        <!-- Subtle Card Borders (#1E293B), Emerald Shield (#10B981),            -->
-        <!-- Mint Green Lucide Icons & Links (#34D399), Dark Translucent Pills.  -->
+        <!-- KIRON PROHORI — LIGHT MINIMAL GLASS (DEFAULT) & OBSIDIAN DARK THEME -->
+        <!-- Light Minimal Glass Canvas (#F3F8F6), Elevated Cards (#FFFFFF),     -->
+        <!-- Subtle Card Borders (#D1E7DD), Bengal Emerald Shield (#006A4E),     -->
+        <!-- Emerald Lucide Icons & Links (#059669), Soft Translucent Pills.     -->
         <!-- =================================================================== -->
-        <SolidColorBrush x:Key="AppCanvasBrush" Color="#0B1120" />
-        <SolidColorBrush x:Key="TitleBarBackgroundBrush" Color="#080D1A" />
-        <SolidColorBrush x:Key="UtilityBarBackgroundBrush" Color="#080D1A" />
-        <SolidColorBrush x:Key="GlassCardBrush" Color="#111827" />
-        <SolidColorBrush x:Key="GlassElevatedBrush" Color="#162032" />
-        <SolidColorBrush x:Key="GlassBorderBrush" Color="#1E293B" />
+        <SolidColorBrush x:Key="AppCanvasBrush" Color="#F3F8F6" />
+        <SolidColorBrush x:Key="TitleBarBackgroundBrush" Color="#E6F2EE" />
+        <SolidColorBrush x:Key="UtilityBarBackgroundBrush" Color="#E9F4F0" />
+        <SolidColorBrush x:Key="GlassCardBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="GlassElevatedBrush" Color="#F7FBF9" />
+        <SolidColorBrush x:Key="GlassBorderBrush" Color="#D1E7DD" />
         <SolidColorBrush x:Key="GlassHoverBorderBrush" Color="#10B981" />
-        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F8FAFC" />
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#94A3B8" />
+        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#0F172A" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#475569" />
         <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B" />
-        <SolidColorBrush x:Key="AccentBlueBrush" Color="#10B981" />
+        <SolidColorBrush x:Key="AccentBlueBrush" Color="#059669" />
         <SolidColorBrush x:Key="SafeEmeraldBrush" Color="#10B981" />
         <SolidColorBrush x:Key="OxygenMintBrush" Color="#34D399" />
         <SolidColorBrush x:Key="WarningAmberBrush" Color="#F59E0B" />
@@ -28,33 +28,33 @@
         <!-- Translucent Emerald Card Icon Container: rgba(16, 185, 129, 0.12) & 1px rgba(16, 185, 129, 0.25) -->
         <SolidColorBrush x:Key="TileIconBoxBrush" Color="#1F10B981" />
         <SolidColorBrush x:Key="TileIconBorderBrush" Color="#4010B981" />
-        <SolidColorBrush x:Key="TileIconGlyphBrush" Color="#34D399" />
+        <SolidColorBrush x:Key="TileIconGlyphBrush" Color="#059669" />
 
-        <!-- Readable Mint Green Action Links (#34D399 -> Hover #6EE7B7) -->
-        <SolidColorBrush x:Key="TileActionLinkBrush" Color="#34D399" />
-        <SolidColorBrush x:Key="TileActionLinkHoverBrush" Color="#6EE7B7" />
+        <!-- Readable Emerald Action Links -->
+        <SolidColorBrush x:Key="TileActionLinkBrush" Color="#047857" />
+        <SolidColorBrush x:Key="TileActionLinkHoverBrush" Color="#059669" />
 
-        <!-- Sleek Dark-Mode Pill Badges: rgba(255, 255, 255, 0.08) background with #E2E8F0 or #34D399 text -->
-        <SolidColorBrush x:Key="DarkPillBackgroundBrush" Color="#14FFFFFF" />
-        <SolidColorBrush x:Key="DarkPillBorderBrush" Color="#24FFFFFF" />
-        <SolidColorBrush x:Key="DarkPillTextBrush" Color="#E2E8F0" />
-        <SolidColorBrush x:Key="DarkPillAccentTextBrush" Color="#34D399" />
+        <!-- Sleek Pill Badges -->
+        <SolidColorBrush x:Key="DarkPillBackgroundBrush" Color="#E6F4EF" />
+        <SolidColorBrush x:Key="DarkPillBorderBrush" Color="#A7F3D0" />
+        <SolidColorBrush x:Key="DarkPillTextBrush" Color="#0F172A" />
+        <SolidColorBrush x:Key="DarkPillAccentTextBrush" Color="#047857" />
 
-        <!-- Deep Slate Card Elevation Drop Shadow -->
+        <!-- Soft Glass Card Elevation Drop Shadow -->
         <DropShadowEffect x:Key="FluentGlassShadow"
-                          BlurRadius="20"
-                          ShadowDepth="4"
+                          BlurRadius="18"
+                          ShadowDepth="3"
                           Direction="270"
-                          Color="#020617"
-                          Opacity="0.45" />
+                          Color="#0F172A"
+                          Opacity="0.07" />
 
         <!-- Smooth Hover Elevation Shadow for 8-Card Grid -->
         <DropShadowEffect x:Key="FluentGlassHoverShadow"
-                          BlurRadius="26"
-                          ShadowDepth="6"
+                          BlurRadius="24"
+                          ShadowDepth="5"
                           Direction="270"
-                          Color="#052E16"
-                          Opacity="0.55" />
+                          Color="#059669"
+                          Opacity="0.16" />
 
         <!-- Readable Bottom Card Action Link Style (#34D399 with smooth hover brightness) -->
         <Style x:Key="TileActionLinkTextStyle" TargetType="TextBlock">

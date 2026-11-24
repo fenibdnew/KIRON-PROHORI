@@ -69,6 +69,9 @@ Name: "browserguide"; Description: "Stage Chrome & Microsoft Edge Browser Protec
 ; Core Desktop Application & Background Service Binaries (Published from dotnet publish -c Release -r win-x64)
 Source: "..\..\publish\win-x64\desktop\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\assets\KironProhori.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\assets\kp-logo.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\assets\KironProhori.ico"; DestDir: "{app}\Assets"; Flags: ignoreversion
+Source: "..\assets\kp-logo.png"; DestDir: "{app}\Assets"; Flags: ignoreversion
 Source: "..\..\publish\win-x64\service\*"; DestDir: "{app}\service"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Browser Extension Manifest V3 Package & Native Messaging Host Template
 Source: "..\..\..\browser-extension\*"; DestDir: "{app}\browser-extension"; Flags: ignoreversion recursesubdirs createallsubdirs

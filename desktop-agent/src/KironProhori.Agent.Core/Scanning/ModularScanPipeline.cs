@@ -66,7 +66,7 @@ public sealed class ModularScanPipeline
     public void ResumeActiveScan() => _performanceGuard.ResumeScan();
 
     /// <summary>
-    /// Resolves default high-risk user-mode target folders for a Quick Scan.
+    /// Resolves default high-risk user-mode target folders for a Quick Scan (Downloads, Desktop, Startup, and %TEMP%).
     /// </summary>
     public static IReadOnlyList<string> GetQuickScanDirectories()
     {
@@ -78,10 +78,10 @@ public sealed class ModularScanPipeline
             if (Directory.Exists(downloads)) dirs.Add(downloads);
         }
 
-        string tempPath = Path.GetTempPath();
-        if (!string.IsNullOrWhiteSpace(tempPath) && Directory.Exists(tempPath))
+        string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        if (!string.IsNullOrWhiteSpace(desktop) && Directory.Exists(desktop))
         {
-            dirs.Add(tempPath);
+            dirs.Add(desktop);
         }
 
         string startup = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
@@ -90,7 +90,13 @@ public sealed class ModularScanPipeline
             dirs.Add(startup);
         }
 
-        return dirs;
+        string tempPath = Path.GetTempPath();
+        if (!string.IsNullOrWhiteSpace(tempPath) && Directory.Exists(tempPath))
+        {
+            dirs.Add(tempPath);
+        }
+
+        return dirs.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     /// <summary>
@@ -504,6 +510,13 @@ public sealed class ModularScanPipeline
                             _performanceGuard.IsPaused,
                             skippedUnchanged,
                             skippedExclusions));
+
+                        // For QuickScan, cap total files inspected across Downloads, Desktop, Startup, and %TEMP% at 250 files so it completes briskly while streaming real live progress
+                        if (scanType == ScanType.QuickScan && filesScanned >= 250)
+                        {
+                            pendingDirs.Clear();
+                            break;
+                        }
                     }
                     catch (OperationCanceledException)
                     {

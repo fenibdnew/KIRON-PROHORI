@@ -60,8 +60,8 @@ public partial class MainWindow : Window
     private const int DbtDeviceArrival = 0x8000;
     private const int DbtDevNodesChanged = 0x0007;
 
-    // Default Theme: Deep Slate (#0B1120) with Emerald (#10B981 / #34D399) Accents
-    private bool _isDarkTheme = true;
+    // Default Theme: Light Minimal Glass (#F3F8F6) with Bengal Emerald (#006A4E / #10B981) Accents
+    private bool _isDarkTheme = false;
     private string _currentLanguage = "en";
     private bool _minimizeToTrayOnClose = true;
     private bool _hasCompletedFirstRunWelcome;
@@ -163,8 +163,8 @@ public partial class MainWindow : Window
 
     private sealed class LocalUiPreferences
     {
-        public int ThemeSchemaVersion { get; set; } = 3;
-        public bool IsDarkTheme { get; set; } = true;
+        public int ThemeSchemaVersion { get; set; } = 4;
+        public bool IsDarkTheme { get; set; } = false;
         public string Language { get; set; } = "en";
         public bool MinimizeToTrayOnClose { get; set; } = true;
         public bool EcoPowerModeEnabled { get; set; } = true;
@@ -173,8 +173,8 @@ public partial class MainWindow : Window
 
     private void LoadLocalUiPreferences()
     {
-        // Default to Deep Slate (#0B1120) Cyber-Defense Theme on startup
-        _isDarkTheme = true;
+        // Default to Light Minimal Glass (#F3F8F6) on startup
+        _isDarkTheme = false;
 
         try
         {
@@ -190,8 +190,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            // Apply saved theme if written by V3+ schema; otherwise default to Deep Slate (#0B1120)
-            _isDarkTheme = prefs.ThemeSchemaVersion >= 3 ? prefs.IsDarkTheme : true;
+            // Apply saved theme if written by V4+ schema; otherwise default to Light Minimal Glass (#F3F8F6)
+            _isDarkTheme = prefs.ThemeSchemaVersion >= 4 ? prefs.IsDarkTheme : false;
             _currentLanguage = string.Equals(prefs.Language, "bn", StringComparison.OrdinalIgnoreCase) ? "bn" : "en";
             _minimizeToTrayOnClose = prefs.MinimizeToTrayOnClose;
             _performanceGuard.SetEcoPowerMode(prefs.EcoPowerModeEnabled);
@@ -199,8 +199,8 @@ public partial class MainWindow : Window
         }
         catch
         {
-            // Safe default: Deep Slate (#0B1120), English, Eco-Power Mode enabled
-            _isDarkTheme = true;
+            // Safe default: Light Minimal Glass (#F3F8F6), English, Eco-Power Mode enabled
+            _isDarkTheme = false;
         }
     }
 
@@ -210,7 +210,7 @@ public partial class MainWindow : Window
         {
             var prefs = new LocalUiPreferences
             {
-                ThemeSchemaVersion = 3,
+                ThemeSchemaVersion = 4,
                 IsDarkTheme = _isDarkTheme,
                 Language = _currentLanguage,
                 MinimizeToTrayOnClose = _minimizeToTrayOnClose,
@@ -397,9 +397,22 @@ public partial class MainWindow : Window
 
             System.Drawing.Icon trayIcon = System.Drawing.SystemIcons.Shield;
             var icoPath = Path.Combine(AppContext.BaseDirectory, "Assets", "KironProhori.ico");
+            var rootIcoPath = Path.Combine(AppContext.BaseDirectory, "KironProhori.ico");
             if (File.Exists(icoPath))
             {
                 trayIcon = new System.Drawing.Icon(icoPath);
+            }
+            else if (File.Exists(rootIcoPath))
+            {
+                trayIcon = new System.Drawing.Icon(rootIcoPath);
+            }
+            else
+            {
+                var resourceStream = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/KironProhori.ico"));
+                if (resourceStream?.Stream != null)
+                {
+                    trayIcon = new System.Drawing.Icon(resourceStream.Stream);
+                }
             }
 
             _systemTrayNotifyIcon = new System.Windows.Forms.NotifyIcon
@@ -746,18 +759,43 @@ public partial class MainWindow : Window
         bool isWebDownloadTab = false,
         bool isQuarantineTab = false,
         bool isRealtimeTab = false,
-        bool isExclusionsFirewallTab = false)
+        bool isExclusionsFirewallTab = false,
+        bool isUpdatesTab = false,
+        bool isNotificationsTab = false)
     {
         DashboardHeroViewPanel.Visibility = showDashboardHero ? Visibility.Visible : Visibility.Collapsed;
         ScannerAndInspectorViewPanel.Visibility = showScannerInspector ? Visibility.Visible : Visibility.Collapsed;
         SettingsDedicatedViewPanel.Visibility = showSettings ? Visibility.Visible : Visibility.Collapsed;
         AboutDedicatedViewPanel.Visibility = showAbout ? Visibility.Visible : Visibility.Collapsed;
 
+        // STRICT RULE: Scan Controls (Pause/Stop/EICAR), Progress Bar, Metrics, and Left SCAN DETECTIONS box ONLY appear on Scan pages
+        GlobalScanControlsToolbar.Visibility = isScanTab ? Visibility.Visible : Visibility.Collapsed;
+        ScanProgressBar.Visibility = isScanTab ? Visibility.Visible : Visibility.Collapsed;
+        ScanStateText.Visibility = isScanTab ? Visibility.Visible : Visibility.Collapsed;
+        ScanMetricsText.Visibility = isScanTab ? Visibility.Visible : Visibility.Collapsed;
+
+        if (isScanTab)
+        {
+            LeftScanDetectionsCardBorder.Visibility = Visibility.Visible;
+            LeftDetectionsGridColumn.Width = new GridLength(1.25, GridUnitType.Star);
+            RightInspectorGridColumn.Width = new GridLength(1.15, GridUnitType.Star);
+            RightInspectorCardBorder.Margin = new Thickness(8, 0, 0, 0);
+        }
+        else
+        {
+            LeftScanDetectionsCardBorder.Visibility = Visibility.Collapsed;
+            LeftDetectionsGridColumn.Width = new GridLength(0);
+            RightInspectorGridColumn.Width = new GridLength(1, GridUnitType.Star);
+            RightInspectorCardBorder.Margin = new Thickness(0);
+        }
+
         // Contextual sub-toolbars inside the Sub-Page view
         ScanModesSubToolbar.Visibility = isScanTab ? Visibility.Visible : Visibility.Collapsed;
         WebAndDownloadSubToolbar.Visibility = isWebDownloadTab ? Visibility.Visible : Visibility.Collapsed;
         ExclusionsAndFirewallSubToolbar.Visibility = isExclusionsFirewallTab ? Visibility.Visible : Visibility.Collapsed;
         ToggleRealtimeMonitoringBtn.Visibility = isRealtimeTab ? Visibility.Visible : Visibility.Collapsed;
+        UpdatesSubToolbar.Visibility = isUpdatesTab ? Visibility.Visible : Visibility.Collapsed;
+        NotificationsSubToolbar.Visibility = isNotificationsTab ? Visibility.Visible : Visibility.Collapsed;
 
         // STRICT RULE: Restore & Permanent Delete ONLY appear inside Quarantine Vault
         QuarantineActionButtonsPanel.Visibility = isQuarantineTab ? Visibility.Visible : Visibility.Collapsed;
@@ -793,7 +831,7 @@ public partial class MainWindow : Window
             HeroShieldIconBadge.Background = CreateBrush(_isDarkTheme ? "#1F10B981" : "#E6F4EF");
             HeroShieldIconBadge.BorderBrush = CreateBrush(_isDarkTheme ? "#4010B981" : "#10B981");
             HeroShieldCornerCheck.Background = CreateBrush("#10B981");
-            HeroShieldGlyphText.Text = "K";
+            HeroShieldGlyphText.Text = "KP";
             HeroStatusPillBorder.Background = CreateBrush(_isDarkTheme ? "#1F10B981" : "#006A4E");
             HeroStatusPillText.Foreground = CreateBrush(_isDarkTheme ? "#34D399" : "#FFFFFF");
             HeroStatusPillText.Text = IsBengaliLanguage ? "সুরক্ষা সক্রিয় · ইকো-মোড" : "PROTECTION LIVE · ECO-AI";
@@ -894,9 +932,11 @@ public partial class MainWindow : Window
     {
         ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.quick_scan", IsBengaliLanguage);
-        ActiveScanBannerTitle.Text = "QUICK SCAN — CRITICAL USER & STARTUP DIRECTORIES";
+        ActiveScanBannerTitle.Text = "QUICK SCAN — DOWNLOADS, DESKTOP, STARTUP & TEMP";
+        RightPanelHeaderText.Text = $"RECENT SCAN SESSIONS ({_scanHistory.Count})";
+        PopulateScanHistoryInInspector();
         var quickTargets = ModularScanPipeline.GetQuickScanDirectories();
-        await RunScanWorkflowAsync(ScanType.QuickScan, quickTargets.Take(1));
+        await RunScanWorkflowAsync(ScanType.QuickScan, quickTargets);
     }
 
     private async void OnFullScanClick(object sender, RoutedEventArgs e)
@@ -904,6 +944,8 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.full_scan", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "FULL SCAN — COMPLETE USER PROFILE & EXECUTABLES";
+        RightPanelHeaderText.Text = $"RECENT SCAN SESSIONS ({_scanHistory.Count})";
+        PopulateScanHistoryInInspector();
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         await RunScanWorkflowAsync(ScanType.FullScan, new[] { userProfile });
     }
@@ -913,6 +955,8 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.custom_scan", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "CUSTOM FOLDER SCAN — USER DOCUMENTS & WORKSPACE";
+        RightPanelHeaderText.Text = $"RECENT SCAN SESSIONS ({_scanHistory.Count})";
+        PopulateScanHistoryInInspector();
         var docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         await RunScanWorkflowAsync(ScanType.CustomFolderScan, new[] { docsPath });
     }
@@ -922,6 +966,8 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.usb_scan", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "REMOVABLE USB DRIVE SCAN";
+        RightPanelHeaderText.Text = $"RECENT SCAN SESSIONS ({_scanHistory.Count})";
+        PopulateScanHistoryInInspector();
         var removableDrives = ModularScanPipeline.GetRemovableUsbDrives()
             .Select(d => d.RootDirectory.FullName)
             .ToList();
@@ -1155,6 +1201,7 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.history", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "LOCAL SCAN SESSION LEDGER & DIAGNOSTICS";
+        ActiveScanLivePathText.Text = "All scan reports and threat logs are stored locally on your PC with zero cloud telemetry.";
         RightPanelHeaderText.Text = $"LOCAL SCAN HISTORY ({_scanHistory.Count} SESSIONS)";
         PopulateScanHistoryInInspector();
     }
@@ -1179,7 +1226,7 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isQuarantineTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.quarantine", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "ISOLATED QUARANTINE VAULT (.KPQ) — RESTORE OR PERMANENTLY DELETE";
-        ActiveScanLivePathText.Text = "Permanent deletion requires explicit confirmation";
+        ActiveScanLivePathText.Text = "Select any isolated item below to Restore with SHA-256 verification or Permanently Delete.";
         await RefreshQuarantineVaultAsync();
         UpdateHeroProtectionBannerState();
     }
@@ -1189,6 +1236,7 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.exclusions", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "CANONICAL PATH EXCLUSIONS & WINDOWS SECURITY COEXISTENCE";
+        ActiveScanLivePathText.Text = "Manage trusted folders or files excluded from KIRON PROHORI scans (never modifies Microsoft Defender).";
         RightPanelHeaderText.Text = "KIRON PROHORI EXCLUSIONS (DOES NOT MODIFY DEFENDER)";
         QuarantineListBox.Items.Clear();
 
@@ -1201,10 +1249,48 @@ public partial class MainWindow : Window
         }
         if (exclusions.Count == 0)
         {
-            QuarantineListBox.Items.Add("No custom path exclusions configured.");
+            QuarantineListBox.Items.Add("No custom path exclusions configured. Click '➕ Add Exclusion' above to exclude a folder or file.");
         }
 
         StatusFooterText.Text = ExclusionManager.SecurityRiskExplanation;
+    }
+
+    private async void OnAddCustomExclusionClick(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Select a trusted folder to exclude from KIRON PROHORI scans (Does not modify Microsoft Defender)",
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = false
+        };
+
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK || string.IsNullOrWhiteSpace(dialog.SelectedPath))
+        {
+            return;
+        }
+
+        var confirm = System.Windows.MessageBox.Show(
+            $"{ExclusionManager.SecurityRiskExplanation}\n\nExclude folder:\n{dialog.SelectedPath}",
+            "KIRON PROHORI — Confirm Folder Exclusion",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning
+        );
+
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        await _exclusionManager.AddExclusionAsync(
+            dialog.SelectedPath,
+            ExclusionScope.DirectoryRecursive,
+            "User added via Exclusions folder picker",
+            userConfirmed: true
+        );
+
+        QuarantineCountText.Text = $"{_exclusionManager.GetExclusions().Count} EXCLUDED";
+        OnExclusionsViewClick(sender, e);
+        StatusFooterText.Text = $"Added folder '{dialog.SelectedPath}' to KIRON PROHORI Exclusions.";
     }
 
     private async void OnRefreshWindowsSecurityClick(object sender, RoutedEventArgs e)
@@ -1212,6 +1298,7 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.defender", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "MICROSOFT DEFENDER COEXISTENCE (READ-ONLY WMI TELEMETRY)";
+        ActiveScanLivePathText.Text = "KIRON PROHORI coexists safely alongside Microsoft Defender and never disables Windows security services.";
         await RefreshWindowsSecurityPostureAsync();
         var posture = _windowsSecurityMonitor.GetSecuritySnapshot();
         RightPanelHeaderText.Text = "MICROSOFT DEFENDER & SYSTEM POSTURE";
@@ -1228,6 +1315,7 @@ public partial class MainWindow : Window
         ShowActiveWorkspaceView(showScannerInspector: true, isExclusionsFirewallTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.firewall", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "SMART FIREWALL INTEGRATION (PROFILES & READ-ONLY TCP SESSIONS)";
+        ActiveScanLivePathText.Text = "Inspects Domain, Private, and Public firewall profiles and active TCP endpoints read-only.";
         await RefreshWindowsSecurityPostureAsync();
         var posture = _windowsSecurityMonitor.GetSecuritySnapshot();
         var connections = _windowsSecurityMonitor.InspectActiveNetworkConnections();
@@ -1371,7 +1459,7 @@ public partial class MainWindow : Window
 
     private void OnCheckUpdatesClick(object sender, RoutedEventArgs e)
     {
-        ShowActiveWorkspaceView(showScannerInspector: true);
+        ShowActiveWorkspaceView(showScannerInspector: true, isUpdatesTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.updates", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "CRYPTOGRAPHICALLY VERIFIED HTTPS UPDATE MANAGER";
         ActiveScanLivePathText.Text = $"Trusted Publisher: {SecureUpdateManager.TrustedPublisherIdentity}";
@@ -1386,16 +1474,17 @@ public partial class MainWindow : Window
         }
         if (history.Count == 0)
         {
-            QuarantineListBox.Items.Add($"Engine & Intelligence V{AboutBrandMetadata.ProductVersion} up to date · Publisher: {SecureUpdateManager.TrustedPublisherIdentity}");
+            QuarantineListBox.Items.Add($"Engine & Intelligence V{AboutBrandMetadata.ProductVersion} up to date · Verified at {DateTimeOffset.UtcNow:HH:mm:ss} UTC · Publisher: {SecureUpdateManager.TrustedPublisherIdentity}");
         }
         StatusFooterText.Text = $"Automatic Update System enforces HTTPS + SHA-256 hash + {SecureUpdateManager.TrustedPublisherIdentity}.";
     }
 
     private void OnNotificationsViewClick(object sender, RoutedEventArgs e)
     {
-        ShowActiveWorkspaceView(showScannerInspector: true);
+        ShowActiveWorkspaceView(showScannerInspector: true, isNotificationsTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.notifications", IsBengaliLanguage);
         ActiveScanBannerTitle.Text = "SMART ANTI-SPAM NOTIFICATION CENTER & 280MS GENTLE CHIME";
+        ActiveScanLivePathText.Text = $"Notification Sound: {(_notificationManager.SoundEnabled ? "ON" : "OFF")} · Volume: {_notificationManager.VolumePercent}% · Anti-Spam Cooldown Active";
         RightPanelHeaderText.Text = "SMART NOTIFICATIONS (ANTI-SPAM + GENTLE CHIME)";
         QuarantineListBox.Items.Clear();
         var notifications = _notificationManager.GetNotificationHistory();
@@ -1461,7 +1550,7 @@ public partial class MainWindow : Window
         }
         if (SettingsThemeStatusText != null)
         {
-            SettingsThemeStatusText.Text = _isDarkTheme ? "Deep Slate (#0B1120) — Default" : "Eco-Minimal Light Glass";
+            SettingsThemeStatusText.Text = _isDarkTheme ? "Deep Slate (#0B1120)" : "Light Minimal Glass (#F3F8F6) — Default";
         }
         if (SettingsCloseBehaviorText != null)
         {
@@ -1543,6 +1632,7 @@ public partial class MainWindow : Window
         PauseResumeScanBtn.Content = "Pause Scan";
 
         ScanStateText.Text = $" · RUNNING ({mode})";
+        RightPanelHeaderText.Text = $"RECENT SCAN SESSIONS ({_scanHistory.Count})";
         ScanProgressBar.IsIndeterminate = true;
         FindingsListBox.Items.Clear();
         _currentFindings.Clear();

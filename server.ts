@@ -2757,7 +2757,7 @@ async function startServer() {
         mainWindowXamlCode.includes('TileActionLinkTextStyle') &&
         mainWindowXamlCode.includes('DarkPillBackgroundBrush') &&
         mainWindowXamlCode.includes('TileIconGlyphBrush') &&
-        mainWindowXamlCode.includes('M 36,28 L 36,72 M 36,51 L 64,28 M 44,44 L 66,72') &&
+        mainWindowXamlCode.includes('M 23,31 L 23,69 M 23,51 L 45,31 M 30,45 L 46,69 M 56,31 L 56,69') &&
         !mainWindowXamlCode.includes('<Image Source="pack://application:,,,/Assets/KironProhori.ico"') &&
         fs.existsSync(path.join(desktopAgentRoot, 'src/KironProhori.Agent.Core/Realtime/RansomwareShieldMonitor.cs')) &&
         fs.existsSync(path.join(desktopAgentRoot, 'src/KironProhori.Agent.Core/WindowsSecurity/PrivacyProtectionMonitor.cs')) &&
