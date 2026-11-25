@@ -4,7 +4,7 @@ KIRON PROHORI — Windows Security & Antivirus V1.0 (Release Notes)
 Product Name       : KIRON PROHORI
 Subtitle           : Windows Security & Antivirus V1.0
 Developer          : ARIFUZZAMAN KIRON
-Target Platform    : Windows 10 x64 (Build 19041+) & Windows 11 x64
+Target Platform    : Windows 10 (x86 & x64, Build 19041+) & Windows 11 (x64, Build 22000+)
 Budget & Privacy   : Strict $0 · NO TELEMETRY BY DEFAULT
 Threat Policy      : QUARANTINE FIRST (Permanent deletion requires separate confirmation)
 =============================================================================
@@ -19,22 +19,29 @@ Thank you for choosing KIRON PROHORI.
 Your privacy matters. Your security matters. Your trust matters.
 Built with care for a safer digital world.
 
-2. INCLUDED COMPONENTS
-----------------------
+2. INCLUDED RELEASE PACKAGES & COMPONENTS
+-----------------------------------------
+- KIRON-PROHORI-Setup-x64.exe (Inno Setup 6 Windows 10/11 x64 Installer & Uninstaller)
+- KIRON-PROHORI-Portable-win-x64.zip (Self-contained 64-bit Windows 10/11 bundle)
+- KIRON-PROHORI-Portable-win-x86.zip (Self-contained 32-bit Windows 10 x86 bundle)
+- KIRON-PROHORI-Browser-Extension-MV3.zip (Chrome & Microsoft Edge Manifest V3 Extension)
+- SHA256SUMS.txt (Cryptographic SHA-256 checksum manifest for all release artifacts)
+
 A. KIRON PROHORI Windows Desktop Security Agent (KironProhori.Desktop.exe)
    - Quick Scan, Full Scan, Custom Folder Scan, Single File Scan, and USB Scan
    - Streaming 64 KB FIPS 180-4 SHA-256 Calculator & Signature Engine
-   - Static PE, Script & Double-Extension (.pdf.exe / RTLO) Heuristic Analyzer
+   - Static PE, Script, Parent-Child LOLBin Behavioral & Layered 0–100 Threat Scoring
    - 4-Tier Verdict Transparency: Confirmed Detection, Suspicious, Unknown, Clean
    - Quarantine Vault (.kpq XOR isolation) with Restore & Separate Delete Confirmation
    - Canonical Exclusion Manager (Never modifies Microsoft Defender exclusions)
+   - Local Security Audit Repository with Separated Dispositions & CSV/JSON Reports
    - Smart Notifications with 280 ms Gentle Chime & Duplicate Suppression
 
 B. KIRON PROHORI Windows Background Service (KironProhori.Service.exe)
    - Service Name: KironProhoriSecurityService (Delayed Auto-Start + Crash Recovery)
    - User-Mode Real-Time File Protection Monitor across Downloads, Temp & Startup
    - Local Named Pipe IPC Server (KironProhori.SecurityService.Ipc.v1)
-   - Cryptographic HTTPS Update & Rollback Manager (.known_good backup)
+   - Cryptographic RSA-2048 HTTPS Update & Rollback Manager (.known_good backup)
 
 C. KIRON PROHORI Chrome & Microsoft Edge Browser Extension (Manifest V3)
    - Blocks verified phishing, malware distribution, scam, and malvertising domains
@@ -45,12 +52,12 @@ C. KIRON PROHORI Chrome & Microsoft Edge Browser Extension (Manifest V3)
 3. RELEASE CHANNEL GOVERNANCE
 -----------------------------
 - Developer Build (v1.0.0-DEV_BUILD): Source-verified automated GitHub Actions build for developer testing.
-- Beta Build (v1.0.0-BETA_BUILD): Pre-release evaluation build for Windows 10/11 x64 testing.
-- Stable V1.0 (v1.0.0-STABLE_V1_0): Promoted only after public CA Authenticode signing and 15/15 Windows VM test matrix verification.
+- Beta Build (v1.0.0-BETA_BUILD): Pre-release evaluation build for Windows 10/11 testing.
+- Stable V1.0 (v1.0.0-STABLE_V1_0): Promoted only after public CA Authenticode signing and Windows VM test matrix verification.
 
 4. VERIFICATION & SHA-256 INTEGRITY
 -----------------------------------
-Before running KIRON-PROHORI-Setup-x64.exe, verify its SHA-256 hash in PowerShell:
+Before running KIRON-PROHORI-Setup-x64.exe or extracting portable packages, verify the SHA-256 hash in PowerShell:
   Get-FileHash .\KIRON-PROHORI-Setup-x64.exe -Algorithm SHA256
 and confirm that it matches the exact digest listed in SHA256SUMS.txt.
 

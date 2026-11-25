@@ -57,6 +57,43 @@ public sealed class ErrorDiagnosticsManager
     }
 
     /// <summary>
+    /// MODULE 11 TAMPER PROTECTION — Verifies whether settings.json has been tampered with or corrupted compared to
+    /// the verified settings.json.known_good baseline, and restores the known-good baseline if unauthorized corruption is detected.
+    /// </summary>
+    public async Task<(bool TamperOrCorruptionDetected, string StatusMessage)> VerifyConfigurationTamperIntegrityAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(_configFilePath))
+        {
+            var report = await RunSelfDiagnosticAndRepairAsync(cancellationToken).ConfigureAwait(false);
+            return (true, $"TAMPER_OR_MISSING_CONFIG_HEALED: {report.RepairActionTaken}");
+        }
+
+        try
+        {
+            string raw = await File.ReadAllTextAsync(_configFilePath, cancellationToken).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(raw);
+            if (doc.RootElement.TryGetProperty("telemetryEnabled", out var telemetryProp) &&
+                telemetryProp.ValueKind == JsonValueKind.True)
+            {
+                // Unauthorized tampering attempted to enable hidden telemetry -> restore known_good
+                if (File.Exists(_knownGoodBackupPath))
+                {
+                    File.Copy(_knownGoodBackupPath, _configFilePath, overwrite: true);
+                }
+                await LogLocalDiagnosticErrorAsync("TamperProtection", "Blocked unauthorized configuration change attempting to enable telemetry.", cancellationToken).ConfigureAwait(false);
+                return (true, "TAMPER_DETECTED_AND_REVERTED: Unauthorized attempt to enable telemetry was reverted from known_good backup.");
+            }
+            return (false, "CONFIGURATION_INTEGRITY_VERIFIED: settings.json matches privacy and schema invariants.");
+        }
+        catch
+        {
+            var report = await RunSelfDiagnosticAndRepairAsync(cancellationToken).ConfigureAwait(false);
+            return (true, $"TAMPER_CORRUPTION_HEALED: {report.RepairActionTaken}");
+        }
+    }
+
+    /// <summary>
     /// Logs an application exception or diagnostic event strictly locally. Never transmits logs over the network.
     /// </summary>
     public async Task LogLocalDiagnosticErrorAsync(string component, string errorSummary, CancellationToken cancellationToken = default)

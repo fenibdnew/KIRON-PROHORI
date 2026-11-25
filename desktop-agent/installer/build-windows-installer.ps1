@@ -40,25 +40,33 @@ $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $SolutionPath = Join-Path $RepoRoot "KironProhori.DesktopAgent.sln"
 $PublishDesktopDir = Join-Path $RepoRoot "publish\win-x64\desktop"
 $PublishServiceDir = Join-Path $RepoRoot "publish\win-x64\service"
+$PublishDesktopX86Dir = Join-Path $RepoRoot "publish\win-x86\desktop"
+$PublishServiceX86Dir = Join-Path $RepoRoot "publish\win-x86\service"
 $ArtifactsDir = Join-Path $RepoRoot "artifacts\installer"
 
 New-Item -ItemType Directory -Force -Path $PublishDesktopDir | Out-Null
 New-Item -ItemType Directory -Force -Path $PublishServiceDir | Out-Null
+New-Item -ItemType Directory -Force -Path $PublishDesktopX86Dir | Out-Null
+New-Item -ItemType Directory -Force -Path $PublishServiceX86Dir | Out-Null
 New-Item -ItemType Directory -Force -Path $ArtifactsDir | Out-Null
 
 # 1. Execute Automated xUnit Verification Suite before packaging
 Write-Host "[1/5] Running xUnit verification tests..." -ForegroundColor Yellow
 dotnet test (Join-Path $RepoRoot "tests\KironProhori.Agent.Tests\KironProhori.Agent.Tests.csproj") -c Release
 
-# 2. Publish Windows Desktop UI (win-x64)
-Write-Host "[2/5] Publishing KIRON PROHORI Desktop UI (win-x64)..." -ForegroundColor Yellow
+# 2. Publish Windows Desktop UI (win-x64 & Windows 10 win-x86)
+Write-Host "[2/5] Publishing KIRON PROHORI Desktop UI (win-x64 & win-x86)..." -ForegroundColor Yellow
 dotnet publish (Join-Path $RepoRoot "src\KironProhori.Agent.Desktop\KironProhori.Agent.Desktop.csproj") `
     -c Release -r win-x64 --self-contained true -o $PublishDesktopDir
+dotnet publish (Join-Path $RepoRoot "src\KironProhori.Agent.Desktop\KironProhori.Agent.Desktop.csproj") `
+    -c Release -r win-x86 --self-contained true -o $PublishDesktopX86Dir
 
-# 3. Publish Windows Background Service (win-x64)
-Write-Host "[3/5] Publishing KIRON PROHORI Windows Background Service (win-x64)..." -ForegroundColor Yellow
+# 3. Publish Windows Background Service (win-x64 & Windows 10 win-x86)
+Write-Host "[3/5] Publishing KIRON PROHORI Windows Background Service (win-x64 & win-x86)..." -ForegroundColor Yellow
 dotnet publish (Join-Path $RepoRoot "src\KironProhori.Agent.Service\KironProhori.Agent.Service.csproj") `
     -c Release -r win-x64 --self-contained true -o $PublishServiceDir
+dotnet publish (Join-Path $RepoRoot "src\KironProhori.Agent.Service\KironProhori.Agent.Service.csproj") `
+    -c Release -r win-x86 --self-contained true -o $PublishServiceX86Dir
 
 # 4. Authenticode Binary Signing (if configured)
 if ($SigningMode -eq "PROD_TRUSTED_CA") {

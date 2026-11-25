@@ -262,9 +262,13 @@ public sealed class NativeMessagingDownloadGuard
             );
         }
 
-        // Heuristic pre-navigation warning for punycode IDN homograph or deceptive login-verify subdomains
+        // Heuristic pre-navigation warning for punycode IDN homograph, brand-impersonation phishing, or deceptive login-verify subdomains
         bool suspiciousPunycodeOrPhishLookalike =
             host.Contains("xn--", StringComparison.OrdinalIgnoreCase) ||
+            host.Contains("bkash-bonus", StringComparison.OrdinalIgnoreCase) ||
+            host.Contains("nagad-reward", StringComparison.OrdinalIgnoreCase) ||
+            host.Contains("microsoft-security-verify", StringComparison.OrdinalIgnoreCase) ||
+            host.Contains("paypal-account-unlock", StringComparison.OrdinalIgnoreCase) ||
             (host.Contains("login-verify", StringComparison.OrdinalIgnoreCase) && host.EndsWith(".invalid", StringComparison.OrdinalIgnoreCase));
 
         if (suspiciousPunycodeOrPhishLookalike)
@@ -276,7 +280,7 @@ public sealed class NativeMessagingDownloadGuard
                 ShouldWarnBeforeNavigation: true,
                 IsTemporarilyAllowlisted: false,
                 Category: "SUSPICIOUS_LOOKALIKE_HOST",
-                BlockReason: "Suspicious IDN punycode or credential-verification hostname pattern detected. Proceed with caution.",
+                BlockReason: "Suspicious IDN punycode, brand-impersonation, or credential-verification hostname pattern detected. Proceed with caution.",
                 ThreatSourceAttribution: "KIRON PROHORI Heuristic URL Guard",
                 MatchedRuleId: null,
                 EvaluatedAtUtc: now
@@ -319,6 +323,37 @@ public sealed class NativeMessagingDownloadGuard
             MatchedRuleId: null,
             EvaluatedAtUtc: now
         );
+    }
+
+    /// <summary>
+    /// MODULE 06 — Validates HTTPS transport encryption and detects unencrypted HTTP login/credential submission risks.
+    /// </summary>
+    public (bool IsHttpsEncrypted, bool HasUnencryptedCredentialRisk, string TransportAssessment) ValidateHttpsTransportPolicy(string rawUrl)
+    {
+        if (string.IsNullOrWhiteSpace(rawUrl) || !Uri.TryCreate(rawUrl.Trim(), UriKind.Absolute, out var uri))
+        {
+            return (false, true, "INVALID_URL: Malformed URI cannot establish verified TLS transport.");
+        }
+
+        bool isHttps = uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        bool isLoginOrAuthPath =
+            uri.AbsolutePath.Contains("login", StringComparison.OrdinalIgnoreCase) ||
+            uri.AbsolutePath.Contains("signin", StringComparison.OrdinalIgnoreCase) ||
+            uri.AbsolutePath.Contains("auth", StringComparison.OrdinalIgnoreCase) ||
+            uri.AbsolutePath.Contains("password", StringComparison.OrdinalIgnoreCase);
+
+        bool isRawIpHost = System.Net.IPAddress.TryParse(uri.Host, out _);
+        bool hasRisk = !isHttps || (isRawIpHost && isLoginOrAuthPath);
+
+        string assessment = !isHttps && isLoginOrAuthPath
+            ? "CRITICAL_PHISHING_RISK: Unencrypted HTTP connection on a credential/login path."
+            : !isHttps
+            ? "UNENCRYPTED_HTTP: Connection does not use HTTPS/TLS transport encryption."
+            : (isRawIpHost && isLoginOrAuthPath)
+            ? "SUSPICIOUS_RAW_IP_LOGIN: Credential page hosted on a raw IP address without a domain certificate."
+            : $"VERIFIED_HTTPS_TRANSPORT: Encrypted TLS scheme verified for host '{uri.Host}'.";
+
+        return (isHttps, hasRisk, assessment);
     }
 
     /// <summary>

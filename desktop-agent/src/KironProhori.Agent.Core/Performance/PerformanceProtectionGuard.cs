@@ -161,4 +161,25 @@ public sealed class PerformanceProtectionGuard
         CurrentSignatureEpoch = newSignatureEpoch;
         _cleanFileCache.Clear();
     }
+
+    /// <summary>
+    /// Captures live process memory and CPU throttling optimization metrics for Phase 3 Resource Usage Optimization.
+    /// </summary>
+    public (double WorkingSetMemoryMb, string ProcessPriority, int CachedCleanFiles, bool EcoModeActive, int MaxCpuCapPercent) GetResourceOptimizationSnapshot()
+    {
+        double workingSetMb = 0;
+        string priority = "Normal";
+        try
+        {
+            using var proc = Process.GetCurrentProcess();
+            workingSetMb = Math.Round(proc.WorkingSet64 / (1024.0 * 1024.0), 2);
+            priority = proc.PriorityClass.ToString();
+        }
+        catch
+        {
+            // Fallback on restricted environments
+        }
+
+        return (workingSetMb, priority, CachedCleanFileCount, EcoPowerModeEnabled, MaxCpuLimitPercent);
+    }
 }

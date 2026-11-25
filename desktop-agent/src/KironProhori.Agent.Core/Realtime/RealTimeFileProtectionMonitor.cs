@@ -37,12 +37,63 @@ public sealed class RealTimeFileProtectionMonitor : IDisposable
     private readonly List<FileSystemWatcher> _activeWatchers = new();
     private readonly List<RealTimeProtectionEvent> _eventHistory = new();
     private readonly ConcurrentDictionary<string, DateTimeOffset> _debounceMap = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentQueue<(string FilePath, string ChangeType, bool IsStartupDirectory)> _scanQueue = new();
+    private readonly SemaphoreSlim _queueDrainLock = new(1, 1);
     private readonly object _lock = new();
 
     public bool IsMonitoringActive { get; private set; }
     public bool IsPaused { get; private set; }
+    public int PendingQueueDepth => _scanQueue.Count;
     public bool IsKernelDriverInstalled => false; // Explicit V1.0 architectural boundary: User-Mode only
-    public string ProtectionArchitecture => "User-Mode FileSystemWatcher + Modular Scan Pipeline (Coexists with Microsoft Defender)";
+    public string ProtectionArchitecture => "User-Mode FileSystemWatcher + Queued Scan Orchestrator (Coexists with Microsoft Defender)";
+
+    /// <summary>
+    /// Enqueues a file-system event into the safe real-time scan queue, skipping duplicate bursts within the debounce window.
+    /// </summary>
+    public bool EnqueueFileEvent(string filePath, string changeType = "CREATED", bool isStartupDirectory = false)
+    {
+        if (IsPaused || string.IsNullOrWhiteSpace(filePath))
+        {
+            return false;
+        }
+
+        if (IsDuplicateEventWithinDebounceWindow(filePath))
+        {
+            return false;
+        }
+
+        _debounceMap[filePath] = DateTimeOffset.UtcNow;
+        _scanQueue.Enqueue((filePath, changeType, isStartupDirectory));
+        return true;
+    }
+
+    /// <summary>
+    /// Sequentially drains all queued real-time file events through ModularScanPipeline to prevent CPU/disk thrashing.
+    /// </summary>
+    public async Task<IReadOnlyList<RealTimeProtectionEvent>> DrainScanQueueAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var processed = new List<RealTimeProtectionEvent>();
+        await _queueDrainLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            while (_scanQueue.TryDequeue(out var item))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var evt = await EvaluateFileEventAsync(
+                    item.FilePath,
+                    item.ChangeType,
+                    item.IsStartupDirectory,
+                    cancellationToken).ConfigureAwait(false);
+                processed.Add(evt);
+            }
+        }
+        finally
+        {
+            _queueDrainLock.Release();
+        }
+        return processed;
+    }
 
     public void PauseMonitoring()
     {

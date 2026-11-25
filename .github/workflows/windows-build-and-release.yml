@@ -123,23 +123,31 @@ jobs:
           New-Item -ItemType Directory -Force -Path "release-assets/logs" | Out-Null
           dotnet restore desktop-agent/KironProhori.DesktopAgent.sln | Tee-Object -FilePath "release-assets/logs/01-dotnet-restore.log"
 
-      - name: Execute 20-Test xUnit Automated Security & Coexistence Suite
+      - name: Execute Automated xUnit Security & Coexistence Suite
         shell: pwsh
         run: |
           dotnet test desktop-agent/tests/KironProhori.Agent.Tests/KironProhori.Agent.Tests.csproj `
             -c Release `
             --logger "trx;LogFileName=xunit-results.trx" | Tee-Object -FilePath "release-assets/logs/02-xunit-tests.log"
 
-      - name: Publish Windows Desktop UI & Background Service (win-x64)
+      - name: Publish Windows Desktop UI & Background Service (win-x64 & Windows 10 win-x86)
         shell: pwsh
         run: |
           dotnet publish desktop-agent/src/KironProhori.Agent.Desktop/KironProhori.Agent.Desktop.csproj `
             -c Release -r win-x64 --self-contained true `
-            -o desktop-agent/publish/win-x64/desktop | Tee-Object -FilePath "release-assets/logs/03-publish-desktop.log"
+            -o desktop-agent/publish/win-x64/desktop | Tee-Object -FilePath "release-assets/logs/03-publish-desktop-x64.log"
 
           dotnet publish desktop-agent/src/KironProhori.Agent.Service/KironProhori.Agent.Service.csproj `
             -c Release -r win-x64 --self-contained true `
-            -o desktop-agent/publish/win-x64/service | Tee-Object -FilePath "release-assets/logs/04-publish-service.log"
+            -o desktop-agent/publish/win-x64/service | Tee-Object -FilePath "release-assets/logs/04-publish-service-x64.log"
+
+          dotnet publish desktop-agent/src/KironProhori.Agent.Desktop/KironProhori.Agent.Desktop.csproj `
+            -c Release -r win-x86 --self-contained true `
+            -o desktop-agent/publish/win-x86/desktop | Tee-Object -FilePath "release-assets/logs/03b-publish-desktop-x86.log"
+
+          dotnet publish desktop-agent/src/KironProhori.Agent.Service/KironProhori.Agent.Service.csproj `
+            -c Release -r win-x86 --self-contained true `
+            -o desktop-agent/publish/win-x86/service | Tee-Object -FilePath "release-assets/logs/04b-publish-service-x86.log"
 
       - name: Compile KIRON-PROHORI-Setup-x64.exe via Inno Setup 6
         shell: pwsh
@@ -151,7 +159,7 @@ jobs:
           }
           & $IsccPath "desktop-agent/installer/inno-setup/KironProhoriSetup.iss" | Tee-Object -FilePath "release-assets/logs/05-inno-setup-build.log"
 
-      - name: Package Browser Extension & Generate Release Assets + SHA256SUMS.txt
+      - name: Package Release Bundles, Browser Extension & Generate SHA256SUMS.txt
         shell: pwsh
         run: |
           $Channel = "${{ steps.channel_gate.outputs.channel }}"
@@ -164,6 +172,8 @@ jobs:
           }
 
           Copy-Item -Path $InstallerSource -Destination "release-assets/KIRON-PROHORI-Setup-x64.exe" -Force
+          Compress-Archive -Path "desktop-agent/publish/win-x64/*" -DestinationPath "release-assets/KIRON-PROHORI-Portable-win-x64.zip" -Force
+          Compress-Archive -Path "desktop-agent/publish/win-x86/*" -DestinationPath "release-assets/KIRON-PROHORI-Portable-win-x86.zip" -Force
           Compress-Archive -Path "browser-extension/*" -DestinationPath "release-assets/KIRON-PROHORI-Browser-Extension-MV3.zip" -Force
 
           # Copy Release-Notes.txt and User-Guide.txt templates and stamp actual build metadata
@@ -173,6 +183,8 @@ jobs:
           # Compute real cryptographic SHA-256 checksums from the actual generated files
           $FilesToHash = @(
             "KIRON-PROHORI-Setup-x64.exe",
+            "KIRON-PROHORI-Portable-win-x64.zip",
+            "KIRON-PROHORI-Portable-win-x86.zip",
             "KIRON-PROHORI-Browser-Extension-MV3.zip",
             "Release-Notes.txt",
             "User-Guide.txt"
@@ -195,6 +207,8 @@ jobs:
           name: kiron-prohori-win-x64-${{ steps.channel_gate.outputs.channel }}-${{ github.sha }}
           path: |
             release-assets/KIRON-PROHORI-Setup-x64.exe
+            release-assets/KIRON-PROHORI-Portable-win-x64.zip
+            release-assets/KIRON-PROHORI-Portable-win-x86.zip
             release-assets/KIRON-PROHORI-Browser-Extension-MV3.zip
             release-assets/SHA256SUMS.txt
             release-assets/Release-Notes.txt
@@ -208,11 +222,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v1.0.0-{0}-{1}', steps.channel_gate.outputs.channel, github.run_number) }}
-          name: "KIRON PROHORI V1.0 (${{ steps.channel_gate.outputs.channel }}) — Windows 10/11 x64"
+          name: "KIRON PROHORI V1.0 (${{ steps.channel_gate.outputs.channel }}) — Windows 10 (x86/x64) & Windows 11 (x64)"
           prerelease: ${{ steps.channel_gate.outputs.channel != 'STABLE_V1_0' }}
           body_path: release-assets/Release-Notes.txt
           files: |
             release-assets/KIRON-PROHORI-Setup-x64.exe
+            release-assets/KIRON-PROHORI-Portable-win-x64.zip
+            release-assets/KIRON-PROHORI-Portable-win-x86.zip
             release-assets/KIRON-PROHORI-Browser-Extension-MV3.zip
             release-assets/SHA256SUMS.txt
             release-assets/Release-Notes.txt

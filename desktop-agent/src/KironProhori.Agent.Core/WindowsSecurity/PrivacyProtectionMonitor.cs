@@ -137,4 +137,44 @@ public sealed class PrivacyProtectionMonitor
             SourceRegistryPath: sourcePath
         ));
     }
+
+    /// <summary>
+    /// PHASE 6 — Builds a unified Privacy Dashboard summary combining camera/microphone consent audit,
+    /// zero-telemetry privacy guarantee, and read-only user-mode limitation disclosure.
+    /// </summary>
+    public PrivacyDashboardSummaryReport GetPrivacyDashboardSummary()
+    {
+        var snap = GetPrivacySnapshot();
+        int activeCameraCount = 0;
+        int activeMicCount = 0;
+
+        foreach (var entry in snap.ApplicationPermissions)
+        {
+            if (!entry.IsCurrentlyActive) continue;
+            if (entry.DeviceCategory.Equals("Webcam", StringComparison.OrdinalIgnoreCase)) activeCameraCount++;
+            if (entry.DeviceCategory.Equals("Microphone", StringComparison.OrdinalIgnoreCase)) activeMicCount++;
+        }
+
+        return new PrivacyDashboardSummaryReport(
+            TelemetryCollectedByDefault: false,
+            AutomaticFileUploadEnabled: false,
+            CameraConsentStatus: snap.GlobalCameraConsent,
+            MicrophoneConsentStatus: snap.GlobalMicrophoneConsent,
+            ActiveCameraAppCount: activeCameraCount,
+            ActiveMicrophoneAppCount: activeMicCount,
+            TotalAuditedPermissionEntries: snap.ApplicationPermissions.Count,
+            HonestUserModeDisclosure: LimitationDisclosure
+        );
+    }
 }
+
+public sealed record PrivacyDashboardSummaryReport(
+    bool TelemetryCollectedByDefault,
+    bool AutomaticFileUploadEnabled,
+    string CameraConsentStatus,
+    string MicrophoneConsentStatus,
+    int ActiveCameraAppCount,
+    int ActiveMicrophoneAppCount,
+    int TotalAuditedPermissionEntries,
+    string HonestUserModeDisclosure
+);

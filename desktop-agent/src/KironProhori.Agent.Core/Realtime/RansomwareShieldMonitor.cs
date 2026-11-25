@@ -145,6 +145,67 @@ public sealed class RansomwareShieldMonitor : IDisposable
     }
 
     /// <summary>
+    /// Starts user-mode FileSystemWatcher monitoring across all configured protected folders.
+    /// </summary>
+    public int StartProtectedFolderMonitoring()
+    {
+        foreach (var w in _watchers)
+        {
+            try
+            {
+                w.EnableRaisingEvents = false;
+                w.Dispose();
+            }
+            catch
+            {
+                // Ignore
+            }
+        }
+        _watchers.Clear();
+
+        List<string> targets;
+        lock (_lock)
+        {
+            targets = _protectedFolders.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
+        foreach (var folder in targets)
+        {
+            try
+            {
+                var watcher = new FileSystemWatcher(folder)
+                {
+                    IncludeSubdirectories = false,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+                    EnableRaisingEvents = IsShieldEnabled
+                };
+                watcher.Changed += (_, e) => EvaluateFileActivity(folder, e.FullPath, "MODIFIED");
+                watcher.Created += (_, e) => EvaluateFileActivity(folder, e.FullPath, "CREATED");
+                watcher.Renamed += (_, e) => EvaluateFileActivity(folder, e.FullPath, "RENAMED");
+                _watchers.Add(watcher);
+            }
+            catch
+            {
+                // Skip inaccessible protected folder smoothly
+            }
+        }
+
+        return _watchers.Count;
+    }
+
+    /// <summary>
+    /// Provides actionable, non-destructive user recovery guidance when ransomware behavior is detected.
+    /// </summary>
+    public static IReadOnlyList<string> GetRansomwareRecoveryGuidance() => new[]
+    {
+        "1. Isolate Network Connectivity: Disconnect Wi-Fi/Ethernet immediately to stop active C2 key exfiltration or lateral SMB propagation.",
+        "2. Inspect Suspicious Processes: Open KIRON PROHORI Process & Memory Inspector to identify non-system executables running from %TEMP% or Downloads.",
+        "3. Quarantine Suspicious Payloads: Use KIRON PROHORI Quarantine Vault (.kpq) rather than deleting files so forensic evidence and reversible payloads are preserved.",
+        "4. Restore from Offline Backups / Volume Shadow Copies: Check Windows File History, OneDrive Version History, or offline USB backups before reconnecting.",
+        "5. Run Microsoft Defender Offline Scan (Start-MpWDOScan): Verify no boot-sector or kernel persistence remains."
+    };
+
+    /// <summary>
     /// Evaluates a file modification or rename inside a protected folder for ransomware behavioral indicators.
     /// </summary>
     public RansomwareProtectionEvent? EvaluateFileActivity(

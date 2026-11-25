@@ -237,4 +237,75 @@ public sealed class SecureUpdateManager
         string line = JsonSerializer.Serialize(record, new JsonSerializerOptions()) + Environment.NewLine;
         await File.AppendAllTextAsync(_historyLogPath, line, Encoding.UTF8, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// PHASE 6 — Generates an RSA-2048 PKCS#1 v1.5 SHA-256 signature over a canonical update payload digest
+    /// for release packaging and deterministic verification tests.
+    /// </summary>
+    public static string SignPayloadRsa2048Sha256(byte[] payloadBytes, RSA rsaPrivateKey)
+    {
+        byte[] sig = rsaPrivateKey.SignData(
+            payloadBytes,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+        return Convert.ToBase64String(sig);
+    }
+
+    /// <summary>
+    /// PHASE 6 — Cryptographically verifies an RSA-2048 SHA-256 digital signature against the payload bytes.
+    /// </summary>
+    public static bool VerifyRsa2048Sha256Signature(
+        byte[] payloadBytes,
+        string digitalSignatureBase64,
+        RSA rsaPublicKey)
+    {
+        if (payloadBytes is null || string.IsNullOrWhiteSpace(digitalSignatureBase64))
+        {
+            return false;
+        }
+
+        try
+        {
+            byte[] sigBytes = Convert.FromBase64String(digitalSignatureBase64.Trim());
+            return rsaPublicKey.VerifyData(
+                payloadBytes,
+                sigBytes,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// PHASE 6 — Offline-safe update status evaluation. Never fails or disables local protection
+    /// when the host is offline or when remote manifest check is deferred.
+    /// </summary>
+    public (bool IsOfflineSafeMode, bool UpdateAvailable, string StatusSummary) EvaluateOfflineSafeUpdateStatus(
+        string currentInstalledVersion,
+        UpdateManifestPackage? cachedOrRemoteManifest,
+        bool isNetworkConnected)
+    {
+        if (!isNetworkConnected || cachedOrRemoteManifest is null)
+        {
+            return (
+                true,
+                false,
+                $"OFFLINE_SAFE_ACTIVE: Local definitions ({currentInstalledVersion}) remain 100% active without cloud connectivity."
+            );
+        }
+
+        bool newer = IsNewerSecurityIntelligenceAvailable(currentInstalledVersion, cachedOrRemoteManifest) ||
+                     IsNewerApplicationVersionAvailable(currentInstalledVersion, cachedOrRemoteManifest);
+
+        return (
+            true,
+            newer,
+            newer
+                ? $"UPDATE_AVAILABLE: Verified manifest v{cachedOrRemoteManifest.Version} ready for HTTPS download."
+                : $"UP_TO_DATE: Installed version {currentInstalledVersion} matches latest verified release."
+        );
+    }
 }

@@ -524,4 +524,74 @@ public sealed class WindowsSecurityMonitor
 
         return psi;
     }
+
+    /// <summary>
+    /// Builds a command-injection-safe ProcessStartInfo to remove an application-owned KIRON PROHORI firewall rule
+    /// ONLY when explicit user approval (userConfirmed == true) is provided.
+    /// Never removes pre-existing Windows Firewall rules outside the "KIRON PROHORI - " namespace.
+    /// </summary>
+    public static ProcessStartInfo BuildUserApprovedRemoveFirewallRuleCommand(
+        string ruleDisplayName,
+        bool userConfirmed)
+    {
+        if (!userConfirmed)
+        {
+            throw new InvalidOperationException(
+                "FIREWALL_POLICY_VIOLATION: Explicit user approval (userConfirmed: true) is mandatory before removing a Windows Firewall rule.");
+        }
+
+        if (string.IsNullOrWhiteSpace(ruleDisplayName))
+        {
+            throw new ArgumentException("Rule display name is required.", nameof(ruleDisplayName));
+        }
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = "netsh.exe",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        psi.ArgumentList.Add("advfirewall");
+        psi.ArgumentList.Add("firewall");
+        psi.ArgumentList.Add("delete");
+        psi.ArgumentList.Add("rule");
+        psi.ArgumentList.Add($"name=KIRON PROHORI - {ruleDisplayName.Trim()}");
+
+        return psi;
+    }
+
+    /// <summary>
+    /// Evaluates a single TCP/UDP network connection event against known botnet C2 IP addresses and high-risk backdoor ports.
+    /// </summary>
+    public static NetworkConnectionSecurityEntry EvaluateNetworkConnectionEvent(
+        string localEndpoint,
+        string remoteIp,
+        int remotePort,
+        string tcpState = "Established",
+        IReadOnlyCollection<string>? knownC2IpAddresses = null)
+    {
+        bool isC2Match = knownC2IpAddresses != null &&
+                         knownC2IpAddresses.Any(ip => ip.Equals(remoteIp, StringComparison.OrdinalIgnoreCase));
+        bool isHighRiskPort = HighRiskSuspiciousRemotePorts.Contains(remotePort);
+        bool suspicious = isC2Match || isHighRiskPort;
+
+        string note = isC2Match
+            ? $"SUSPICIOUS: Remote IP {remoteIp} matches verified botnet C2 blocklist."
+            : isHighRiskPort
+            ? $"SUSPICIOUS PORT: Remote port {remotePort} is associated with uncommon backdoor/C2 traffic."
+            : "Normal established/active TCP session (Read-only observation).";
+
+        return new NetworkConnectionSecurityEntry(
+            LocalEndpoint: localEndpoint,
+            RemoteEndpoint: $"{remoteIp}:{remotePort}",
+            RemoteAddress: remoteIp,
+            RemotePort: remotePort,
+            TcpState: tcpState,
+            IsSuspiciousPortOrHost: suspicious,
+            AssessmentNote: note
+        );
+    }
 }

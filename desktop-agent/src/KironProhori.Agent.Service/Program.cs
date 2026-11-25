@@ -63,6 +63,9 @@ public static class Program
                 services.AddSingleton<ScheduledScanCoordinator>();
                 services.AddSingleton<WindowsSecurityMonitor>();
                 services.AddSingleton<ErrorDiagnosticsManager>();
+                services.AddSingleton<LocalSecurityAuditRepository>();
+                services.AddSingleton<ProcessAndMemorySecurityInspector>();
+                services.AddSingleton<SystemCleanupPreviewInspector>();
                 services.AddHostedService<KironProhoriBackgroundWorker>();
             })
             .Build();
@@ -82,6 +85,7 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
     private readonly SecureUpdateManager _updateManager;
     private readonly WindowsSecurityMonitor _windowsSecurityMonitor;
     private readonly ErrorDiagnosticsManager _diagnostics;
+    private readonly LocalSecurityAuditRepository _auditRepository;
     private DateTimeOffset _serviceStartedAtUtc;
 
     public KironProhoriBackgroundWorker(
@@ -93,7 +97,8 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
         ExclusionManager exclusionManager,
         SecureUpdateManager updateManager,
         WindowsSecurityMonitor windowsSecurityMonitor,
-        ErrorDiagnosticsManager diagnostics)
+        ErrorDiagnosticsManager diagnostics,
+        LocalSecurityAuditRepository? auditRepository = null)
     {
         _logger = logger;
         _scanPipeline = scanPipeline;
@@ -104,30 +109,49 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
         _updateManager = updateManager;
         _windowsSecurityMonitor = windowsSecurityMonitor;
         _diagnostics = diagnostics;
+        _auditRepository = auditRepository ?? new LocalSecurityAuditRepository();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _serviceStartedAtUtc = DateTimeOffset.UtcNow;
+        var platformReport = WindowsPlatformCompatibilityDetector.DetectCurrentPlatform();
+        var securitySnapshot = _windowsSecurityMonitor.GetSecuritySnapshot();
+
         _logger.LogInformation(
-            "{Product} Background Service v{Version} by {Developer} starting on {OS} (Privacy: {Privacy})",
+            "{Product} Background Service v{Version} by {Developer} starting on {OS} ({Arch}, Supported: {Supported}, Defender: {Defender}, Privacy: {Privacy})",
             AboutBrandMetadata.ProductName,
             AboutBrandMetadata.ProductVersion,
             AboutBrandMetadata.DeveloperName,
-            Environment.OSVersion,
+            platformReport.DetectedWindowsGeneration,
+            platformReport.OsArchitecture,
+            platformReport.IsSupportedWindowsConfiguration,
+            securitySnapshot.MicrosoftDefenderStatus,
             AboutBrandMetadata.PrivacyPolicyDefault);
 
         // 1. Run self-healing startup check on configuration & quarantine metadata
-        DiagnosticHealthReport health = await _diagnostics.RunSelfDiagnosticAndRepairAsync().ConfigureAwait(false);
+        DiagnosticHealthReport health = await _diagnostics.RunSelfDiagnosticAndRepairAsync(stoppingToken).ConfigureAwait(false);
         _logger.LogInformation("Startup configuration health check completed: {Status}", health.Status);
 
-        // 2. Start User-Mode Real-Time File Protection Monitor on Downloads, Temp, and Startup folders
+        // 2. Record Phase 1 Foundation startup audit record in local database
+        await _auditRepository.AppendAuditRecordAsync(
+            moduleName: "PHASE_01_FOUNDATION_SERVICE",
+            eventType: "SERVICE_STARTUP",
+            threatOrEventName: "KironProhoriSecurityServiceStarted",
+            targetPathOrSource: platformReport.DetectedWindowsGeneration,
+            sha256Hash: "N/A",
+            disposition: ThreatLifecycleDisposition.Detected,
+            engineUsed: "KironProhori.WindowsBackgroundService",
+            details: $"Arch={platformReport.OsArchitecture}; Defender={securitySnapshot.MicrosoftDefenderStatus}; ConfigHealth={health.Status}",
+            cancellationToken: stoppingToken).ConfigureAwait(false);
+
+        // 3. Start User-Mode Real-Time File Protection Monitor on Downloads, Temp, and Startup folders
         _realTimeMonitor.StartMonitoring();
         _logger.LogInformation(
             "User-Mode Real-Time File Protection started across {Count} monitored directories.",
             RealTimeFileProtectionMonitor.GetDefaultWatchedDirectories().Count);
 
-        // 3. Run Local Named Pipe IPC loop for Desktop UI and Native Messaging Host status synchronization
+        // 4. Run Local Named Pipe IPC loop for Desktop UI and Native Messaging Host status synchronization
         Task ipcTask = RunLocalNamedPipeServerLoopAsync(stoppingToken);
 
         try
@@ -191,7 +215,21 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
 
     public async Task<string> HandleIpcCommandAsync(string command, CancellationToken cancellationToken = default)
     {
+        if (string.Equals(command, "EXPORT_AUDIT_CSV", StringComparison.OrdinalIgnoreCase))
+        {
+            return _auditRepository.ExportToCsv();
+        }
+
+        if (string.Equals(command, "EXPORT_AUDIT_JSON", StringComparison.OrdinalIgnoreCase))
+        {
+            return _auditRepository.ExportToJson();
+        }
+
         var entries = await _quarantineManager.ListQuarantineEntriesAsync(cancellationToken).ConfigureAwait(false);
+        var platformReport = WindowsPlatformCompatibilityDetector.DetectCurrentPlatform();
+        var defenderSnapshot = _windowsSecurityMonitor.GetSecuritySnapshot();
+        var auditRecords = _auditRepository.GetRecords();
+
         var statusPayload = new
         {
             serviceName = Program.WindowsServiceName,
@@ -199,10 +237,26 @@ public sealed class KironProhoriBackgroundWorker : BackgroundService
             version = AboutBrandMetadata.ProductVersion,
             developer = AboutBrandMetadata.DeveloperName,
             uptimeSeconds = Math.Round((DateTimeOffset.UtcNow - _serviceStartedAtUtc).TotalSeconds, 1),
+            platformCompatibility = new
+            {
+                detectedWindowsGeneration = platformReport.DetectedWindowsGeneration,
+                osArchitecture = platformReport.OsArchitecture,
+                processArchitecture = platformReport.ProcessArchitecture,
+                is64BitOperatingSystem = platformReport.Is64BitOperatingSystem,
+                isSupportedWindowsConfiguration = platformReport.IsSupportedWindowsConfiguration,
+                kernelDriverMinifilterState = platformReport.KernelDriverMinifilterState
+            },
+            defenderCoexistence = new
+            {
+                microsoftDefenderStatus = defenderSnapshot.MicrosoftDefenderStatus,
+                realTimeProtectionEnabled = defenderSnapshot.RealTimeProtectionEnabled,
+                zeroSystemModificationsGuaranteed = defenderSnapshot.ZeroSystemModificationsGuaranteed
+            },
             realTimeMonitoringActive = _realTimeMonitor.IsMonitoringActive,
             monitoredDirectories = RealTimeFileProtectionMonitor.GetDefaultWatchedDirectories(),
             quarantinedCount = entries.Count(e => !e.IsRestored),
             exclusionsCount = _exclusionManager.GetExclusions().Count,
+            auditDatabaseRecordCount = auditRecords.Count,
             webProtectionRuleCount = NativeMessagingDownloadGuard.GetVerifiedWebProtectionRules().Count,
             telemetryEnabled = false,
             commandReceived = command,

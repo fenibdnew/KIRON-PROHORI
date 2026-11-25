@@ -44,6 +44,9 @@ public partial class MainWindow : Window
     private readonly SafeBankingProtectionModule _safeBankingModule;
     private readonly EmailAttachmentSecurityScanner _emailAttachmentScanner;
     private readonly PrivacyFirstCloudThreatIntelligenceService _cloudIntelService;
+    private readonly LocalSecurityAuditRepository _auditRepository;
+    private readonly ProcessAndMemorySecurityInspector _processInspector;
+    private readonly SystemCleanupPreviewInspector _cleanupInspector;
 
     private readonly string _localAppDataDir;
     private readonly string _uiPreferencesFilePath;
@@ -120,6 +123,9 @@ public partial class MainWindow : Window
         _safeBankingModule = new SafeBankingProtectionModule(_browserDownloadGuard);
         _emailAttachmentScanner = new EmailAttachmentSecurityScanner(_scanPipeline);
         _cloudIntelService = new PrivacyFirstCloudThreatIntelligenceService(null, _updateManager);
+        _auditRepository = new LocalSecurityAuditRepository(Path.Combine(_localAppDataDir, "Database", "security-audit-db.json"));
+        _processInspector = new ProcessAndMemorySecurityInspector();
+        _cleanupInspector = new SystemCleanupPreviewInspector();
 
         LoadLocalUiPreferences();
         ApplyThemePalette();
@@ -145,6 +151,17 @@ public partial class MainWindow : Window
             await RefreshWindowsSecurityPostureAsync();
             await RefreshQuarantineVaultAsync();
             UpdateHeroProtectionBannerState();
+
+            var platformCompat = WindowsPlatformCompatibilityDetector.DetectCurrentPlatform();
+            await _auditRepository.AppendAuditRecordAsync(
+                moduleName: "PHASE_01_FOUNDATION_DESKTOP",
+                eventType: "DESKTOP_UI_STARTUP",
+                threatOrEventName: "KironProhoriDesktopStarted",
+                targetPathOrSource: platformCompat.DetectedWindowsGeneration,
+                sha256Hash: "N/A",
+                disposition: ThreatLifecycleDisposition.Detected,
+                engineUsed: "KironProhori.DesktopUI",
+                details: $"OS={platformCompat.DetectedWindowsGeneration}; Arch={platformCompat.OsArchitecture}; Supported={platformCompat.IsSupportedWindowsConfiguration}");
 
             if (!string.IsNullOrWhiteSpace(App.InitialScanTargetPath))
             {
@@ -954,11 +971,25 @@ public partial class MainWindow : Window
     {
         ShowActiveWorkspaceView(showScannerInspector: true, isScanTab: true);
         CurrentSectionTitle.Text = BilingualStrings.Get("nav.custom_scan", IsBengaliLanguage);
-        ActiveScanBannerTitle.Text = "CUSTOM FOLDER SCAN — USER DOCUMENTS & WORKSPACE";
+        ActiveScanBannerTitle.Text = "CUSTOM FOLDER SCAN — USER-SELECTED DIRECTORY";
         RightPanelHeaderText.Text = $"RECENT SCAN SESSIONS ({_scanHistory.Count})";
         PopulateScanHistoryInInspector();
-        var docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        await RunScanWorkflowAsync(ScanType.CustomFolderScan, new[] { docsPath });
+
+        string targetFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Select a folder to scan with KIRON PROHORI Custom Folder Scanner",
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = false,
+            InitialDirectory = targetFolder
+        };
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+        {
+            targetFolder = dialog.SelectedPath;
+        }
+
+        await RunScanWorkflowAsync(ScanType.CustomFolderScan, new[] { targetFolder });
     }
 
     private async void OnUsbScanClick(object sender, RoutedEventArgs e)
@@ -1215,7 +1246,16 @@ public partial class MainWindow : Window
                 $"{session.StartedAtUtc:HH:mm:ss} | {session.ScanType} | Scanned: {session.TotalFilesScanned} | Threats: {session.ThreatsDetectedCount} | Excluded: {session.SkippedExcludedCount}"
             );
         }
-        if (_scanHistory.Count == 0)
+
+        var auditRecords = _auditRepository.GetRecords();
+        foreach (var rec in auditRecords.Take(25))
+        {
+            QuarantineListBox.Items.Add(
+                $"{rec.TimestampUtc:yyyy-MM-dd HH:mm:ss} | [{rec.Disposition}] {rec.ThreatOrEventName} | Engine: {rec.EngineUsed} | Target: {rec.TargetPathOrSource}"
+            );
+        }
+
+        if (_scanHistory.Count == 0 && auditRecords.Count == 0)
         {
             QuarantineListBox.Items.Add("No scan sessions recorded in this session yet. Click Quick Scan or Run Safe EICAR Self-Test.");
         }
@@ -1665,6 +1705,15 @@ public partial class MainWindow : Window
             {
                 _currentFindings.Add(finding);
                 RenderFindingInList(finding);
+                await _auditRepository.AppendAuditRecordAsync(
+                    moduleName: "MODULE_02_SCAN_ENGINE",
+                    eventType: mode.ToString(),
+                    threatOrEventName: finding.DetectionName,
+                    targetPathOrSource: finding.FilePath,
+                    sha256Hash: finding.Sha256Hash,
+                    disposition: ThreatLifecycleDisposition.Detected,
+                    engineUsed: finding.EngineName,
+                    details: finding.Explanation);
             }
 
             if (summary.Findings.Count == 0)
@@ -1730,7 +1779,16 @@ public partial class MainWindow : Window
             return;
         }
 
-        await _quarantineManager.QuarantineFileAsync(finding, userConfirmed: true);
+        var qEntry = await _quarantineManager.QuarantineFileAsync(finding, userConfirmed: true);
+        await _auditRepository.AppendAuditRecordAsync(
+            moduleName: "MODULE_04_QUARANTINE",
+            eventType: "THREAT_QUARANTINED",
+            threatOrEventName: finding.DetectionName,
+            targetPathOrSource: finding.FilePath,
+            sha256Hash: finding.Sha256Hash,
+            disposition: ThreatLifecycleDisposition.Quarantined,
+            engineUsed: finding.EngineName,
+            details: $"Isolated as {qEntry.VaultPayloadFileName} ({qEntry.QuarantineId})");
         _currentFindings.RemoveAt(idx);
         FindingsListBox.Items.RemoveAt(idx);
         await RefreshQuarantineVaultAsync();
@@ -1802,6 +1860,15 @@ public partial class MainWindow : Window
 
         var item = _currentQuarantineItems[idx];
         await _quarantineManager.RestoreQuarantinedFileAsync(item.QuarantineId, userConfirmed: true);
+        await _auditRepository.AppendAuditRecordAsync(
+            moduleName: "MODULE_04_QUARANTINE",
+            eventType: "QUARANTINE_RESTORED",
+            threatOrEventName: item.DetectionName,
+            targetPathOrSource: item.OriginalFilePath,
+            sha256Hash: item.Sha256Hash,
+            disposition: ThreatLifecycleDisposition.Unresolved,
+            engineUsed: item.DetectionEngineId,
+            details: $"Restored {item.OriginalFilePath} with verified SHA-256 integrity.");
         await RefreshQuarantineVaultAsync();
         UpdateHeroProtectionBannerState();
         StatusFooterText.Text = $"Restored {item.OriginalFilePath} and verified SHA-256 integrity.";
@@ -1830,6 +1897,15 @@ public partial class MainWindow : Window
         }
 
         await _quarantineManager.PermanentlyDeleteQuarantinedFileAsync(item.QuarantineId, userConfirmed: true);
+        await _auditRepository.AppendAuditRecordAsync(
+            moduleName: "MODULE_04_QUARANTINE",
+            eventType: "QUARANTINE_PERMANENT_DELETE",
+            threatOrEventName: item.DetectionName,
+            targetPathOrSource: item.OriginalFilePath,
+            sha256Hash: item.Sha256Hash,
+            disposition: ThreatLifecycleDisposition.Removed,
+            engineUsed: item.DetectionEngineId,
+            details: $"Permanently deleted quarantined payload {item.QuarantineId} after explicit user approval.");
         await RefreshQuarantineVaultAsync();
         UpdateHeroProtectionBannerState();
         StatusFooterText.Text = $"Permanently deleted quarantined payload {item.QuarantineId[..8]}.";
