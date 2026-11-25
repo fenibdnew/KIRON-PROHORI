@@ -425,7 +425,7 @@ public partial class MainWindow : Window
             }
             else
             {
-                var resourceStream = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/KironProhori.ico"));
+                var resourceStream = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/Assets/KironProhori.ico"));
                 if (resourceStream?.Stream != null)
                 {
                     trayIcon = new System.Drawing.Icon(resourceStream.Stream);
@@ -1323,7 +1323,7 @@ public partial class MainWindow : Window
 
         await _exclusionManager.AddExclusionAsync(
             dialog.SelectedPath,
-            ExclusionScope.DirectoryRecursive,
+            ExclusionScope.Folder,
             "User added via Exclusions folder picker",
             userConfirmed: true
         );
@@ -1712,8 +1712,8 @@ public partial class MainWindow : Window
                     targetPathOrSource: finding.FilePath,
                     sha256Hash: finding.Sha256Hash,
                     disposition: ThreatLifecycleDisposition.Detected,
-                    engineUsed: finding.EngineName,
-                    details: finding.Explanation);
+                    engineUsed: finding.DetectionEngineId,
+                    details: finding.Description);
             }
 
             if (summary.Findings.Count == 0)
@@ -1787,7 +1787,7 @@ public partial class MainWindow : Window
             targetPathOrSource: finding.FilePath,
             sha256Hash: finding.Sha256Hash,
             disposition: ThreatLifecycleDisposition.Quarantined,
-            engineUsed: finding.EngineName,
+            engineUsed: finding.DetectionEngineId,
             details: $"Isolated as {qEntry.VaultPayloadFileName} ({qEntry.QuarantineId})");
         _currentFindings.RemoveAt(idx);
         FindingsListBox.Items.RemoveAt(idx);
