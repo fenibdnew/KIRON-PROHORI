@@ -1682,9 +1682,7 @@ public sealed class AgentPhase7ATests
             string eicarPath = Path.Combine(tempRoot, "phase7_eicar.com");
             await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.OfficialEicarTestString);
 
-            var scanSession = await pipeline.ScanDirectoriesAsync(
-                ScanType.SingleFileScan,
-                new[] { eicarPath });
+            var scanSession = await pipeline.ScanSingleFileAsync(eicarPath);
             Assert.Single(scanSession.Findings);
             Assert.Contains("EICAR", scanSession.Findings[0].DetectionName, StringComparison.OrdinalIgnoreCase);
 
