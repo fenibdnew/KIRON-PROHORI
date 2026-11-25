@@ -1171,7 +1171,7 @@ public sealed class AgentPhase7ATests
             var scanDir = Path.Combine(tempRoot, "Workspace");
             Directory.CreateDirectory(scanDir);
             var eicarPath = Path.Combine(scanDir, "eicar_phase2_sample.com");
-            await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.EicarStandardTestString);
+            await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.OfficialEicarTestString);
 
             string computedHash = await Sha256HashEngine.ComputeFileSha256Async(eicarPath);
             Assert.Equal("275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f", computedHash);
@@ -1180,7 +1180,7 @@ public sealed class AgentPhase7ATests
             var quickReport = await pipeline.ScanDirectoriesAsync(ScanType.QuickScan, new[] { scanDir });
             Assert.Equal(ScanType.QuickScan, quickReport.ScanType);
             Assert.Single(quickReport.Findings);
-            Assert.False(string.IsNullOrWhiteSpace(quickReport.Findings[0].EngineName));
+            Assert.False(string.IsNullOrWhiteSpace(quickReport.Findings[0].DetectionEngineId));
 
             var fullReport = await pipeline.ScanDirectoriesAsync(ScanType.FullScan, new[] { scanDir });
             Assert.Equal(ScanType.FullScan, fullReport.ScanType);
@@ -1207,8 +1207,8 @@ public sealed class AgentPhase7ATests
                 targetPathOrSource: detectedFinding.FilePath,
                 sha256Hash: detectedFinding.Sha256Hash,
                 disposition: ThreatLifecycleDisposition.Detected,
-                engineUsed: detectedFinding.EngineName,
-                details: detectedFinding.Explanation);
+                engineUsed: detectedFinding.DetectionEngineId,
+                details: detectedFinding.Description);
 
             var qEntry = await quarantineMgr.QuarantineFileAsync(detectedFinding, userConfirmed: true);
             Assert.False(File.Exists(eicarPath));
@@ -1219,7 +1219,7 @@ public sealed class AgentPhase7ATests
                 targetPathOrSource: detectedFinding.FilePath,
                 sha256Hash: detectedFinding.Sha256Hash,
                 disposition: ThreatLifecycleDisposition.Quarantined,
-                engineUsed: detectedFinding.EngineName,
+                engineUsed: detectedFinding.DetectionEngineId,
                 details: $"Isolated as {qEntry.VaultPayloadFileName}");
 
             // Restore and verify SHA-256 integrity matches original EICAR digest
@@ -1273,7 +1273,7 @@ public sealed class AgentPhase7ATests
             var cleanFile = Path.Combine(downloadsDir, "notes.txt");
             var eicarFile = Path.Combine(downloadsDir, "dropper_eicar.com");
             await File.WriteAllTextAsync(cleanFile, "harmless text file");
-            await File.WriteAllTextAsync(eicarFile, Sha256HashEngine.EicarStandardTestString);
+            await File.WriteAllTextAsync(eicarFile, Sha256HashEngine.OfficialEicarTestString);
 
             Assert.True(rtMonitor.EnqueueFileEvent(cleanFile, "CREATED"));
             // Immediate duplicate event on the same path within 400ms debounce window is skipped
@@ -1381,18 +1381,20 @@ public sealed class AgentPhase7ATests
                 "{\"command\":\"EVALUATE_URL\",\"url\":\"https://phishing-login-verify.kiron-test.invalid\"}"
             );
             msgStream.Position = 0;
-            string roundTripJson = await NativeMessagingDownloadGuard.ReadNativeMessageAsync(msgStream);
+            string? roundTripJson = await NativeMessagingDownloadGuard.ReadNativeMessageAsync<string>(msgStream);
+            Assert.NotNull(roundTripJson);
             Assert.Contains("phishing-login-verify.kiron-test.invalid", roundTripJson);
 
             var dlVerdict = await webGuard.EvaluateBrowserDownloadAsync(new BrowserDownloadEventPayload(
                 DownloadId: "DL-PHASE4-01",
-                FileName: "setup_legit.txt",
-                LocalFilePath: downloadedCleanPath,
                 DownloadUrl: "https://github.com/fenibdnew/KIRON-PROHORI/releases",
                 WebsiteDomain: "github.com",
-                BrowserName: "Microsoft Edge MV3",
+                FileName: "setup_legit.txt",
+                LocalFilePath: downloadedCleanPath,
                 BrowserState: "complete",
-                FileSizeBytes: 27
+                BrowserDangerSignal: "safe",
+                MimeType: "text/plain",
+                TimestampUtc: DateTimeOffset.UtcNow
             ));
             Assert.Equal(DownloadScanStatus.Clean, dlVerdict.Status);
 
@@ -1567,8 +1569,8 @@ public sealed class AgentPhase7ATests
                 DownloadUrl: "https://github.com/fenibdnew/KIRON-PROHORI/releases/download/v1.0.0/definitions.json",
                 ExpectedSha256: v2Sha256,
                 PublisherIdentity: SecureUpdateManager.TrustedPublisherIdentity,
-                DigitalSignatureBase64: rsaSigBase64,
-                PublishedAtUtc: DateTimeOffset.UtcNow
+                ReleasedAtUtc: DateTimeOffset.UtcNow,
+                DigitalSignatureBase64: rsaSigBase64
             );
 
             var installRecord = await updateMgr.VerifyAndApplyUpdateAsync(
@@ -1678,7 +1680,7 @@ public sealed class AgentPhase7ATests
 
             // 1. Unit & End-to-End Integration Test (Scan -> EICAR Detection -> Quarantine -> Audit Log -> Restore)
             string eicarPath = Path.Combine(tempRoot, "phase7_eicar.com");
-            await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.EicarStandardTestString);
+            await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.OfficialEicarTestString);
 
             var scanSession = await pipeline.ScanDirectoriesAsync(
                 ScanType.SingleFileScan,
