@@ -1678,24 +1678,24 @@ public sealed class AgentPhase7ATests
 
             // 1. Unit & End-to-End Integration Test (Scan -> EICAR Detection -> Quarantine -> Audit Log -> Restore)
             string eicarPath = Path.Combine(tempRoot, "phase7_eicar.com");
-            await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.EicarStandardString);
+            await File.WriteAllTextAsync(eicarPath, Sha256HashEngine.EicarStandardTestString);
 
-            var scanSession = await pipeline.ExecuteScanAsync(
+            var scanSession = await pipeline.ScanDirectoriesAsync(
                 ScanType.SingleFileScan,
                 new[] { eicarPath });
-            Assert.Single(scanSession.Detections);
-            Assert.Equal("EICAR-Standard-AntiVirus-Test-File", scanSession.Detections[0].ThreatName);
+            Assert.Single(scanSession.Findings);
+            Assert.Contains("EICAR", scanSession.Findings[0].DetectionName, StringComparison.OrdinalIgnoreCase);
 
-            var qRecord = await quarantineMgr.QuarantineFileAsync(scanSession.Detections[0]);
+            var qRecord = await quarantineMgr.QuarantineFileAsync(scanSession.Findings[0], userConfirmed: true);
             Assert.False(File.Exists(eicarPath));
             await auditRepo.AppendAuditRecordAsync(
-                "MODULE_04_QUARANTINE", "QA_INTEGRATION_QUARANTINE", qRecord.ThreatName,
+                "MODULE_04_QUARANTINE", "QA_INTEGRATION_QUARANTINE", qRecord.DetectionName,
                 qRecord.OriginalFilePath, qRecord.Sha256Hash, ThreatLifecycleDisposition.Quarantined,
                 "KironProhori.QuarantineManager", "Phase 7 end-to-end integration test.");
             Assert.Single(auditRepo.GetRecords(ThreatLifecycleDisposition.Quarantined));
 
-            bool restored = await quarantineMgr.RestoreQuarantinedFileAsync(qRecord.QuarantineId, addToExclusions: false);
-            Assert.True(restored);
+            var restoredEntry = await quarantineMgr.RestoreQuarantinedFileAsync(qRecord.QuarantineId, userConfirmed: true);
+            Assert.True(restoredEntry.IsRestored);
             Assert.True(File.Exists(eicarPath));
 
             // 2. Windows 10 (x86/x64) & Windows 11 (x64) Compatibility Matrix Verification

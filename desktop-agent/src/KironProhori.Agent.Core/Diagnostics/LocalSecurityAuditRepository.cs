@@ -19,7 +19,8 @@ public enum ThreatLifecycleDisposition
     Blocked,
     Quarantined,
     Removed,
-    Unresolved
+    Unresolved,
+    CleanVerified
 }
 
 public sealed record WindowsPlatformCompatibilityReport(
@@ -989,9 +990,27 @@ public sealed class Phase7QualityAssuranceAuditor
         KironProhori.Agent.Core.Quarantine.QuarantineManager quarantineManager,
         ProcessAndMemorySecurityInspector processInspector)
     {
-        bool blocksPathTraversal = !quarantineManager.ValidateSafePathNoTraversal(@"..\..\Windows\System32\cmd.exe");
-        bool allowsCanonicalLocalPath = quarantineManager.ValidateSafePathNoTraversal(
-            Path.Combine(Path.GetTempPath(), "kp_safe_review_sample.bin"));
+        bool blocksPathTraversal = false;
+        try
+        {
+            quarantineManager.ValidateSafePathNoTraversal(@"..\..\Windows\System32\cmd.exe");
+        }
+        catch (InvalidOperationException)
+        {
+            blocksPathTraversal = true;
+        }
+
+        bool allowsCanonicalLocalPath = false;
+        try
+        {
+            quarantineManager.ValidateSafePathNoTraversal(
+                Path.Combine(Path.GetTempPath(), "kp_safe_review_sample.bin"));
+            allowsCanonicalLocalPath = true;
+        }
+        catch
+        {
+            allowsCanonicalLocalPath = false;
+        }
 
         var lsassCheck = processInspector.EvaluateProcessMetadata(640, "lsass.exe", @"C:\Windows\System32\lsass.exe");
         var csrssCheck = processInspector.EvaluateProcessMetadata(512, "csrss.exe", @"C:\Windows\System32\csrss.exe");
